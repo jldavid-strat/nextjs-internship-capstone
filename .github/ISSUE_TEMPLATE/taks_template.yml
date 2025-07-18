@@ -63,9 +63,9 @@ body:
       label: Acceptance Criteria
       description: Define what must be true for the task to be considered complete
       placeholder: "
-        - [] Specific, measurable criteria
-        - [] That define when the task is complete
-        - [] Include testing requirements
+        - [] Specific, measurable criteria \n
+        - [] That define when the task is complete \n
+        - [] Include testing requirements \n
         "
 
   - type: textarea
