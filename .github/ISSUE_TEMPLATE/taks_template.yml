@@ -53,6 +53,7 @@ body:
     attributes:
       label: Description
       description: Clear description of what needs to be implemented
+      placeholder: "Short description of what the task entails"
     validations:
       required: true
 
