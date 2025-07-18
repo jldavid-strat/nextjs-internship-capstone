@@ -2,9 +2,8 @@ name: Feature Task Template
 description: Standard template for creating new features
 title: "Task: [Phase] - [Feature Name]"
 labels: ["task"]
-assignees: []
-projects: ["jldav1d/1"]
-
+assignees: ["jldavid-strat"]
+projects: ["jldavid-strat/1"]
 body:
   - type: dropdown
     id: priority
