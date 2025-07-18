@@ -1,0 +1,83 @@
+name: Feature Task Template
+description: Standard template for creating new features
+title: "Task: [Phase] - [Feature Name]"
+labels: ["task"]
+assignees: []
+
+body:
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Select the priority of this task
+      options:
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+
+  - type: input
+    id: estimated_time
+    attributes:
+      label: Estimated Time
+      placeholder: "e.g., 6 hours"
+    validations:
+      required: true
+
+  - type: input
+    id: week
+    attributes:
+      label: Week
+      placeholder: "e.g., Week 3"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Frontend
+        - Backend
+        - Database
+        - Testing
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Clear description of what needs to be implemented
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Define what must be true for the task to be considered complete
+      options:
+        - label: Specific, measurable criteria
+        - label: That define when the task is complete
+        - label: Include testing requirements
+
+  - type: textarea
+    id: implementation_notes
+    attributes:
+      label: Implementation Notes
+      description: Include technical approach, dependencies, or useful resources
+
+  - type: checkboxes
+    id: definition_of_done
+    attributes:
+      label: Definition of Done
+      options:
+        - label: Code written and working locally
+        - label: Self-reviewed for quality and best practices
+        - label: Tests written (if applicable)
+        - label: Documentation updated
+        - label: Feature deployed and tested
+        - label: Ready for optional peer review
