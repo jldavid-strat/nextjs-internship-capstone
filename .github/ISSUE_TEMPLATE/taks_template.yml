@@ -19,6 +19,8 @@ body:
 
   - type: input
     id: estimated_time
+    label: Estimated Time
+    description: An approximate prediction of how long the will take to complete
     attributes:
       label: Estimated Time
       placeholder: "e.g., 6 hours"
@@ -27,6 +29,7 @@ body:
 
   - type: input
     id: week
+    label: Enter the week this task is set to be done
     attributes:
       label: Week
       placeholder: "e.g., Week 3"
@@ -54,21 +57,23 @@ body:
     validations:
       required: true
 
-  - type: checkboxes
+  - type: textarea
     id: acceptance_criteria
     attributes:
       label: Acceptance Criteria
       description: Define what must be true for the task to be considered complete
-      options:
-        - label: Specific, measurable criteria
-        - label: That define when the task is complete
-        - label: Include testing requirements
+      placeholder: "
+        - [] Specific, measurable criteria
+        - [] That define when the task is complete
+        - [] Include testing requirements
+        "
 
   - type: textarea
     id: implementation_notes
     attributes:
       label: Implementation Notes
-      description: Include technical approach, dependencies, or useful resources
+      description: Outline the steps or approach to complete the task
+      placeholder: "Describe technical approach, dependencies, or useful resources"
 
   - type: checkboxes
     id: definition_of_done
