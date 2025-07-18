@@ -19,19 +19,18 @@ body:
 
   - type: input
     id: estimated_time
-    label: Estimated Time
-    description: An approximate prediction of how long the will take to complete
     attributes:
       label: Estimated Time
+      description: An approximate prediction of how long the will take to complete
       placeholder: "e.g., 6 hours"
     validations:
       required: true
 
   - type: input
     id: week
-    label: Enter the week this task is set to be done
     attributes:
       label: Week
+      description: Enter the week this task is set to be done
       placeholder: "e.g., Week 3"
     validations:
       required: true
