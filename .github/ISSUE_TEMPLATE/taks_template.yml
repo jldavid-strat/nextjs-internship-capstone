@@ -3,6 +3,7 @@ description: Standard template for creating new features
 title: "Task: [Phase] - [Feature Name]"
 labels: ["task"]
 assignees: []
+projects: ["jldav1d/1"]
 
 body:
   - type: dropdown
