@@ -1,0 +1,50 @@
+name: Weekly Planning Template
+description: Standard template for outlining tasks and goals for weekly sprints
+title: "Week [] Planning - [Date Range]"
+labels: ["weekly-planning"]
+assignees: ["jldavid-strat"]
+body:
+  - type: textarea
+    id: goals
+    attributes:
+      label: Goals for this week
+      description: Describe the objectives to be completed this week
+      placeholder: "
+        - [] Main objective 1 \n
+        - [] Main objective 2 \n
+        - [] Main objective 3 \n
+        "
+      validations:
+        required: true
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Tasks Planned
+      description: List the tasks to be done and their priority
+      placeholder: "
+        - [ ] Task 1 (Priority: High, Est: 4h) \n
+        - [ ] Task 2 (Priority: Medium, Est: 6h) \n
+        - [ ] Task 3 (Priority: Low, Est: 2h) \n
+        "
+      validations:
+        required: true
+  - type: textarea
+    id: questions
+    attributes:
+      label: Tasks Planned
+      description: Any technical questions about areas where you might need help
+      placeholder: "
+        - What dependency should I use for this feature?
+        "
+      validations:
+        required: true
+  - type: textarea
+    id: learnings
+    attributes:
+      label: Learning Goals
+      description: List concepts or technologies to learn this week
+      placeholder: "
+        - Learn about zustand state management
+        "
+      validations:
+        required: true
