@@ -4,9 +4,9 @@ import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-platinum-900 to-platinum-800 dark:from-outer_space-500 dark:to-payne's_gray-500">
+    <div className="min-h-screen bg-linear-to-br from-platinum-900 to-platinum-800 dark:from-outer_space-500 dark:to-payne's_gray-500">
       {/* Header */}
-      <header className="border-b border-french_gray-300 bg-white/80 backdrop-blur-sm dark:border-payne's_gray-400 dark:bg-outer_space-500/80">
+      <header className="border-b border-french_gray-300 bg-white/80 backdrop-blur-xs dark:border-payne's_gray-400 dark:bg-outer_space-500/80">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="text-2xl font-bold text-blue_munsell-500">ProjectFlow</div>
