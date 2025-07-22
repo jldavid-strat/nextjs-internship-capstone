@@ -1,22 +1,26 @@
-// TODO: Task 2.2 - Configure authentication middleware for route protection
-// import { authMiddleware } from "@clerk/nextjs"
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-// Placeholder middleware - currently allows all routes for development
-// TODO: Replace with actual Clerk authMiddleware when authentication is implemented
-export default function middleware() {
-  // TODO: Implement actual authentication middleware
-  // For now, allow all routes so interns can navigate and see the mock pages
-  console.log("TODO: Implement Clerk authentication middleware")
+const isProtectedRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/dashboard(.*)']);
 
-  // Return undefined to allow all requests through
-  return undefined
-}
+export default clerkMiddleware(
+  async (auth, req) => {
+    // redirects the user to sign-in page
+    if (isProtectedRoute(req)) await auth.protect();
+  },
+  {
+    // only enable debugging in development environment
+    debug: process.env.NODE_ENV === 'development',
+  },
+);
 
 export const config = {
-  // TODO: Update matcher when implementing actual authentication
-  // For now, don't match any routes to allow free navigation
-  matcher: [],
-}
+  matcher: [
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
+  ],
+};
 
 /*
 TODO: Task 2.2 Implementation Notes for Interns:
