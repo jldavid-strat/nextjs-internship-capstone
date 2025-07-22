@@ -73,8 +73,8 @@ By completing this project, interns will demonstrate proficiency in:
 ## 📁 Current Project Structure
 
 ```
-project/
-├── app/                    # Next.js App Router pages
+root/
+├── app/                   # Next.js App Router pages
 │   ├── (auth)/            # Authentication routes (placeholder)
 │   ├── (dashboard)/       # Dashboard routes (placeholder)
 │   ├── dashboard/         # Main dashboard page ✅
@@ -82,7 +82,7 @@ project/
 │   ├── globals.css        # Global styles
 │   ├── layout.tsx         # Root layout
 │   └── page.tsx           # Landing page ✅
-├── components/             # Reusable UI components ✅
+├── components/            # Reusable UI components ✅
 │   ├── modals/            # Modal components (placeholder)
 │   ├── dashboard-*.tsx    # Dashboard components ✅
 │   ├── kanban-board.tsx   # Kanban board (placeholder)
@@ -91,13 +91,14 @@ project/
 │   └── theme-*.tsx        # Theme components ✅
 ├── hooks/                 # Custom React hooks (placeholder)
 ├── lib/                   # Utilities and configurations
-│   ├── db/               # Database schema (placeholder)
-│   ├── utils.ts          # Utility functions
-│   └── validations.ts    # Form validations (placeholder)
+│   ├── db/                # Database schema (placeholder)
+│   ├── utils.ts           # Utility functions
+│   └── validations.ts     # Form validations (placeholder)
 ├── stores/                # Zustand state stores (placeholder)
 ├── types/                 # TypeScript type definitions ✅
 ├── styles/                # Additional styles
 └── public/                # Static assets (placeholder images)
+└── project-docs/          # Project guidelines for setup, code review, weekly tasks, etc.
 ```
 
 ### 🚧 Implementation Status
