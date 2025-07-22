@@ -1,6 +1,5 @@
 import { SignUp } from '@clerk/nextjs';
 
-// TODO: Task 2.3 - Create sign-in and sign-up pages
 export default function SignUpPage() {
   return (
     <div className="bg-platinum-900 dark:bg-outer_space-600 flex min-h-screen items-center justify-center px-4">
@@ -14,7 +13,7 @@ export default function SignUpPage() {
           </p>
         </div>
 
-        {/* TODO: Task 2.3 - Replace with actual Clerk SignUp component */}
+        {/* TODO 2.3: add custom styling*/}
         <SignUp />
       </div>
     </div>
