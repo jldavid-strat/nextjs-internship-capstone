@@ -47,14 +47,15 @@ body:
       description: Outline the steps or approach to complete the task
       placeholder: 'Describe technical approach, dependencies, or useful resources'
 
-  - type: checkboxes
+  - type: textarea
     id: definition_of_done
     attributes:
       label: Definition of Done
-      options:
-        - label: Code written and working locally
-        - label: Self-reviewed for quality and best practices
-        - label: Tests written (if applicable)
-        - label: Documentation updated
-        - label: Feature deployed and tested
-        - label: Ready for optional peer review
+      placeholder: '
+        - [] Code written and working locally
+        - [] Self-reviewed for quality and best practices
+        - [] Tests written (if applicable)
+        - [] Documentation updated
+        - [] Feature deployed and tested
+        - [] Ready for optional peer review
+        '
