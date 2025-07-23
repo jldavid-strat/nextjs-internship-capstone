@@ -1,50 +1,27 @@
 name: Feature Task Template
 description: Standard template for creating new features
-title: "Task: [Phase] - [Feature Name]"
-labels: ["task"]
-assignees: ["jldavid-strat"]
-projects: ["jldavid-strat/1"]
+title: 'Task: [Phase] - [Feature Name]'
+labels: ['task']
+assignees: ['jldavid-strat']
+projects: ['jldavid-strat/1']
 body:
-  - type: dropdown
-    id: priority
+  - type: textarea
+    id: task-name
     attributes:
-      label: Priority
-      description: Select the priority of this task
-      options:
-        - High
-        - Medium
-        - Low
+      description: 'Task: [Phase] - [Feature Name]'
+      placeholder: '## Task: Authentication - 1.1 Setup Clerk Authentication Service'
     validations:
       required: true
 
-  - type: input
-    id: estimated_time
+  - type: textarea
+    id: task-info
     attributes:
-      label: Estimated Time
-      description: An approximate prediction of how long the will take to complete
-      placeholder: "e.g., 6 hours"
-    validations:
-      required: true
-
-  - type: input
-    id: week
-    attributes:
-      label: Week
-      description: Enter the week this task is set to be done
-      placeholder: "e.g., Week 3"
-    validations:
-      required: true
-
-  - type: dropdown
-    id: category
-    attributes:
-      label: Category
-      options:
-        - Frontend
-        - Backend
-        - Database
-        - Testing
-        - Other
+      description: 'Set the basic info about the task'
+      placeholder: "
+        **Priority**: High/Medium/Low \n
+        **Estimated Time**: X hours \n
+        **Week**: Week X \n
+        **Category**: Frontend/Backend/Database/Testing"
     validations:
       required: true
 
@@ -53,7 +30,7 @@ body:
     attributes:
       label: Description
       description: Clear description of what needs to be implemented
-      placeholder: "Short description of what the task entails"
+      placeholder: 'Short description of what the task entails'
     validations:
       required: true
 
@@ -73,7 +50,7 @@ body:
     attributes:
       label: Implementation Notes
       description: Outline the steps or approach to complete the task
-      placeholder: "Describe technical approach, dependencies, or useful resources"
+      placeholder: 'Describe technical approach, dependencies, or useful resources'
 
   - type: checkboxes
     id: definition_of_done
