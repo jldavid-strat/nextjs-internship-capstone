@@ -52,10 +52,10 @@ body:
     attributes:
       label: Definition of Done
       placeholder: '
-        - [] Code written and working locally
-        - [] Self-reviewed for quality and best practices
-        - [] Tests written (if applicable)
-        - [] Documentation updated
-        - [] Feature deployed and tested
-        - [] Ready for optional peer review
+        - [] Code written and working locally \n
+        - [] Self-reviewed for quality and best practices \n
+        - [] Tests written (if applicable) \n
+        - [] Documentation updated \n
+        - [] Feature deployed and tested \n
+        - [] Ready for optional peer review \n
         '
