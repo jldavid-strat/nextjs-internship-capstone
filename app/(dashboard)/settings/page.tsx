@@ -1,4 +1,4 @@
-import UserProfileContent from '@/components/sections/UserProfileContent';
+import UserProfileDetail from '@/components/sections/UserProfileDetail';
 import { User, Bell, Shield, Palette } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -54,7 +54,7 @@ export default function SettingsPage() {
         </div>
 
         {/* User Information */}
-        <UserProfileContent />
+        <UserProfileDetail />
       </div>
     </div>
   );
