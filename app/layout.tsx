@@ -16,7 +16,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
+      {/* TODO: add universal loading on top of the app */}
+      <html
+        lang="en"
+        suppressHydrationWarning
+      >
         <body className={inter.className}>
           <ThemeProvider>{children}</ThemeProvider>
         </body>
