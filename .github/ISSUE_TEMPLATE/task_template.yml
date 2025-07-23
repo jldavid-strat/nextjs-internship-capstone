@@ -51,11 +51,11 @@ body:
     id: definition_of_done
     attributes:
       label: Definition of Done
-      placeholder: '
+      placeholder: "
         - [] Code written and working locally \n
         - [] Self-reviewed for quality and best practices \n
         - [] Tests written (if applicable) \n
         - [] Documentation updated \n
         - [] Feature deployed and tested \n
         - [] Ready for optional peer review \n
-        '
+        "
