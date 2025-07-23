@@ -1,6 +1,8 @@
 // TODO: Task 3.1 - Design database schema for users, projects, lists, and tasks
 // TODO: Task 3.3 - Set up Drizzle ORM with type-safe schema definitions
 
+import { pgTable, text, serial, date, integer, varchar } from 'drizzle-orm/pg-core';
+
 /*
 TODO: Implementation Notes for Interns:
 
@@ -37,8 +39,40 @@ export const users = pgTable('users', {
 */
 
 // Placeholder exports to prevent import errors
-export const users = "TODO: Implement users table schema"
-export const projects = "TODO: Implement projects table schema"
-export const lists = "TODO: Implement lists table schema"
-export const tasks = "TODO: Implement tasks table schema"
-export const comments = "TODO: Implement comments table schema"
+// export const users = 'TODO: Implement users table schema';
+// export const lists = 'TODO: Implement lists table schema';
+
+export const projects = pgTable('projects', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  createdAt: date('created_at').notNull().defaultNow(),
+  updatedAt: date('updated_at'),
+  dueDate: date('due_date'),
+});
+export const tasks = pgTable('tasks', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  description: text('description'),
+  assigneeId: serial('assignee-id'),
+  priority: varchar('priority', { length: 255 }).default('low'),
+  position: integer('position').notNull(),
+  createdAt: date('created_at').notNull().defaultNow(),
+  updatedAt: date('updated_at'),
+});
+export const comments = pgTable('comments', {
+  id: serial('id').primaryKey(),
+  content: text('content').notNull(),
+  authorId: serial('author_id').notNull(),
+  createdAt: date('created_at').notNull().defaultNow(),
+  updatedAt: date('updated_at'),
+});
+
+export type InsertProject = typeof projects.$inferInsert;
+export type SelectProject = typeof projects.$inferSelect;
+
+export type InsertTask = typeof tasks.$inferInsert;
+export type SelectTask = typeof tasks.$inferSelect;
+
+export type InsertComment = typeof comments.$inferInsert;
+export type SelectComment = typeof comments.$inferSelect;
