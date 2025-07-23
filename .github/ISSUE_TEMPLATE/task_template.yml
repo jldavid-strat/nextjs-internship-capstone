@@ -6,18 +6,13 @@ assignees: ['jldavid-strat']
 projects: ['jldavid-strat/1']
 body:
   - type: textarea
-    id: task-name
-    attributes:
-      description: 'Task: [Phase] - [Feature Name]'
-      placeholder: '## Task: Authentication - 1.1 Setup Clerk Authentication Service'
-    validations:
-      required: true
-
-  - type: textarea
     id: task-info
     attributes:
-      description: 'Set the basic info about the task'
+      label: 'Task Info'
+      description: 'Enter the basic info about the task'
       placeholder: "
+        ## Task: [Phase] - [Feature Name]
+
         **Priority**: High/Medium/Low \n
         **Estimated Time**: X hours \n
         **Week**: Week X \n
