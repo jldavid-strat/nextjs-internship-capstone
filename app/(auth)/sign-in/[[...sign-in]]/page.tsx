@@ -2,19 +2,14 @@ import { SignIn } from '@clerk/nextjs';
 
 export default function SignInPage() {
   return (
-    <div className="bg-platinum-900 dark:bg-outer_space-600 flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-outer_space-500 dark:text-platinum-500 mb-2 text-3xl font-bold">
-            Welcome Back
-          </h1>
-          <p className="text-payne's_gray-500 dark:text-french_gray-400">
-            Sign in to your project management account
-          </p>
-        </div>
+    <div className="bg-platinum-900 dark:bg-outer_space-600 flex min-h-screen flex-col items-center justify-center border px-4">
+      <div className="my-2 w-full max-w-md">
+        <h1 className="text-outer_space-500 dark:text-platinum-500 mb-2 text-center text-3xl font-bold">
+          Continue with your projects!
+        </h1>
         {/* TODO 2.3: add custom styling*/}
-        <SignIn />
       </div>
+      <SignIn />
     </div>
   );
 }

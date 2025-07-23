@@ -1,21 +1,21 @@
 import { SignUp } from '@clerk/nextjs';
 
+{
+  /* TODO 2.3: add custom layout for this path*/
+  // example: <- Home (COMPONENT)
+}
 export default function SignUpPage() {
   return (
-    <div className="bg-platinum-900 dark:bg-outer_space-600 flex min-h-screen items-center justify-center px-4">
+    <div className="bg-platinum-900 dark:bg-outer_space-600 flex min-h-screen flex-col items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h1 className="text-outer_space-500 dark:text-platinum-500 mb-2 text-3xl font-bold">
-            Create Account
-          </h1>
-          <p className="text-payne's_gray-500 dark:text-french_gray-400">
             Join our project management platform
-          </p>
+          </h1>
         </div>
-
-        {/* TODO 2.3: add custom styling*/}
-        <SignUp />
       </div>
+      {/* TODO 2.3: add custom styling*/}
+      <SignUp />
     </div>
   );
 }
