@@ -17,6 +17,7 @@ import {
   Bell,
   Search,
 } from 'lucide-react';
+import { UserButton } from '@clerk/nextjs';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home, current: true },
@@ -117,9 +118,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
               <ThemeToggle />
 
-              <div className="bg-blue_munsell-500 flex h-8 w-8 items-center justify-center rounded-full font-semibold text-white">
-                U
-              </div>
+              <UserButton />
             </div>
           </div>
         </div>
