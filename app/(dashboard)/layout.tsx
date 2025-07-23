@@ -47,7 +47,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       >
         <div className="border-french_gray-300 dark:border-payne's_gray-400 flex h-16 items-center justify-between border-b px-6">
           <Link href="/" className="text-blue_munsell-500 text-2xl font-bold">
-            ProjectFlow
+            Task Flow
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}
