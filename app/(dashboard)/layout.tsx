@@ -17,7 +17,8 @@ import {
   Bell,
   Search,
 } from 'lucide-react';
-import { UserButton } from '@clerk/nextjs';
+import { UserButton, useUser } from '@clerk/nextjs';
+import ProtectedPage from '@/components/protected/ProtectedPage';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home, current: true },
@@ -30,6 +31,9 @@ const navigation = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isSignedIn } = useUser();
+
+  if (!isSignedIn) return <ProtectedPage />;
 
   return (
     <div className="bg-platinum-900 dark:bg-outer_space-600 min-h-screen">
@@ -131,3 +135,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </div>
   );
 }
+
+// function DashboardHeader() {
+//   return ();
+// }
