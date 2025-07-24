@@ -1,3 +1,4 @@
+import { getAllProjects } from '@/lib/db';
 import { Calendar, Users, MoreHorizontal } from 'lucide-react';
 
 const projects = [
@@ -64,7 +65,9 @@ const projects = [
   },
 ];
 
-export function ProjectGrid() {
+export async function ProjectGrid() {
+  const projectList = await getAllProjects();
+  console.log(projectList);
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
       {projects.map((project) => (

@@ -1,6 +1,9 @@
 // // TODO: Task 3.2 - Configure PostgreSQL database (Vercel Postgres or Neon)
 // // TODO: Task 3.5 - Implement database connection and query utilities
 
+import { db } from './connect_db';
+import { projects } from './schema';
+
 // /*
 // TODO: Implementation Notes for Interns:
 
@@ -82,3 +85,6 @@
 //     },
 //   },
 // }
+export async function getAllProjects() {
+  return await db.select().from(projects).orderBy(projects.createdAt).limit(6);
+}

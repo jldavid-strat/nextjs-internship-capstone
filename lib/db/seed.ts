@@ -1,11 +1,10 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { db } from '@/lib/db/connect_db';
 import { reset, seed } from 'drizzle-seed';
 import * as schema from '@/lib/db/schema';
 
 const { projects, tasks, comments } = schema;
 
 async function main() {
-  const db = drizzle(process.env.DATABASE_URL!);
   await reset(db, schema);
   await seed(db, { projects });
   await seed(db, { tasks });
