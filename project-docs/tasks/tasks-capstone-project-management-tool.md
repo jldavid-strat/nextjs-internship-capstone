@@ -61,12 +61,12 @@ Each intern will work through all tasks below for their individual implementatio
 ### Phase 3: Database & Backend (Weeks 3-4)
 
 - [ ] 3.0 Database Design & Setup
-- [ ] 3.1 Design database schema for users, projects, lists, and tasks
-- [ ] 3.2 Configure PostgreSQL database (Vercel Postgres or Neon)
-- [ ] 3.3 Set up Drizzle ORM with type-safe schema definitions
-- [ ] 3.4 Create database migration system
-- [ ] 3.5 Implement database connection and query utilities
-- [ ] 3.6 Set up data validation with Zod schemas
+  - [ ] 3.1 Design database schema for users, projects, lists, and tasks
+  - [ ] 3.2 Configure PostgreSQL database (Vercel Postgres or Neon)
+  - [ ] 3.3 Set up Drizzle ORM with type-safe schema definitions
+  - [ ] 3.4 Create database migration system
+  - [ ] 3.5 Implement database connection and query utilities
+  - [ ] 3.6 Set up data validation with Zod schemas
 
 ### Phase 4: Core Features (Weeks 4-6)
 

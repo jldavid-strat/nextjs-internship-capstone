@@ -1,7 +1,18 @@
 // TODO: Task 3.1 - Design database schema for users, projects, lists, and tasks
 // TODO: Task 3.3 - Set up Drizzle ORM with type-safe schema definitions
 
-import { pgTable, text, serial, date, integer, varchar } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  serial,
+  date,
+  integer,
+  varchar,
+  uuid,
+  bigserial,
+} from 'drizzle-orm/pg-core';
+import { projectStatus } from './enums';
+import { timestamp } from 'drizzle-orm/gel-core';
 
 /*
 TODO: Implementation Notes for Interns:
@@ -42,27 +53,37 @@ export const users = pgTable('users', {
 // export const users = 'TODO: Implement users table schema';
 // export const lists = 'TODO: Implement lists table schema';
 
-export const projects = pgTable('projects', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull(),
+// future considerations:
+// add public_id when passing id to API endpoint
+export const project = pgTable('project', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  teamId: bigserial('team_id', { mode: 'number' }).references(() => team.id),
   description: text('description'),
-  createdAt: date('created_at').notNull().defaultNow(),
-  updatedAt: date('updated_at'),
-  dueDate: date('due_date'),
+  status: projectStatus(),
+  statusChangedAt: date('status_changed_at').defaultNow(),
+  statusChangedBy: bigserial('status_changed_by', { mode: 'number' }).references(
+    () => team_member.member_id,
+  ),
+  dueDate: timestamp('due_date'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
+
 export const tasks = pgTable('tasks', {
-  id: serial('id').primaryKey(),
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
   title: text('title').notNull(),
   description: text('description'),
   assigneeId: serial('assignee-id'),
   priority: varchar('priority', { length: 255 }).default('low'),
   position: integer('position').notNull(),
-  createdAt: date('created_at').notNull().defaultNow(),
-  updatedAt: date('updated_at'),
+  createdAt: date('created_at').defaultNow(),
+  updatedAt: date('updated_at').defaultNow(),
 });
 export const comments = pgTable('comments', {
-  id: serial('id').primaryKey(),
-  content: text('content').notNull(),
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  description: text('description').notNull(),
+  detail: text('detail').notNull(),
   authorId: serial('author_id').notNull(),
   createdAt: date('created_at').notNull().defaultNow(),
   updatedAt: date('updated_at'),
