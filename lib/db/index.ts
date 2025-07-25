@@ -2,7 +2,7 @@
 // // TODO: Task 3.5 - Implement database connection and query utilities
 
 import { db } from './connect_db';
-import { projects } from './schema';
+import { project } from './schema';
 
 // /*
 // TODO: Implementation Notes for Interns:
@@ -86,5 +86,5 @@ import { projects } from './schema';
 //   },
 // }
 export async function getAllProjects() {
-  return await db.select().from(projects).orderBy(projects.createdAt).limit(6);
+  return await db.select().from(project).orderBy(project.createdAt).limit(6);
 }

@@ -1,6 +1,7 @@
 import { relations } from 'drizzle-orm';
 import * as table from './schema';
 
+// TODO: Task 3.1 recheck relationships
 export const userRelations = relations(table.user, ({ one, many }) => ({
   jobPosition: one(table.jobPosition, {
     fields: [table.user.jobPositionId],

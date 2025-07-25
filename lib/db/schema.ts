@@ -59,7 +59,7 @@ export const jobPosition = pgTable('job_position', {
 
 export const user = pgTable('user', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
-  technicalKey: integer('technical_key').unique(),
+  // clerkId: integer('clerk_id').,
   firstName: varchar('first_name', { length: 255 }).notNull(),
   lastName: varchar('last_name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).notNull(),
