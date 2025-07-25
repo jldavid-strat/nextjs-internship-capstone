@@ -1,6 +1,6 @@
 import { pgEnum } from 'drizzle-orm/pg-core';
 
-export const projectStatus = pgEnum('project_status', [
+export const projectStatusEnum = pgEnum('project_status', [
   'active',
   'completed',
   'archived',
@@ -8,22 +8,22 @@ export const projectStatus = pgEnum('project_status', [
   'cancelled',
 ]);
 
-export const taskStatus = pgEnum('task_status', [
+export const taskStatusEnum = pgEnum('task_status', [
   'in_progress',
   'planning',
   'review',
   'done',
 ]);
 
-export const taskPriority = pgEnum('task_priority', ['low', 'medium', 'high']);
+export const taskPriorityEnum = pgEnum('task_priority', ['low', 'medium', 'high']);
 
-export const teamMemberRole = pgEnum('team_member_role', [
+export const teamMemberRoleEnum = pgEnum('team_member_role', [
   'team_manager',
   'viewer',
   'member',
 ]);
 
-export const jobPositionName = pgEnum('job_position_name', [
+export const jobPositionNameEnum = pgEnum('job_position_name', [
   'project_manager',
   'developer',
   'qa',
