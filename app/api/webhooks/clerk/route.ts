@@ -7,10 +7,13 @@ export async function POST(req: NextRequest) {
     const evt = await verifyWebhook(req);
 
     if (evt.type === 'user.created') {
+      // use createUser()
       console.log('userId', evt.data.id);
     } else if (evt.type === 'user.updated') {
+      // use updateUser()
       console.log('userId', evt.data.id);
     } else if (evt.type === 'user.deleted') {
+      // use deleteUser()
       console.log('userId', evt.data.id);
     }
     return new Response('Webhook received', { status: 200 });
