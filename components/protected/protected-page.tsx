@@ -4,13 +4,7 @@ import { useEffect } from 'react';
 
 export default function ProtectedPage() {
   useEffect(() => {
-    const delay = setTimeout(() => {
-      redirect('/sign-in');
-    }, 1000);
-
-    return () => {
-      clearTimeout(delay);
-    };
+    redirect('/sign-in');
   }, []);
 
   return (
