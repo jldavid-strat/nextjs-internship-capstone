@@ -11,7 +11,8 @@ interface clerkUserProps {
   clerkId: string;
   firstName: string;
   lastName: string;
-  primaryEmailAddress: string;
+  imgUrl: string;
+  emailAddress: string;
   createdAt: Date;
   updatedAt: Date | undefined;
 }
@@ -22,7 +23,8 @@ export async function createUser(clerkUser: clerkUserProps) {
       clerkId: clerkUser.clerkId,
       firstName: clerkUser.firstName,
       lastName: clerkUser.lastName,
-      primaryEmailAddress: clerkUser.primaryEmailAddress,
+      imgUrl: clerkUser.imgUrl,
+      emailAddress: clerkUser.emailAddress,
       createdAt: clerkUser.createdAt,
     });
   } catch (error) {
@@ -37,8 +39,9 @@ export async function updatedUser(clerkUser: clerkUserProps) {
       .set({
         firstName: clerkUser.firstName,
         lastName: clerkUser.lastName,
-        primaryEmailAddress: clerkUser.primaryEmailAddress,
-        updatedAt: clerkUser.createdAt,
+        imgUrl: clerkUser.imgUrl,
+        emailAddress: clerkUser.emailAddress,
+        updatedAt: clerkUser.updatedAt,
       })
       .where(eq(user.clerkId, clerkUser.clerkId));
 
