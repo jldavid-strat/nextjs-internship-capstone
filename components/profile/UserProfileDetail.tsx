@@ -5,10 +5,9 @@ import { Fragment, useState } from 'react';
 import { Edit, Loader2 } from 'lucide-react';
 
 export default function UserProfileDetail() {
-  // TODO 2.4: maybe replace this with useUser for better user actions
   const { isLoaded, isSignedIn, user } = useUser();
-  const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const disabledCursorStyle = isEditing ? 'cursor-not-allowed' : ' ';
 
@@ -18,16 +17,14 @@ export default function UserProfileDetail() {
 
   const updateUser = async (formData: FormData) => {
     setIsEditing(false);
+    setIsLoading(true);
 
-    console.log('before', isLoading);
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    console.log('after', isLoading);
+    // TODO: handle updates or changes to email addresses
     await user.update({
       firstName: formData.get('first-name') as string,
       lastName: formData.get('last-name') as string,
     });
     setIsLoading(false);
-    console.log('user updated');
   };
 
   return (
@@ -106,8 +103,8 @@ export default function UserProfileDetail() {
 
           {/* buttons */}
           {isLoading ? (
-            <div>
-              <p>Updating..</p>
+            <div className="flex gap-4">
+              <p>Updating...</p>
               <Loader2 className="dark:text-platinum-500 animate-spin"></Loader2>
             </div>
           ) : (
@@ -116,11 +113,16 @@ export default function UserProfileDetail() {
                 <Fragment>
                   <button
                     onClick={() => setIsEditing(false)}
+                    disabled={isLoading}
                     className="text-payne's_gray-500 dark:text-french_gray-400 hover:bg-platinum-500 dark:hover:bg-payne's_gray-400 rounded-lg px-4 py-2 transition-colors"
                   >
                     Cancel
                   </button>
-                  <button className="bg-blue_munsell-500 hover:bg-blue_munsell-600 rounded-lg px-4 py-2 text-white transition-colors">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="bg-blue_munsell-500 hover:bg-blue_munsell-600 rounded-lg px-4 py-2 text-white transition-colors"
+                  >
                     Save Changes
                   </button>
                 </Fragment>
