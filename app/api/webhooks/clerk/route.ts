@@ -1,7 +1,8 @@
 // TODO: handle webhook in production via Svix
 
 import { verifyWebhook } from '@clerk/nextjs/webhooks';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { isClerkAPIResponseError } from '@clerk/nextjs/errors';
 
 // boilerplate for clerk webhook
 
@@ -23,18 +24,26 @@ export async function POST(req: NextRequest) {
     switch (evt.type) {
       case 'user.created':
         // use createUser(clerkUser)
-        return new Response('User has been created successfully ', { status: 200 });
+        return new NextResponse('User has been created successfully ', { status: 200 });
       case 'user.updated':
         // use updateUser(clerkUser)
-        return new Response('User has been updated successfully ', { status: 200 });
+        return new NextResponse('User has been updated successfully ', { status: 200 });
       case 'user.deleted':
         // use deleteUser(clerkUser)
-        return new Response('User has been successfully deleted', { status: 200 });
+        return new NextResponse('User has been successfully deleted', { status: 200 });
       default:
-        return new Response('Cannot handle request', { status: 400 });
+        return new NextResponse('Cannot handle request', { status: 400 });
     }
-  } catch (err) {
-    console.error('Error verifying webhook:', err);
-    return new Response('Error verifying webhook', { status: 400 });
+  } catch (error) {
+    if (isClerkAPIResponseError(error)) {
+      console.error('Clerk API Error verifying webhook:', error.errors);
+      console.error('Full error details:', JSON.stringify(error, null, 2));
+
+      return NextResponse.json({ error: 'Webhook verification failed' }, { status: 400 });
+    }
+
+    // Handle non-Clerk errors
+    console.error('Unexpected error verifying webhook:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
