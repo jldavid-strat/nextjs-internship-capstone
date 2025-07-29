@@ -18,7 +18,7 @@ import {
   Search,
 } from 'lucide-react';
 import { UserButton, useUser } from '@clerk/nextjs';
-import ProtectedPage from '@/components/protected/ProtectedPage';
+import ProtectedPage from '@/components/protected/protected-page';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home, current: true },

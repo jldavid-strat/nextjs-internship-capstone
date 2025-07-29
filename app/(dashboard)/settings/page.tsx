@@ -1,4 +1,4 @@
-import UserProfileDetail from '@/components/profile/UserProfileDetail';
+import UserProfileDetail from '@/components/profile/user-profile-detail';
 import { User, Bell, Shield, Palette } from 'lucide-react';
 
 export default function SettingsPage() {
