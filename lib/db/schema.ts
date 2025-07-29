@@ -1,227 +1,258 @@
-// TODO: Task 3.1 - Design database schema for users, projects, lists, and tasks
-// TODO: Task 3.3 - Set up Drizzle ORM with type-safe schema definitions
-
 import {
   pgTable,
-  text,
   integer,
   varchar,
-  bigserial,
+  text,
+  timestamp,
   primaryKey,
+  uniqueIndex,
+  bigserial,
+  index,
 } from 'drizzle-orm/pg-core';
-import * as enums from './enums';
-import { timestamp } from 'drizzle-orm/pg-core';
+import {
+  jobPositionNameEnum,
+  memberRoleEnum,
+  projectStatusEnum,
+  taskPriorityEnum,
+  taskStatusEnum,
+} from './enums';
 
-/*
-TODO: Implementation Notes for Interns:
+export const user = pgTable(
+  'user',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    clerkId: varchar('clerk_id').unique().notNull(),
+    firstName: varchar('first_name', { length: 255 }).notNull(),
+    lastName: varchar('last_name', { length: 255 }).notNull(),
+    imgUrl: varchar('img_url').notNull(),
+    emailAddress: varchar('email', { length: 255 }).notNull(),
+    jobPositionId: bigserial('job_position_id', { mode: 'number' }).references(
+      () => jobPosition.id,
+    ),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => [index('clerk_id_idx').on(table.clerkId)],
+);
 
-1. Install Drizzle ORM dependencies:
-   - drizzle-orm
-   - drizzle-kit
-   - @vercel/postgres (if using Vercel Postgres)
-   - OR pg + @types/pg (if using regular PostgreSQL)
+export const jobPosition = pgTable(
+  'job_position',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    name: jobPositionNameEnum('name').notNull(),
+  },
+  (table) => [index('job_position_id').on(table.id)],
+);
 
-2. Define schemas for:
-   - users (id, clerkId, email, name, createdAt, updatedAt)
-   - projects (id, name, description, ownerId, createdAt, updatedAt, dueDate)
-   - lists (id, name, projectId, position, createdAt, updatedAt)
-   - tasks (id, title, description, listId, assigneeId, priority, dueDate, position, createdAt, updatedAt)
-   - comments (id, content, taskId, authorId, createdAt, updatedAt)
+export const project = pgTable(
+  'project',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    title: varchar('title', { length: 255 }).notNull(),
+    description: text('description'),
+    status: projectStatusEnum('status').notNull().default('active'),
+    statusChangedAt: timestamp('status_changed_at'),
+    statusChangedBy: bigserial('status_changed_by', { mode: 'number' }).references(
+      () => user.id,
+    ),
+    ownerId: bigserial('owner_id', { mode: 'number' })
+      .references(() => user.id)
+      .notNull(),
+    dueDate: timestamp('due_date'),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => [index('project_id_idx').on(table.id)],
+);
 
-3. Set up proper relationships between tables
-4. Add indexes for performance
-5. Configure migrations
+export const projectMember = pgTable(
+  'project_member',
+  {
+    userId: bigserial('user_id', { mode: 'number' })
+      .references(() => user.id)
+      .notNull(),
+    projectId: bigserial('project_id', { mode: 'number' })
+      .references(() => project.id)
+      .notNull(),
+    projectMemberRole: memberRoleEnum('project_member_role').notNull().default('member'),
+    joinedAt: timestamp('joined_at').defaultNow(),
+  },
+  (table) => [
+    primaryKey({
+      name: 'custom_project_member_pk',
+      columns: [table.userId, table.projectId],
+    }),
+    uniqueIndex('project_member_unique_idx').on(table.userId, table.projectId),
+  ],
+);
 
-Example structure:
-import { pgTable, text, timestamp, integer, uuid } from 'drizzle-orm/pg-core'
-
-export const users = pgTable('users', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  clerkId: text('clerk_id').notNull().unique(),
-  email: text('email').notNull(),
-  name: text('name').notNull(),
+export const projectDiscussion = pgTable('project_discussion', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  projectId: bigserial('project_id', { mode: 'number' })
+    .references(() => project.id)
+    .notNull(),
+  title: varchar('title', { length: 255 }).notNull(),
+  content: text('content').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-})
-
-// ... other tables
-*/
-
-// Placeholder exports to prevent import errors
-// export const users = 'TODO: Implement users table schema';
-// export const lists = 'TODO: Implement lists table schema';
-
-export const jobPosition = pgTable('job_position', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
-  name: varchar('name', { length: 255 }).notNull(),
-  description: text('description'),
+  closedAt: timestamp('closed_at'),
 });
 
-export const user = pgTable('user', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
-  clerkId: varchar('clerk_id', { length: 255 }).notNull(),
-  firstName: varchar('first_name', { length: 255 }).notNull(),
-  lastName: varchar('last_name', { length: 255 }).notNull(),
-  imgUrl: varchar('img_url', { length: 255 }).notNull(),
-  emailAddress: varchar('email', { length: 255 }).notNull(),
-  jobPositionId: integer('job_position_id').references(() => jobPosition.id),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
-
-export const team = pgTable('team', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
-  name: varchar('name', { length: 255 }).notNull(),
-  description: varchar('description', { length: 500 }),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
-
-export const memberRole = pgTable('member_role', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
-  name: enums.teamMemberRoleEnum('name').notNull(),
-});
+export const team = pgTable(
+  'team',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    name: varchar('name', { length: 255 }).notNull(),
+    description: text('description'),
+    projectId: bigserial('project_id', { mode: 'number' }).references(() => project.id),
+    color: varchar('color', { length: 7 }),
+    createdBy: bigserial('created_by', { mode: 'number' })
+      .references(() => user.id)
+      .notNull(),
+    createdAt: timestamp('created_at').defaultNow(),
+  },
+  (table) => [index('team_id_idx').on(table.id)],
+);
 
 export const teamMember = pgTable(
   'team_member',
   {
-    memberId: integer('member_id').references(() => user.id),
-    teamId: integer('team_id').references(() => team.id),
-    memberRoleId: integer('member_role_id').references(() => memberRole.id),
+    userId: bigserial('user_id', { mode: 'number' })
+      .references(() => user.id)
+      .notNull(),
+    teamId: bigserial('team_id', { mode: 'number' })
+      .references(() => team.id)
+      .notNull(),
+    teamMemberRole: memberRoleEnum('team_member_role').notNull().default('member'),
     joinedAt: timestamp('joined_at').defaultNow(),
   },
-  (table) => ({
-    pk: primaryKey({ columns: [table.memberId, table.teamId] }),
-  }),
+  (table) => [
+    primaryKey({
+      name: 'custom_project_member_pk',
+      columns: [table.userId, table.teamId],
+    }),
+    uniqueIndex('team_member_unique_idx').on(table.userId, table.teamId),
+  ],
 );
 
-// consider: add public_id when passing id to API endpoint
-export const project = pgTable('project', {
+export const milestone = pgTable('milestone', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
-  teamId: integer('team_id').references(() => team.id),
-  title: varchar('title', { length: 255 }),
-  description: varchar('description', { length: 1000 }),
-  status: enums.projectStatusEnum('status').default('active'),
-  statusChangedAt: timestamp('status_changed_at'),
-  statusChangedBy: integer('status_changed_by').references(() => teamMember.memberId),
-  dueDate: timestamp('due_date'),
+  milestoneName: varchar('milestone_name', { length: 255 }).notNull(),
+  projectId: bigserial('project_id', { mode: 'number' })
+    .references(() => project.id)
+    .notNull(),
   createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
+  achievedAt: timestamp('achieved_at'),
 });
 
+export const kanbanColumn = pgTable(
+  'kanban_column',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    name: varchar('name', { length: 255 }).notNull(),
+    description: text('description'),
+    projectId: bigserial('project_id', { mode: 'number' })
+      .references(() => project.id)
+      .notNull(),
+    position: integer('position').notNull(),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => [index('kanban_column_id_idx').on(table.id)],
+);
+
+export const label = pgTable(
+  'label',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    name: varchar('name', { length: 255 }).notNull().unique(),
+    color: varchar('color', { length: 7 }),
+  },
+  (table) => [index('label_id_idx').on(table.id)],
+);
 // consider: create detail column (as markdown) for entering details about the task
-export const task = pgTable('task', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
-  title: varchar('title', { length: 255 }),
-  description: text('description'),
-  projectId: integer('project_id').references(() => project.id),
-  status: enums.taskStatusEnum('status').default('planning'),
-  priority: enums.taskPriorityEnum('priority').default('low'),
-  dueDate: timestamp('due_date'),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
-
-export const label = pgTable('label', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
-  name: varchar('name', { length: 100 }).notNull().unique(),
-  color: varchar('color', { length: 7 }),
-});
+export const task = pgTable(
+  'task',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    title: varchar('title', { length: 255 }).notNull(),
+    description: text('description'),
+    detail: text('detail'),
+    projectId: bigserial('project_id', { mode: 'number' })
+      .references(() => project.id)
+      .notNull(),
+    kanbanColumnId: integer('kanban_column_id')
+      .references(() => kanbanColumn.id)
+      .notNull(),
+    milestoneId: bigserial('milestone_id', { mode: 'number' }).references(
+      () => milestone.id,
+    ),
+    status: taskStatusEnum('status').notNull().default('planning'),
+    priority: taskPriorityEnum('priority').notNull().default('medium'),
+    dueDate: timestamp('due_date'),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => [index('task_id_idx').on(table.id)],
+);
 
 export const taskLabel = pgTable(
   'task_label',
   {
-    taskId: integer('task_id').references(() => task.id),
-    labelId: integer('label_id').references(() => label.id),
+    taskId: bigserial('task_id', { mode: 'number' })
+      .references(() => task.id)
+      .notNull(),
+    labelId: bigserial('label_id', { mode: 'number' })
+      .references(() => label.id)
+      .notNull(),
   },
-  (table) => ({
-    pk: primaryKey({ columns: [table.taskId, table.labelId] }),
-  }),
+  (table) => [primaryKey({ columns: [table.taskId, table.labelId] })],
 );
 
 export const taskHistory = pgTable('task_history', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
-  taskId: integer('task_id').references(() => task.id),
-  changedBy: integer('changed_by').references(() => teamMember.memberId),
-  changeDescription: text('change_description'),
-  changedAt: timestamp('changed_at').defaultNow(),
+  taskId: bigserial('task_id', { mode: 'number' })
+    .references(() => task.id)
+    .notNull(),
+  changedBy: bigserial('changed_by', { mode: 'number' })
+    .references(() => user.id)
+    .notNull(),
+  changeDescription: text('change_description').notNull(),
+  changedAt: timestamp('changed_at').notNull().defaultNow(),
 });
 
 export const taskAssignee = pgTable(
   'task_assignee',
   {
-    taskId: integer('task_id').references(() => task.id),
-    assigneeId: integer('assignee_id').references(() => teamMember.memberId),
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    taskId: bigserial('task_id', { mode: 'number' })
+      .references(() => task.id)
+      .notNull(),
+    assigneeId: bigserial('assignee_id', { mode: 'number' })
+      .references(() => user.id)
+      .notNull(),
     assignedAt: timestamp('assigned_at').defaultNow(),
   },
-  (table) => ({
-    pk: primaryKey({ columns: [table.taskId, table.assigneeId] }),
-  }),
+  (table) => [uniqueIndex('task_assignee_idx').on(table.taskId, table.assigneeId)],
 );
 
 export const taskAttachment = pgTable('task_attachment', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
-  taskId: integer('task_id').references(() => task.id),
-  filename: varchar('filename', { length: 255 }),
-  filetype: varchar('filetype', { length: 100 }),
-  filepath: varchar('filepath', { length: 500 }),
+  taskId: bigserial('task_id', { mode: 'number' }).references(() => task.id),
+  filename: varchar('filename', { length: 255 }).notNull(),
+  filetype: varchar('filetype', { length: 100 }).notNull(),
+  filepath: varchar('filepath', { length: 500 }).notNull(),
   uploadedAt: timestamp('uploaded_at').defaultNow(),
 });
 
 export const taskComment = pgTable('task_comment', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
-  content: text('content'),
-  taskId: integer('task_id').references(() => task.id),
-  authorId: integer('author_id').references(() => teamMember.memberId),
+  content: text('content').notNull(),
+  taskId: bigserial('task_id', { mode: 'number' })
+    .references(() => task.id)
+    .notNull(),
+  authorId: bigserial('author_id', { mode: 'number' })
+    .references(() => user.id)
+    .notNull(),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
-
-export const columnList = pgTable('column_list', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
-  name: varchar('name', { length: 255 }),
-  description: varchar('description', { length: 500 }),
-  projectId: integer('project_id').references(() => project.id),
-  position: integer('position'),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
-
-export const milestone = pgTable('milestone', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
-  milestoneName: varchar('milestone_name', { length: 255 }),
-  projectId: integer('project_id').references(() => project.id),
-  achievedAt: timestamp('achieved_at'),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-export const columnListNames = pgTable(
-  'column_list_names',
-  {
-    columnListId: integer('column_list_id').references(() => columnList.id),
-    projectId: integer('project_id').references(() => project.id),
-  },
-  (table) => ({
-    pk: primaryKey({ columns: [table.columnListId, table.projectId] }),
-  }),
-);
-
-export const columnTaskList = pgTable(
-  'column_task_list',
-  {
-    taskId: integer('task_id').references(() => task.id),
-    columnListId: integer('column_list_id').references(() => columnList.id),
-  },
-  (table) => ({
-    pk: primaryKey({ columns: [table.taskId, table.columnListId] }),
-  }),
-);
-
-// export type InsertProject = typeof projects.$inferInsert;
-// export type SelectProject = typeof projects.$inferSelect;
-
-// export type InsertTask = typeof tasks.$inferInsert;
-// export type SelectTask = typeof tasks.$inferSelect;
-
-// export type InsertComment = typeof comments.$inferInsert;
-// export type SelectComment = typeof comments.$inferSelect;
