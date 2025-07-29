@@ -17,7 +17,9 @@ interface clerkUserProps {
   updatedAt: Date | undefined;
 }
 
-export async function createUser(clerkUser: clerkUserProps) {
+export async function createUser(
+  clerkUser: Omit<clerkUserProps, 'updatedAt'>,
+): Promise<void> {
   try {
     await db.insert(user).values({
       clerkId: clerkUser.clerkId,
@@ -32,7 +34,7 @@ export async function createUser(clerkUser: clerkUserProps) {
   }
 }
 
-export async function updatedUser(clerkUser: clerkUserProps) {
+export async function updatedUser(clerkUser: clerkUserProps): Promise<void> {
   try {
     await db
       .update(user)
@@ -52,7 +54,7 @@ export async function updatedUser(clerkUser: clerkUserProps) {
   }
 }
 
-export async function deleteUser(clerkId: clerkUserProps['clerkId']) {
+export async function deleteUser(clerkId: clerkUserProps['clerkId']): Promise<void> {
   try {
     await db.delete(user).where(eq(user.clerkId, clerkId));
     redirect('/sign-up');
