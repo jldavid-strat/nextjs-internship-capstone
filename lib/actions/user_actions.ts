@@ -52,9 +52,9 @@ export async function updatedUser(clerkUser: clerkUserProps) {
   }
 }
 
-export async function deleteUser(clerkUser: clerkUserProps) {
+export async function deleteUser(clerkId: clerkUserProps['clerkId']) {
   try {
-    await db.delete(user).where(eq(user.clerkId, clerkUser.clerkId));
+    await db.delete(user).where(eq(user.clerkId, clerkId));
     redirect('/sign-up');
   } catch (error) {
     console.error(error);
