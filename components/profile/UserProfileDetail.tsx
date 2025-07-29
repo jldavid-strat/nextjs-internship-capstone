@@ -4,6 +4,9 @@ import { useUser } from '@clerk/nextjs';
 import { Fragment, useState } from 'react';
 import { Edit, Loader2 } from 'lucide-react';
 
+// TODO: handle updates or changes to email addresses
+// TODO: add interface to do password-related actions (change password and forgot password)
+
 export default function UserProfileDetail() {
   const { isLoaded, isSignedIn, user } = useUser();
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -19,7 +22,6 @@ export default function UserProfileDetail() {
     setIsEditing(false);
     setIsLoading(true);
 
-    // TODO: handle updates or changes to email addresses
     await user.update({
       firstName: formData.get('first-name') as string,
       lastName: formData.get('last-name') as string,
