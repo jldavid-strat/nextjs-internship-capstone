@@ -1,3 +1,4 @@
+import { ProjectGrid } from '@/components/project-grid';
 import { Plus, Search, Filter } from 'lucide-react';
 
 export default function ProjectsPage() {
@@ -17,7 +18,6 @@ export default function ProjectsPage() {
           New Project
         </button>
       </div>
-
       {/* Implementation Tasks Banner */}
       <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20">
         <h3 className="mb-2 text-sm font-medium text-yellow-800 dark:text-yellow-200">
@@ -30,7 +30,6 @@ export default function ProjectsPage() {
           <li>• Task 4.6: Add project and task search/filtering capabilities</li>
         </ul>
       </div>
-
       {/* Search and Filter Bar */}
       <div className="flex flex-col gap-4 sm:flex-row">
         <div className="relative flex-1">
@@ -49,7 +48,6 @@ export default function ProjectsPage() {
           Filter
         </button>
       </div>
-
       {/* Projects Grid Placeholder */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -87,7 +85,8 @@ export default function ProjectsPage() {
           </div>
         ))}
       </div>
-
+      {/* try project list */}
+      <ProjectGrid />
       {/* Component Placeholders */}
       <div className="mt-8 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6 dark:border-gray-600 dark:bg-gray-800/50">
         <h3 className="mb-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
