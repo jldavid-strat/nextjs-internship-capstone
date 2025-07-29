@@ -24,15 +24,12 @@ export async function POST(req: NextRequest) {
       case 'user.created':
         // use createUser(clerkUser)
         return new Response('User has been created successfully ', { status: 200 });
-        break;
       case 'user.updated':
         // use updateUser(clerkUser)
         return new Response('User has been updated successfully ', { status: 200 });
-        break;
       case 'user.deleted':
         // use deleteUser(clerkUser)
         return new Response('User has been successfully deleted', { status: 200 });
-        break;
       default:
         return new Response('Cannot handle request', { status: 400 });
     }
