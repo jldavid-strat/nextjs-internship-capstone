@@ -27,9 +27,6 @@ suggestions.txt
 # vercel
 .vercel
 
-# drizzle migrations
-/migrations
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
