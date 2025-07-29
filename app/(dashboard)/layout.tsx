@@ -31,9 +31,11 @@ const navigation = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { isSignedIn } = useUser();
+  const { isSignedIn, isLoaded } = useUser();
 
-  if (!isSignedIn) return <ProtectedPage />;
+  if (isLoaded) {
+    if (!isSignedIn) return <ProtectedPage />;
+  }
 
   return (
     <div className="bg-platinum-900 dark:bg-outer_space-600 min-h-screen">
