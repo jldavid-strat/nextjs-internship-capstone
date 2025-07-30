@@ -5,7 +5,6 @@ import {
   text,
   timestamp,
   primaryKey,
-  bigserial,
   index,
 } from 'drizzle-orm/pg-core';
 import {
@@ -19,15 +18,13 @@ import {
 export const user = pgTable(
   'user',
   {
-    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
     clerkId: varchar('clerk_id').unique().notNull(),
     firstName: varchar('first_name', { length: 255 }).notNull(),
     lastName: varchar('last_name', { length: 255 }).notNull(),
     imgUrl: varchar('img_url').notNull(),
     emailAddress: varchar('email', { length: 255 }).notNull(),
-    jobPositionId: bigserial('job_position_id', { mode: 'number' }).references(
-      () => jobPosition.id,
-    ),
+    jobPositionId: integer('job_position_id').references(() => jobPosition.id),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },
@@ -37,7 +34,7 @@ export const user = pgTable(
 export const jobPosition = pgTable(
   'job_position',
   {
-    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
     name: jobPositionNameEnum('name').notNull(),
   },
   (table) => [index('job_position_id').on(table.id)],
@@ -46,15 +43,13 @@ export const jobPosition = pgTable(
 export const project = pgTable(
   'project',
   {
-    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
     title: varchar('title', { length: 255 }).notNull(),
     description: text('description'),
     status: projectStatusEnum('status').notNull().default('active'),
     statusChangedAt: timestamp('status_changed_at'),
-    statusChangedBy: bigserial('status_changed_by', { mode: 'number' }).references(
-      () => user.id,
-    ),
-    ownerId: bigserial('owner_id', { mode: 'number' })
+    statusChangedBy: integer('status_changed_by').references(() => user.id),
+    ownerId: integer('owner_id')
       .references(() => user.id)
       .notNull(),
     dueDate: timestamp('due_date'),
@@ -67,10 +62,10 @@ export const project = pgTable(
 export const projectMember = pgTable(
   'project_member',
   {
-    userId: bigserial('user_id', { mode: 'number' })
+    userId: integer('user_id')
       .references(() => user.id)
       .notNull(),
-    projectId: bigserial('project_id', { mode: 'number' })
+    projectId: integer('project_id')
       .references(() => project.id)
       .notNull(),
     projectMemberRole: memberRoleEnum('project_member_role').notNull().default('member'),
@@ -85,8 +80,8 @@ export const projectMember = pgTable(
 );
 
 export const projectDiscussion = pgTable('project_discussion', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
-  projectId: bigserial('project_id', { mode: 'number' })
+  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+  projectId: integer('project_id')
     .references(() => project.id)
     .notNull(),
   title: varchar('title', { length: 255 }).notNull(),
@@ -98,12 +93,12 @@ export const projectDiscussion = pgTable('project_discussion', {
 export const team = pgTable(
   'team',
   {
-    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
     name: varchar('name', { length: 255 }).notNull(),
     description: text('description'),
-    projectId: bigserial('project_id', { mode: 'number' }).references(() => project.id),
+    projectId: integer('project_id').references(() => project.id),
     color: varchar('color', { length: 7 }),
-    createdBy: bigserial('created_by', { mode: 'number' })
+    createdBy: integer('created_by')
       .references(() => user.id)
       .notNull(),
     createdAt: timestamp('created_at').defaultNow(),
@@ -114,10 +109,10 @@ export const team = pgTable(
 export const teamMember = pgTable(
   'team_member',
   {
-    userId: bigserial('user_id', { mode: 'number' })
+    userId: integer('user_id')
       .references(() => user.id)
       .notNull(),
-    teamId: bigserial('team_id', { mode: 'number' })
+    teamId: integer('team_id')
       .references(() => team.id)
       .notNull(),
     teamMemberRole: memberRoleEnum('team_member_role').notNull().default('member'),
@@ -132,9 +127,9 @@ export const teamMember = pgTable(
 );
 
 export const milestone = pgTable('milestone', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
   milestoneName: varchar('milestone_name', { length: 255 }).notNull(),
-  projectId: bigserial('project_id', { mode: 'number' })
+  projectId: integer('project_id')
     .references(() => project.id)
     .notNull(),
   createdAt: timestamp('created_at').defaultNow(),
@@ -144,10 +139,10 @@ export const milestone = pgTable('milestone', {
 export const kanbanColumn = pgTable(
   'kanban_column',
   {
-    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
     name: varchar('name', { length: 255 }).notNull(),
     description: text('description'),
-    projectId: bigserial('project_id', { mode: 'number' })
+    projectId: integer('project_id')
       .references(() => project.id)
       .notNull(),
     position: integer('position').notNull(),
@@ -160,7 +155,7 @@ export const kanbanColumn = pgTable(
 export const label = pgTable(
   'label',
   {
-    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
     name: varchar('name', { length: 255 }).notNull().unique(),
     color: varchar('color', { length: 7 }),
   },
@@ -170,19 +165,17 @@ export const label = pgTable(
 export const task = pgTable(
   'task',
   {
-    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
     title: varchar('title', { length: 255 }).notNull(),
     description: text('description'),
     detail: text('detail'),
-    projectId: bigserial('project_id', { mode: 'number' })
+    projectId: integer('project_id')
       .references(() => project.id)
       .notNull(),
     kanbanColumnId: integer('kanban_column_id')
       .references(() => kanbanColumn.id)
       .notNull(),
-    milestoneId: bigserial('milestone_id', { mode: 'number' }).references(
-      () => milestone.id,
-    ),
+    milestoneId: integer('milestone_id').references(() => milestone.id),
     status: taskStatusEnum('status').notNull().default('planning'),
     priority: taskPriorityEnum('priority').notNull().default('medium'),
     dueDate: timestamp('due_date'),
@@ -195,10 +188,10 @@ export const task = pgTable(
 export const taskLabel = pgTable(
   'task_label',
   {
-    taskId: bigserial('task_id', { mode: 'number' })
+    taskId: integer('task_id')
       .references(() => task.id)
       .notNull(),
-    labelId: bigserial('label_id', { mode: 'number' })
+    labelId: integer('label_id')
       .references(() => label.id)
       .notNull(),
   },
@@ -208,11 +201,11 @@ export const taskLabel = pgTable(
 );
 
 export const taskHistory = pgTable('task_history', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
-  taskId: bigserial('task_id', { mode: 'number' })
+  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+  taskId: integer('task_id')
     .references(() => task.id)
     .notNull(),
-  changedBy: bigserial('changed_by', { mode: 'number' })
+  changedBy: integer('changed_by')
     .references(() => user.id)
     .notNull(),
   changeDescription: text('change_description').notNull(),
@@ -222,10 +215,10 @@ export const taskHistory = pgTable('task_history', {
 export const taskAssignee = pgTable(
   'task_assignee',
   {
-    taskId: bigserial('task_id', { mode: 'number' })
+    taskId: integer('task_id')
       .references(() => task.id)
       .notNull(),
-    assigneeId: bigserial('assignee_id', { mode: 'number' })
+    assigneeId: integer('assignee_id')
       .references(() => user.id)
       .notNull(),
     assignedAt: timestamp('assigned_at').defaultNow(),
@@ -239,8 +232,8 @@ export const taskAssignee = pgTable(
 );
 
 export const taskAttachment = pgTable('task_attachment', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
-  taskId: bigserial('task_id', { mode: 'number' }).references(() => task.id),
+  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+  taskId: integer('task_id').references(() => task.id),
   filename: varchar('filename', { length: 255 }).notNull(),
   filetype: varchar('filetype', { length: 100 }).notNull(),
   filepath: varchar('filepath', { length: 500 }).notNull(),
@@ -248,12 +241,12 @@ export const taskAttachment = pgTable('task_attachment', {
 });
 
 export const taskComment = pgTable('task_comment', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
   content: text('content').notNull(),
-  taskId: bigserial('task_id', { mode: 'number' })
+  taskId: integer('task_id')
     .references(() => task.id)
     .notNull(),
-  authorId: bigserial('author_id', { mode: 'number' })
+  authorId: integer('author_id')
     .references(() => user.id)
     .notNull(),
   createdAt: timestamp('created_at').defaultNow(),
