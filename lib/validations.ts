@@ -1,5 +1,8 @@
 // TODO: Task 3.6 - Set up data validation with Zod schemas
 
+import { z } from 'zod';
+import { PROJECT_STATUS_VALUES } from './constants/enums';
+
 /*
 TODO: Implementation Notes for Interns:
 
@@ -34,8 +37,19 @@ export const taskSchema = z.object({
 */
 
 // Placeholder exports to prevent import errors
-export const projectSchema = "TODO: Implement project validation schema"
-export const taskSchema = "TODO: Implement task validation schema"
-export const userSchema = "TODO: Implement user validation schema"
-export const listSchema = "TODO: Implement list validation schema"
-export const commentSchema = "TODO: Implement comment validation schema"
+export const ProjectSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(256, 'Title is too long'),
+  description: z.string().max(300, 'Description too long').optional(),
+  status: z.enum(PROJECT_STATUS_VALUES).default('active'),
+  statusChangedAt: z.date().optional(),
+  statusChangedBy: z.int().positive().optional(),
+  ownerId: z.int().positive().optional(),
+  dueDate: z.date().optional(),
+  createdAt: z.date().default(new Date()),
+  updatedAt: z.date().optional(),
+});
+
+export const taskSchema = 'TODO: Implement task validation schema';
+export const userSchema = 'TODO: Implement user validation schema';
+export const listSchema = 'TODO: Implement list validation schema';
+export const commentSchema = 'TODO: Implement comment validation schema';
