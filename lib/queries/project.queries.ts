@@ -8,10 +8,11 @@ interface queryResult<T = undefined> {
   data?: T;
 }
 
-type SelectBlog = typeof project.$inferSelect;
-type InsertBlog = typeof project.$inferInsert;
+type SelectProject = typeof project.$inferSelect;
+type InsertProject = typeof project.$inferInsert;
+type UpdateProject = typeof project.$inferInsert;
 
-export async function createProject(projectData: InsertBlog): Promise<queryResult> {
+export async function createProject(projectData: InsertProject): Promise<queryResult> {
   try {
     await db.insert(project).values({
       title: projectData.title,
@@ -29,7 +30,7 @@ export async function createProject(projectData: InsertBlog): Promise<queryResul
 }
 export async function updateProject(
   projectId: number,
-  projectData: InsertBlog,
+  projectData: UpdateProject,
 ): Promise<queryResult> {
   try {
     await db
@@ -63,7 +64,7 @@ export async function deleteProject(projectId: number): Promise<queryResult> {
   }
 }
 
-export async function getAllProjects(): Promise<queryResult<SelectBlog[] | null>> {
+export async function getAllProjects(): Promise<queryResult<SelectProject[] | null>> {
   try {
     const projects = await db.select().from(project).orderBy(project.createdAt);
 
@@ -82,7 +83,7 @@ export async function getAllProjects(): Promise<queryResult<SelectBlog[] | null>
 }
 export async function getProjectById(
   projectId: number,
-): Promise<queryResult<SelectBlog | null>> {
+): Promise<queryResult<SelectProject | null>> {
   try {
     const singularProject = await db
       .select()
