@@ -1,3 +1,4 @@
+import { timestamp, integer } from 'drizzle-orm/pg-core';
 // TypeScript type definitions
 // Task 1.3: Set up project structure and folder organization
 
@@ -11,14 +12,16 @@ export interface User {
 }
 
 export interface Project {
-  id: string;
-  name: string;
+  id: number;
+  title: string;
   description?: string;
-  ownerId: string;
+  status: string;
+  statusChangedAt?: Date;
+  statusChangedby?: number;
+  ownerId: number;
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt?: Date;
   dueDate?: Date;
-  lists: List[];
 }
 
 export interface List {
