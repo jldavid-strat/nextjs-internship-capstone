@@ -5,7 +5,6 @@ import {
   text,
   timestamp,
   primaryKey,
-  uniqueIndex,
   bigserial,
   index,
 } from 'drizzle-orm/pg-core';
@@ -82,7 +81,6 @@ export const projectMember = pgTable(
       name: 'custom_project_member_pk',
       columns: [table.userId, table.projectId],
     }),
-    uniqueIndex('project_member_unique_idx').on(table.userId, table.projectId),
   ],
 );
 
@@ -127,10 +125,9 @@ export const teamMember = pgTable(
   },
   (table) => [
     primaryKey({
-      name: 'custom_project_member_pk',
+      name: 'custom_team_member_pk',
       columns: [table.userId, table.teamId],
     }),
-    uniqueIndex('team_member_unique_idx').on(table.userId, table.teamId),
   ],
 );
 
@@ -205,7 +202,9 @@ export const taskLabel = pgTable(
       .references(() => label.id)
       .notNull(),
   },
-  (table) => [primaryKey({ columns: [table.taskId, table.labelId] })],
+  (table) => [
+    primaryKey({ name: 'custom_task_label_pk', columns: [table.taskId, table.labelId] }),
+  ],
 );
 
 export const taskHistory = pgTable('task_history', {
@@ -223,7 +222,6 @@ export const taskHistory = pgTable('task_history', {
 export const taskAssignee = pgTable(
   'task_assignee',
   {
-    id: bigserial('id', { mode: 'number' }).primaryKey(),
     taskId: bigserial('task_id', { mode: 'number' })
       .references(() => task.id)
       .notNull(),
@@ -232,7 +230,12 @@ export const taskAssignee = pgTable(
       .notNull(),
     assignedAt: timestamp('assigned_at').defaultNow(),
   },
-  (table) => [uniqueIndex('task_assignee_idx').on(table.taskId, table.assigneeId)],
+  (table) => [
+    primaryKey({
+      name: 'custom_task_assignee_pk',
+      columns: [table.taskId, table.assigneeId],
+    }),
+  ],
 );
 
 export const taskAttachment = pgTable('task_attachment', {
