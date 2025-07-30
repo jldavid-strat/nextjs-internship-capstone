@@ -17,8 +17,9 @@ export const taskStatusEnum = pgEnum('task_status', [
 
 export const taskPriorityEnum = pgEnum('task_priority', ['low', 'medium', 'high']);
 
-export const teamMemberRoleEnum = pgEnum('team_member_role', [
-  'team_manager',
+export const memberRoleEnum = pgEnum('team_member_role', [
+  'owner',
+  'admin',
   'viewer',
   'member',
 ]);
