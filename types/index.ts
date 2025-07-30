@@ -1,5 +1,4 @@
 import { ProjectStatus } from '@/lib/constants/enums';
-import { timestamp, integer } from 'drizzle-orm/pg-core';
 // TypeScript type definitions
 // Task 1.3: Set up project structure and folder organization
 

@@ -1,7 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../db/connect_db';
 import { project } from '../db/schema';
-import { Project } from '@/types';
 
 interface queryResult<T = undefined> {
   success: boolean;
@@ -9,7 +8,10 @@ interface queryResult<T = undefined> {
   data?: T;
 }
 
-export async function createProject(projectData: Project): Promise<queryResult> {
+type SelectBlog = typeof project.$inferSelect;
+type InsertBlog = typeof project.$inferInsert;
+
+export async function createProject(projectData: InsertBlog): Promise<queryResult> {
   try {
     await db.insert(project).values({
       title: projectData.title,
@@ -27,7 +29,7 @@ export async function createProject(projectData: Project): Promise<queryResult> 
 }
 export async function updateProject(
   projectId: number,
-  projectData: Project,
+  projectData: InsertBlog,
 ): Promise<queryResult> {
   try {
     await db
@@ -36,7 +38,7 @@ export async function updateProject(
         title: projectData.title,
         description: projectData.description,
         statusChangedAt: projectData.statusChangedAt,
-        statusChangedBy: projectData.statusChangedby,
+        statusChangedBy: projectData.statusChangedBy,
         status: projectData.status,
         ownerId: projectData.ownerId,
         dueDate: projectData.dueDate,
@@ -61,7 +63,7 @@ export async function deleteProject(projectId: number): Promise<queryResult> {
   }
 }
 
-export async function getAllProjects(): Promise<queryResult<Project[] | null>> {
+export async function getAllProjects(): Promise<queryResult<SelectBlog[] | null>> {
   try {
     const projects = await db.select().from(project).orderBy(project.createdAt);
 
@@ -80,7 +82,7 @@ export async function getAllProjects(): Promise<queryResult<Project[] | null>> {
 }
 export async function getProjectById(
   projectId: number,
-): Promise<queryResult<Project | null>> {
+): Promise<queryResult<SelectBlog | null>> {
   try {
     const singularProject = await db
       .select()
@@ -90,7 +92,7 @@ export async function getProjectById(
     return {
       success: true,
       message: `Successfully retrieve project`,
-      data: singularProject,
+      data: singularProject[0],
     };
   } catch (error) {
     return {
