@@ -7,6 +7,7 @@ import {
   primaryKey,
   index,
   uuid,
+  bigint,
 } from 'drizzle-orm/pg-core';
 import {
   jobPositionNameEnum,
@@ -23,9 +24,13 @@ export const user = pgTable(
     clerkId: varchar('clerk_id').unique().notNull(),
     firstName: varchar('first_name', { length: 255 }).notNull(),
     lastName: varchar('last_name', { length: 255 }).notNull(),
-    imgUrl: varchar('img_url').notNull(),
+    imgLink: varchar('img_url').notNull(),
     primaryEmailAddress: varchar('primary_email_address', { length: 255 }).notNull(),
-    jobPositionId: integer('job_position_id').references(() => jobPosition.id),
+
+    // default to 'none'
+    jobPositionId: bigint('job_position_id', { mode: 'number' })
+      .references(() => jobPosition.id)
+      .default(1),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },
@@ -35,8 +40,8 @@ export const user = pgTable(
 export const jobPosition = pgTable(
   'job_position',
   {
-    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
-    name: jobPositionNameEnum('name').notNull(),
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    name: jobPositionNameEnum('name').notNull().unique(),
   },
   (table) => [index('job_position_id').on(table.id)],
 );
@@ -50,7 +55,7 @@ export const project = pgTable(
     status: projectStatusEnum('status').notNull().default('active'),
     statusChangedAt: timestamp('status_changed_at'),
     statusChangedBy: integer('status_changed_by').references(() => user.id),
-    ownerId: integer('owner_id')
+    ownerId: uuid('owner_id')
       .references(() => user.id)
       .notNull(),
     dueDate: timestamp('due_date'),
@@ -81,7 +86,7 @@ export const projectMember = pgTable(
 );
 
 export const projectDiscussion = pgTable('project_discussion', {
-  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
   projectId: uuid('project_id')
     .references(() => project.id)
     .notNull(),
@@ -91,15 +96,28 @@ export const projectDiscussion = pgTable('project_discussion', {
   closedAt: timestamp('closed_at'),
 });
 
+export const teamProjects = pgTable(
+  'team_projects',
+  {
+    teamId: uuid('team_id').references(() => team.id),
+    projectId: uuid('project_id').references(() => project.id),
+  },
+  (table) => [
+    primaryKey({
+      name: 'custom_team_projects_pk',
+      columns: [table.teamId, table.projectId],
+    }),
+  ],
+);
+
 export const team = pgTable(
   'team',
   {
     id: uuid('id').primaryKey().defaultRandom(),
     name: varchar('name', { length: 300 }).notNull(),
     description: varchar('description', { length: 300 }),
-    projectId: uuid('project_id').references(() => project.id),
     color: varchar('color', { length: 7 }),
-    createdBy: integer('created_by')
+    createdBy: uuid('created_by')
       .references(() => user.id)
       .notNull(),
     createdAt: timestamp('created_at').defaultNow(),
@@ -129,7 +147,7 @@ export const teamMember = pgTable(
 );
 
 export const milestone = pgTable('milestone', {
-  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
   milestoneName: varchar('milestone_name', { length: 255 }).notNull(),
   projectId: uuid('project_id')
     .references(() => project.id)
@@ -141,7 +159,7 @@ export const milestone = pgTable('milestone', {
 export const kanbanColumn = pgTable(
   'kanban_column',
   {
-    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     name: varchar('name', { length: 255 }).notNull(),
     description: varchar('description', { length: 300 }),
     projectId: uuid('project_id')
@@ -157,17 +175,18 @@ export const kanbanColumn = pgTable(
 export const label = pgTable(
   'label',
   {
-    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     name: varchar('name', { length: 255 }).notNull().unique(),
     color: varchar('color', { length: 7 }),
   },
   (table) => [index('label_id_idx').on(table.id)],
 );
+
 // consider: create detail column (as markdown) for entering details about the task
 export const task = pgTable(
   'task',
   {
-    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     title: varchar('title', { length: 300 }).notNull(),
     description: varchar('description', { length: 300 }),
     detail: text('detail'),
@@ -178,8 +197,8 @@ export const task = pgTable(
       .references(() => kanbanColumn.id)
       .notNull(),
     milestoneId: integer('milestone_id').references(() => milestone.id),
-    status: taskStatusEnum('status').notNull().default('planning'),
-    priority: taskPriorityEnum('priority').notNull().default('medium'),
+    status: taskStatusEnum('status').notNull().default('none'),
+    priority: taskPriorityEnum('priority').notNull().default('none'),
     dueDate: timestamp('due_date'),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
@@ -190,7 +209,7 @@ export const task = pgTable(
 export const taskLabel = pgTable(
   'task_label',
   {
-    taskId: integer('task_id')
+    taskId: bigint('task_id', { mode: 'number' })
       .references(() => task.id)
       .notNull(),
     labelId: integer('label_id')
@@ -203,8 +222,8 @@ export const taskLabel = pgTable(
 );
 
 export const taskHistory = pgTable('task_history', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  taskId: integer('task_id')
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  taskId: bigint('task_id', { mode: 'number' })
     .references(() => task.id)
     .notNull(),
   changedBy: uuid('changed_by')
@@ -217,7 +236,7 @@ export const taskHistory = pgTable('task_history', {
 export const taskAssignee = pgTable(
   'task_assignee',
   {
-    taskId: integer('task_id')
+    taskId: bigint('task_id', { mode: 'number' })
       .references(() => task.id)
       .notNull(),
     assigneeId: uuid('assignee_id')
@@ -234,11 +253,11 @@ export const taskAssignee = pgTable(
 );
 
 export const taskAttachment = pgTable('task_attachment', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  taskId: integer('task_id').references(() => task.id),
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  taskId: bigint('task_id', { mode: 'number' }).references(() => task.id),
   filename: varchar('filename', { length: 255 }).notNull(),
   filetype: varchar('filetype', { length: 100 }).notNull(),
-  filepath: varchar('filepath', { length: 500 }).notNull(),
+  filepath: text('filepath').notNull(),
   uploadedBy: uuid('uploaded_by_id')
     .references(() => user.id)
     .notNull(),
@@ -247,9 +266,9 @@ export const taskAttachment = pgTable('task_attachment', {
 
 // TODO: add ability for comments to have replies
 export const taskComment = pgTable('task_comment', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
   content: text('content').notNull(),
-  taskId: integer('task_id')
+  taskId: bigint('task_id', { mode: 'number' })
     .references(() => task.id)
     .notNull(),
 
