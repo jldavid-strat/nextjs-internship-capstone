@@ -23,7 +23,7 @@ export const user = pgTable(
     firstName: varchar('first_name', { length: 255 }).notNull(),
     lastName: varchar('last_name', { length: 255 }).notNull(),
     imgUrl: varchar('img_url').notNull(),
-    emailAddress: varchar('email', { length: 255 }).notNull(),
+    primaryEmailAddress: varchar('primary_email_address', { length: 255 }).notNull(),
     jobPositionId: integer('job_position_id').references(() => jobPosition.id),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
@@ -102,6 +102,7 @@ export const team = pgTable(
       .references(() => user.id)
       .notNull(),
     createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
   },
   (table) => [index('team_id_idx').on(table.id)],
 );
@@ -240,12 +241,16 @@ export const taskAttachment = pgTable('task_attachment', {
   uploadedAt: timestamp('uploaded_at').defaultNow(),
 });
 
+// TODO: add ability for comments to have replies
 export const taskComment = pgTable('task_comment', {
   id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
   content: text('content').notNull(),
   taskId: integer('task_id')
     .references(() => task.id)
     .notNull(),
+
+  // check if viable
+  parentCommentId: integer('parent_comment_id'),
   authorId: integer('author_id')
     .references(() => user.id)
     .notNull(),
