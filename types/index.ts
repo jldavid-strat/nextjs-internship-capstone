@@ -57,11 +57,11 @@ export interface Comment {
   updatedAt: Date;
 }
 
-export type queryResult<T> =
+export type queryResult<T = undefined> =
   | {
       success: true;
       message: string;
-      data: T;
+      data?: T;
     }
   | {
       success: false;

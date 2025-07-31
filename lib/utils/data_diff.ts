@@ -37,7 +37,8 @@ export default function getDataDiff(original: Data, current: Data): Changes | nu
     // Handle different types of comparisons
     if (
       originalValue !== currentValue &&
-      String(originalValue) !== String(currentValue)
+      String(originalValue) !== String(currentValue) &&
+      JSON.stringify(originalValue) !== JSON.stringify(currentValue)
     ) {
       changes[key] = {
         oldValue: originalValue,

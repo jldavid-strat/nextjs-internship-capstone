@@ -1,16 +1,8 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../db/connect_db';
 import { project } from '../db/schema';
-
-interface queryResult<T = undefined> {
-  success: boolean;
-  message: string;
-  data?: T;
-}
-
-type SelectProject = typeof project.$inferSelect;
-type InsertProject = typeof project.$inferInsert;
-type UpdateProject = typeof project.$inferInsert;
+import { queryResult } from '@/types';
+import { InsertProject, SelectProject, UpdateProject } from '@/types/db.types';
 
 export async function createProject(projectData: InsertProject): Promise<queryResult> {
   try {
@@ -20,14 +12,25 @@ export async function createProject(projectData: InsertProject): Promise<queryRe
       status: projectData.status,
       ownerId: projectData.ownerId,
       dueDate: projectData.dueDate,
-      createdAt: projectData.createdAt,
+      createdAt: new Date(),
     });
 
     return { success: true, message: `Project successfully created` };
   } catch (error) {
-    return { success: false, message: `Failed to create project. Error ${error}` };
+    return {
+      success: false,
+      message: `Failed to create project`,
+      error: JSON.stringify(error),
+    };
   }
 }
+
+/* TODO: check if drizzle does granular update
+  If no 
+  1. only update the fields that have been modified
+  2. create specific update functions for fields reference other fields 
+*/
+
 export async function updateProject(
   projectId: number,
   projectData: UpdateProject,
@@ -43,14 +46,17 @@ export async function updateProject(
         status: projectData.status,
         ownerId: projectData.ownerId,
         dueDate: projectData.dueDate,
-        createdAt: projectData.createdAt,
         updatedAt: projectData.updatedAt,
       })
       .where(eq(project.id, projectId));
 
     return { success: true, message: `Project successfully updated` };
   } catch (error) {
-    return { success: false, message: `Failed to update project. Error ${error}` };
+    return {
+      success: false,
+      message: `Failed to update project`,
+      error: JSON.stringify(error),
+    };
   }
 }
 
@@ -60,11 +66,16 @@ export async function deleteProject(projectId: number): Promise<queryResult> {
 
     return { success: true, message: `Project successfully deleted` };
   } catch (error) {
-    return { success: false, message: `Failed to delete project. Error ${error}` };
+    return {
+      success: false,
+      message: `Failed to delete project`,
+      error: JSON.stringify(error),
+    };
   }
 }
 
-export async function getAllProjects(): Promise<queryResult<SelectProject[] | null>> {
+// NOTE: change to Partial<SelectProject[]> if you don't need all the columns
+export async function getAllProjects(): Promise<queryResult<SelectProject[]>> {
   try {
     const projects = await db.select().from(project).orderBy(project.createdAt);
 
@@ -77,13 +88,13 @@ export async function getAllProjects(): Promise<queryResult<SelectProject[] | nu
     return {
       success: false,
       message: `Failed retrieve all projects. Error ${error}`,
-      data: null,
+      error: JSON.stringify(error),
     };
   }
 }
 export async function getProjectById(
   projectId: number,
-): Promise<queryResult<SelectProject | null>> {
+): Promise<queryResult<SelectProject>> {
   try {
     const singularProject = await db
       .select()
@@ -98,8 +109,8 @@ export async function getProjectById(
   } catch (error) {
     return {
       success: false,
-      message: `Failed to project. Error ${error}`,
-      data: null,
+      message: `Failed to project.`,
+      error: JSON.stringify(error),
     };
   }
 }
