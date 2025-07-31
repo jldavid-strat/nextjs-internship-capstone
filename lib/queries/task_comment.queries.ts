@@ -1,13 +1,11 @@
 import { queryResult } from '@/types';
 import { db } from '../db/connect_db';
-import { taskComment } from '../db/schema';
+import { task, taskComment, taskLabel } from '../db/schema';
 import { eq } from 'drizzle-orm';
-
-type InsertTaskComment = typeof taskComment.$inferInsert;
-type UpdateTaskComment = typeof taskComment.$inferInsert;
+import { TaskComment, CreateTaskComment, UpdateTaskComment } from '@/types/db.types';
 
 export async function createTask(
-  taskCommentData: InsertTaskComment,
+  taskCommentData: CreateTaskComment,
 ): Promise<queryResult> {
   try {
     await db.insert(taskComment).values({
@@ -27,7 +25,7 @@ export async function createTask(
 }
 
 export async function updateTaskComment(
-  taskCommentId: number,
+  taskCommentId: TaskComment['id'],
   taskCommentData: UpdateTaskComment,
 ): Promise<queryResult> {
   try {
@@ -43,8 +41,57 @@ export async function updateTaskComment(
   } catch (error) {
     return {
       success: false,
-      message: `Failed to update task comment. Error ${error}`,
+      message: `Failed to update task comment`,
       error: JSON.stringify(error),
     };
   }
 }
+export async function deleteTaskComment(
+  taskCommentId: TaskComment['id'],
+): Promise<queryResult> {
+  try {
+    await db.delete(taskComment).where(eq(taskComment.id, taskCommentId));
+
+    return { success: true, message: `Task comment successfully deleted` };
+  } catch (error) {
+    return {
+      success: false,
+      message: `Failed to delete task comment`,
+      error: JSON.stringify(error),
+    };
+  }
+}
+
+// TODO: retrieve all comments from a specific task
+// export async function getTaskComments(
+//   taskId: SelectTask['id'],
+//   taskCommentId: SelectTaskComment['id'],
+// ): Promise<queryResult<SelectTaskComment[]>> {
+//   try {
+//     // const taskComments = await db
+//     //   .select()
+//     //   .from(taskComment)
+//     //   .innerJoin(task, eq(taskId, taskCommentId))
+//     //   .where(eq());
+//     const taskComments = await db.query.task.findMany({
+//       where: eq(task.id, taskId),
+//       with: {
+//         taskComment: {
+//           where: (taskComment, { eq }) => eq(taskComment., taskCommentId),
+//         },
+//       },
+//     });
+
+//     return {
+//       success: true,
+//       message: `Task comment successfully retrieved`,
+//       data: taskComments,
+//     };
+//   } catch (error) {
+//     return {
+//       success: false,
+//       message: `Failed to delete task comment`,
+//       error: JSON.stringify(error),
+//     };
+//   }
+// }

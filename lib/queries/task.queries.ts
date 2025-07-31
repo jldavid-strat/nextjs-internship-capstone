@@ -2,9 +2,9 @@ import { queryResult } from '@/types';
 import { db } from '../db/connect_db';
 import { task } from '../db/schema';
 import { eq } from 'drizzle-orm';
-import { InsertTask, UpdateTask } from '@/types/db.types';
+import { CreateTask, Task, UpdateTask } from '@/types/db.types';
 
-export async function createTask(taskData: InsertTask): Promise<queryResult> {
+export async function createTask(taskData: CreateTask): Promise<queryResult> {
   try {
     await db.insert(task).values({
       title: taskData.title,
@@ -28,7 +28,7 @@ export async function createTask(taskData: InsertTask): Promise<queryResult> {
 }
 
 export async function updateTeam(
-  taskId: number,
+  taskId: Task['id'],
   taskData: UpdateTask,
 ): Promise<queryResult> {
   try {

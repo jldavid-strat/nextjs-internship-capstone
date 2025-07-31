@@ -2,9 +2,9 @@ import { eq } from 'drizzle-orm';
 import { db } from '../db/connect_db';
 import { team, teamMember, user } from '../db/schema';
 import { queryResult } from '@/types';
-import { InsertTeam, UpdateTeam } from '@/types/db.types';
+import { Team, CreateTeam, User, UpdateTeam } from '@/types/db.types';
 
-export async function createTeam(teamData: InsertTeam): Promise<queryResult> {
+export async function createTeam(teamData: CreateTeam): Promise<queryResult> {
   try {
     await db.insert(team).values({
       name: teamData.name,
@@ -25,7 +25,7 @@ export async function createTeam(teamData: InsertTeam): Promise<queryResult> {
 }
 
 export async function updateTeam(
-  teamId: number,
+  teamId: Team['id'],
   teamData: UpdateTeam,
 ): Promise<queryResult> {
   try {
@@ -52,7 +52,7 @@ export async function updateTeam(
   }
 }
 
-export async function deleteTeam(teamId: number): Promise<queryResult> {
+export async function deleteTeam(teamId: Team['id']): Promise<queryResult> {
   try {
     await db.delete(team).where(eq(team.id, teamId));
 
@@ -69,7 +69,7 @@ export async function deleteTeam(teamId: number): Promise<queryResult> {
 }
 
 // retrieves teams where user is a member
-export async function getUserTeams(userId: number) {
+export async function getUserTeams(userId: User['id']) {
   try {
     const teams = await db
       .select()
@@ -88,7 +88,7 @@ export async function getUserTeams(userId: number) {
 }
 
 // retrieve specific team of user
-export async function getTeam(userId: number, teamId: number) {
+export async function getTeam(userId: Team['id'], teamId: Team['id']) {
   try {
     const userTeam = await db
       .select()

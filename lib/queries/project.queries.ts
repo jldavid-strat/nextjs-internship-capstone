@@ -2,9 +2,9 @@ import { eq } from 'drizzle-orm';
 import { db } from '../db/connect_db';
 import { project } from '../db/schema';
 import { queryResult } from '@/types';
-import { InsertProject, SelectProject, UpdateProject } from '@/types/db.types';
+import { Project, CreateProject, UpdateProject } from '@/types/db.types';
 
-export async function createProject(projectData: InsertProject): Promise<queryResult> {
+export async function createProject(projectData: CreateProject): Promise<queryResult> {
   try {
     await db.insert(project).values({
       title: projectData.title,
@@ -32,7 +32,7 @@ export async function createProject(projectData: InsertProject): Promise<queryRe
 */
 
 export async function updateProject(
-  projectId: number,
+  projectId: Project['id'],
   projectData: UpdateProject,
 ): Promise<queryResult> {
   try {
@@ -60,7 +60,7 @@ export async function updateProject(
   }
 }
 
-export async function deleteProject(projectId: number): Promise<queryResult> {
+export async function deleteProject(projectId: Project['id']): Promise<queryResult> {
   try {
     await db.delete(project).where(eq(project.id, projectId));
 
@@ -75,7 +75,7 @@ export async function deleteProject(projectId: number): Promise<queryResult> {
 }
 
 // NOTE: change to Partial<SelectProject[]> if you don't need all the columns
-export async function getAllProjects(): Promise<queryResult<SelectProject[]>> {
+export async function getAllProjects(): Promise<queryResult<Project[]>> {
   try {
     const projects = await db.select().from(project).orderBy(project.createdAt);
 
@@ -93,8 +93,8 @@ export async function getAllProjects(): Promise<queryResult<SelectProject[]>> {
   }
 }
 export async function getProjectById(
-  projectId: number,
-): Promise<queryResult<SelectProject>> {
+  projectId: Project['id'],
+): Promise<queryResult<Project>> {
   try {
     const singularProject = await db
       .select()
