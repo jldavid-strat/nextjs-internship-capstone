@@ -7,13 +7,20 @@ export const PROJECT_STATUS_VALUES = [
   'cancelled',
 ] as const;
 
-export const TASK_STATUS_VALUES = ['in_progress', 'planning', 'review', 'done'] as const;
+export const TASK_STATUS_VALUES = [
+  'none',
+  'in_progress',
+  'planning',
+  'review',
+  'done',
+] as const;
 
-export const TASK_PRIORITY_VALUES = ['low', 'medium', 'high'] as const;
+export const TASK_PRIORITY_VALUES = ['none', 'low', 'medium', 'high'] as const;
 
 export const MEMBER_ROLE_VALUES = ['owner', 'admin', 'viewer', 'member'] as const;
 
 export const JOB_POSITION_VALUES = [
+  'none',
   'project_manager',
   'developer',
   'qa',
