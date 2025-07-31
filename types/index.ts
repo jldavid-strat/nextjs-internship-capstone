@@ -57,11 +57,17 @@ export interface Comment {
   updatedAt: Date;
 }
 
-export interface queryResult<T = undefined> {
-  success: boolean;
-  message: string;
-  data?: T;
-}
+export type queryResult<T> =
+  | {
+      success: true;
+      message: string;
+      data: T;
+    }
+  | {
+      success: false;
+      message: string;
+      error: string;
+    };
 
 // Note for interns: These types should match your database schema
 // Update as needed when implementing the actual database schema
