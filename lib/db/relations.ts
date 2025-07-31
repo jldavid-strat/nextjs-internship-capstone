@@ -1,148 +1,144 @@
 import { relations } from 'drizzle-orm';
 import * as table from './schema';
 
-// TODO: Task 3.1 recheck relationships
-export const userRelations = relations(table.user, ({ one, many }) => ({
-  jobPosition: one(table.jobPosition, {
-    fields: [table.user.jobPositionId],
-    references: [table.jobPosition.id],
+// TODO: recheck relationships
+export const userRelations = relations(table.users, ({ one, many }) => ({
+  jobPosition: one(table.jobPositions, {
+    fields: [table.users.jobPositionId],
+    references: [table.jobPositions.id],
   }),
-  ownedProjects: many(table.project),
-  projectMemberships: many(table.projectMember),
-  teamMemberships: many(table.teamMember),
-  createdTeams: many(table.team),
-  taskAssignments: many(table.taskAssignee),
-  taskComments: many(table.taskComment),
+  ownedProjects: many(table.projects),
+  projectMemberships: many(table.projectMembers),
+  teamMemberships: many(table.teamMembers),
+  createdTeams: many(table.teams),
+  taskAssignments: many(table.taskAssignees),
+  taskComments: many(table.taskComments),
   taskHistories: many(table.taskHistory),
 }));
 
-export const projectRelations = relations(table.project, ({ one, many }) => ({
-  owner: one(table.user, {
-    fields: [table.project.ownerId],
-    references: [table.user.id],
+export const projectRelations = relations(table.projects, ({ one, many }) => ({
+  owner: one(table.users, {
+    fields: [table.projects.ownerId],
+    references: [table.users.id],
   }),
-  statusChanger: one(table.user, {
-    fields: [table.project.statusChangedBy],
-    references: [table.user.id],
+  statusChanger: one(table.users, {
+    fields: [table.projects.statusChangedBy],
+    references: [table.users.id],
   }),
-  members: many(table.projectMember),
-  teams: many(table.team),
-  tasks: many(table.task),
-  discussions: many(table.projectDiscussion),
-  milestones: many(table.milestone),
-  kanbanColumns: many(table.kanbanColumn),
+  members: many(table.projectMembers),
+  teams: many(table.teams),
+  tasks: many(table.tasks),
+  discussions: many(table.projectDiscussions),
+  milestones: many(table.milestones),
+  kanbanColumns: many(table.kanbanColumns),
 }));
 
-export const projectMemberRelations = relations(table.projectMember, ({ one }) => ({
-  user: one(table.user, {
-    fields: [table.projectMember.userId],
-    references: [table.user.id],
+export const projectMemberRelations = relations(table.projectMembers, ({ one }) => ({
+  user: one(table.users, {
+    fields: [table.projectMembers.userId],
+    references: [table.users.id],
   }),
-  project: one(table.project, {
-    fields: [table.projectMember.projectId],
-    references: [table.project.id],
-  }),
-}));
-
-export const teamRelations = relations(table.team, ({ one, many }) => ({
-  project: one(table.project, {
-    fields: [table.team.projectId],
-    references: [table.project.id],
-  }),
-  creator: one(table.user, {
-    fields: [table.team.createdBy],
-    references: [table.user.id],
-  }),
-  members: many(table.teamMember),
-}));
-
-export const teamMemberRelations = relations(table.teamMember, ({ one }) => ({
-  user: one(table.user, {
-    fields: [table.teamMember.userId],
-    references: [table.user.id],
-  }),
-  team: one(table.team, {
-    fields: [table.teamMember.teamId],
-    references: [table.team.id],
+  project: one(table.projects, {
+    fields: [table.projectMembers.projectId],
+    references: [table.projects.id],
   }),
 }));
 
-export const taskRelations = relations(table.task, ({ one, many }) => ({
-  project: one(table.project, {
-    fields: [table.task.projectId],
-    references: [table.project.id],
+export const teamRelations = relations(table.teams, ({ one, many }) => ({
+  creator: one(table.users, {
+    fields: [table.teams.createdBy],
+    references: [table.users.id],
   }),
-  kanbanColumn: one(table.kanbanColumn, {
-    fields: [table.task.kanbanColumnId],
-    references: [table.kanbanColumn.id],
+  members: many(table.teamMembers),
+}));
+
+export const teamMemberRelations = relations(table.teamMembers, ({ one }) => ({
+  user: one(table.users, {
+    fields: [table.teamMembers.userId],
+    references: [table.users.id],
   }),
-  milestone: one(table.milestone, {
-    fields: [table.task.milestoneId],
-    references: [table.milestone.id],
+  team: one(table.teams, {
+    fields: [table.teamMembers.teamId],
+    references: [table.teams.id],
   }),
-  labels: many(table.taskLabel),
-  assignees: many(table.taskAssignee),
-  comments: many(table.taskComment),
-  attachments: many(table.taskAttachment),
+}));
+
+export const taskRelations = relations(table.tasks, ({ one, many }) => ({
+  project: one(table.projects, {
+    fields: [table.tasks.projectId],
+    references: [table.projects.id],
+  }),
+  kanbanColumn: one(table.kanbanColumns, {
+    fields: [table.tasks.kanbanColumnId],
+    references: [table.kanbanColumns.id],
+  }),
+  milestone: one(table.milestones, {
+    fields: [table.tasks.milestoneId],
+    references: [table.milestones.id],
+  }),
+  labels: many(table.taskLabels),
+  assignees: many(table.taskAssignees),
+  comments: many(table.taskComments),
+  attachments: many(table.taskAttachments),
   history: many(table.taskHistory),
 }));
 
-export const milestoneRelations = relations(table.milestone, ({ one, many }) => ({
-  project: one(table.project, {
-    fields: [table.milestone.projectId],
-    references: [table.project.id],
+export const milestoneRelations = relations(table.milestones, ({ one, many }) => ({
+  project: one(table.projects, {
+    fields: [table.milestones.projectId],
+    references: [table.projects.id],
   }),
-  tasks: many(table.task),
+  tasks: many(table.tasks),
 }));
 
-export const kanbanColumnRelations = relations(table.kanbanColumn, ({ one, many }) => ({
-  project: one(table.project, {
-    fields: [table.kanbanColumn.projectId],
-    references: [table.project.id],
+export const kanbanColumnRelations = relations(table.kanbanColumns, ({ one, many }) => ({
+  project: one(table.projects, {
+    fields: [table.kanbanColumns.projectId],
+    references: [table.projects.id],
   }),
-  tasks: many(table.task),
+  tasks: many(table.tasks),
 }));
 
-export const taskLabelRelations = relations(table.taskLabel, ({ one }) => ({
-  task: one(table.task, {
-    fields: [table.taskLabel.taskId],
-    references: [table.task.id],
+export const taskLabelRelations = relations(table.taskLabels, ({ one }) => ({
+  task: one(table.tasks, {
+    fields: [table.taskLabels.taskId],
+    references: [table.tasks.id],
   }),
-  label: one(table.label, {
-    fields: [table.taskLabel.labelId],
-    references: [table.label.id],
-  }),
-}));
-
-export const taskAssigneeRelations = relations(table.taskAssignee, ({ one }) => ({
-  task: one(table.task, {
-    fields: [table.taskAssignee.taskId],
-    references: [table.task.id],
-  }),
-  assignee: one(table.user, {
-    fields: [table.taskAssignee.assigneeId],
-    references: [table.user.id],
+  label: one(table.labels, {
+    fields: [table.taskLabels.labelId],
+    references: [table.labels.id],
   }),
 }));
 
-export const taskCommentRelations = relations(table.taskComment, ({ one }) => ({
-  task: one(table.task, {
-    fields: [table.taskComment.taskId],
-    references: [table.task.id],
+export const taskAssigneeRelations = relations(table.taskAssignees, ({ one }) => ({
+  task: one(table.tasks, {
+    fields: [table.taskAssignees.taskId],
+    references: [table.tasks.id],
   }),
-  author: one(table.user, {
-    fields: [table.taskComment.authorId],
-    references: [table.user.id],
+  assignee: one(table.users, {
+    fields: [table.taskAssignees.assigneeId],
+    references: [table.users.id],
+  }),
+}));
+
+export const taskCommentRelations = relations(table.taskComments, ({ one }) => ({
+  task: one(table.tasks, {
+    fields: [table.taskComments.taskId],
+    references: [table.tasks.id],
+  }),
+  author: one(table.users, {
+    fields: [table.taskComments.authorId],
+    references: [table.users.id],
   }),
 }));
 
 export const taskHistoryRelations = relations(table.taskHistory, ({ one }) => ({
-  task: one(table.task, {
+  task: one(table.tasks, {
     fields: [table.taskHistory.taskId],
-    references: [table.task.id],
+    references: [table.tasks.id],
   }),
-  changedBy: one(table.user, {
+  changedBy: one(table.users, {
     fields: [table.taskHistory.changedBy],
-    references: [table.user.id],
+    references: [table.users.id],
   }),
 }));

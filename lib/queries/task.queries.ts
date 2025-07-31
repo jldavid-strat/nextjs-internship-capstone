@@ -1,12 +1,12 @@
 import { queryResult } from '@/types';
 import { db } from '../db/connect_db';
-import { task } from '../db/schema';
+import { tasks } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { CreateTask, Task, UpdateTask } from '@/types/db.types';
 
 export async function createTask(taskData: CreateTask): Promise<queryResult> {
   try {
-    await db.insert(task).values({
+    await db.insert(tasks).values({
       title: taskData.title,
       description: taskData.description,
       projectId: taskData.projectId,
@@ -33,7 +33,7 @@ export async function updateTeam(
 ): Promise<queryResult> {
   try {
     await db
-      .update(task)
+      .update(tasks)
       .set({
         title: taskData.title,
         description: taskData.description,
@@ -45,7 +45,7 @@ export async function updateTeam(
         milestoneId: taskData.milestoneId,
         updatedAt: new Date(),
       })
-      .where(eq(task.id, taskId));
+      .where(eq(tasks.id, taskId));
 
     return { success: true, message: `Task successfully updated` };
   } catch (error) {
@@ -59,7 +59,7 @@ export async function updateTeam(
 
 export async function deleteTask(taskId: number): Promise<queryResult> {
   try {
-    await db.delete(task).where(eq(task.id, taskId));
+    await db.delete(tasks).where(eq(tasks.id, taskId));
 
     // TODO: also delete the records of team in teamMember
 

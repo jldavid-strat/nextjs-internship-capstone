@@ -1,23 +1,23 @@
 /*  == INFERRED TYPES FROM DB SCHEMA == */
 
-import { project, task, taskComment, team, user } from '@/lib/db/schema';
+import { projects, tasks, taskComments, teams, users } from '@/lib/db/schema';
 
-export type Project = typeof project.$inferSelect;
-export type CreateProject = typeof project.$inferInsert;
-export type UpdateProject = Partial<typeof project.$inferInsert>;
+export type Project = typeof projects.$inferSelect;
+export type CreateProject = typeof projects.$inferInsert;
+export type UpdateProject = Partial<typeof projects.$inferInsert>;
 
-export type TaskComment = typeof taskComment.$inferSelect;
-export type CreateTaskComment = typeof taskComment.$inferInsert;
-export type UpdateTaskComment = Partial<typeof taskComment.$inferInsert>;
+export type TaskComment = typeof taskComments.$inferSelect;
+export type CreateTaskComment = typeof taskComments.$inferInsert;
+export type UpdateTaskComment = Partial<typeof taskComments.$inferInsert>;
 
-export type Team = typeof team.$inferSelect;
-export type CreateTeam = typeof team.$inferInsert;
-export type UpdateTeam = Partial<typeof team.$inferInsert>;
+export type Team = typeof teams.$inferSelect;
+export type CreateTeam = typeof teams.$inferInsert;
+export type UpdateTeam = Partial<typeof teams.$inferInsert>;
 
-export type Task = typeof task.$inferSelect;
-export type CreateTask = typeof task.$inferInsert;
-export type UpdateTask = Partial<typeof task.$inferInsert>;
+export type Task = typeof tasks.$inferSelect;
+export type CreateTask = typeof tasks.$inferInsert;
+export type UpdateTask = Partial<typeof tasks.$inferInsert>;
 
-export type User = typeof user.$inferSelect;
-export type CreateUser = typeof user.$inferInsert;
-export type UpdateUser = Partial<typeof user.$inferInsert>;
+export type User = typeof users.$inferSelect;
+export type CreateUser = typeof users.$inferInsert;
+export type UpdateUser = Partial<typeof users.$inferInsert>;

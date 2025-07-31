@@ -1,12 +1,12 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../db/connect_db';
-import { project } from '../db/schema';
+import { projects } from '../db/schema';
 import { queryResult } from '@/types';
 import { Project, CreateProject, UpdateProject } from '@/types/db.types';
 
 export async function createProject(projectData: CreateProject): Promise<queryResult> {
   try {
-    await db.insert(project).values({
+    await db.insert(projects).values({
       title: projectData.title,
       description: projectData.description,
       status: projectData.status,
@@ -37,7 +37,7 @@ export async function updateProject(
 ): Promise<queryResult> {
   try {
     await db
-      .update(project)
+      .update(projects)
       .set({
         title: projectData.title,
         description: projectData.description,
@@ -48,7 +48,7 @@ export async function updateProject(
         dueDate: projectData.dueDate,
         updatedAt: projectData.updatedAt,
       })
-      .where(eq(project.id, projectId));
+      .where(eq(projects.id, projectId));
 
     return { success: true, message: `Project successfully updated` };
   } catch (error) {
@@ -62,7 +62,7 @@ export async function updateProject(
 
 export async function deleteProject(projectId: Project['id']): Promise<queryResult> {
   try {
-    await db.delete(project).where(eq(project.id, projectId));
+    await db.delete(projects).where(eq(projects.id, projectId));
 
     return { success: true, message: `Project successfully deleted` };
   } catch (error) {
@@ -77,12 +77,12 @@ export async function deleteProject(projectId: Project['id']): Promise<queryResu
 // NOTE: change to Partial<SelectProject[]> if you don't need all the columns
 export async function getAllProjects(): Promise<queryResult<Project[]>> {
   try {
-    const projects = await db.select().from(project).orderBy(project.createdAt);
+    const projectList = await db.select().from(projects).orderBy(projects.createdAt);
 
     return {
       success: true,
       message: `Successfully retrieve all projects`,
-      data: projects,
+      data: projectList,
     };
   } catch (error) {
     return {
@@ -98,8 +98,8 @@ export async function getProjectById(
   try {
     const singularProject = await db
       .select()
-      .from(project)
-      .where(eq(project.id, projectId));
+      .from(projects)
+      .where(eq(projects.id, projectId));
 
     return {
       success: true,

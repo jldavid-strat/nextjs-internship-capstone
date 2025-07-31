@@ -1,6 +1,6 @@
 import { queryResult } from '@/types';
 import { db } from '../db/connect_db';
-import { task, taskComment, taskLabel } from '../db/schema';
+import { tasks, taskComments, taskLabels } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { TaskComment, CreateTaskComment, UpdateTaskComment } from '@/types/db.types';
 
@@ -8,7 +8,7 @@ export async function createTask(
   taskCommentData: CreateTaskComment,
 ): Promise<queryResult> {
   try {
-    await db.insert(taskComment).values({
+    await db.insert(taskComments).values({
       authorId: taskCommentData.authorId,
       taskId: taskCommentData.taskId,
       content: taskCommentData.content,
@@ -30,12 +30,12 @@ export async function updateTaskComment(
 ): Promise<queryResult> {
   try {
     await db
-      .update(taskComment)
+      .update(taskComments)
       .set({
         content: taskCommentData.content,
         updatedAt: new Date(),
       })
-      .where(eq(taskComment.id, taskCommentId));
+      .where(eq(taskComments.id, taskCommentId));
 
     return { success: true, message: `Task comment successfully updated` };
   } catch (error) {
@@ -50,7 +50,7 @@ export async function deleteTaskComment(
   taskCommentId: TaskComment['id'],
 ): Promise<queryResult> {
   try {
-    await db.delete(taskComment).where(eq(taskComment.id, taskCommentId));
+    await db.delete(taskComments).where(eq(taskComments.id, taskCommentId));
 
     return { success: true, message: `Task comment successfully deleted` };
   } catch (error) {

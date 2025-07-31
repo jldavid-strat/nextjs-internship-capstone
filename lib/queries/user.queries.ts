@@ -2,7 +2,7 @@
 
 'use server';
 import { db } from '@/lib/db/connect_db';
-import { user } from '@/lib/db/schema';
+import { users } from '@/lib/db/schema';
 import { queryResult } from '@/types';
 import { User, CreateUser, UpdateUser } from '@/types/db.types';
 import { eq } from 'drizzle-orm';
@@ -13,11 +13,11 @@ export async function createUser(
   clerkUser: Omit<CreateUser, 'updatedAt'>,
 ): Promise<void> {
   try {
-    await db.insert(user).values({
+    await db.insert(users).values({
       clerkId: clerkUser.clerkId,
       firstName: clerkUser.firstName,
       lastName: clerkUser.lastName,
-      imgUrl: clerkUser.imgUrl,
+      imgLink: clerkUser.imgLink,
       primaryEmailAddress: clerkUser.primaryEmailAddress,
       createdAt: clerkUser.createdAt,
     });
@@ -32,15 +32,15 @@ export async function updatedUser(
 ): Promise<void> {
   try {
     await db
-      .update(user)
+      .update(users)
       .set({
         firstName: clerkUser.firstName,
         lastName: clerkUser.lastName,
-        imgUrl: clerkUser.imgUrl,
+        imgLink: clerkUser.imgLink,
         primaryEmailAddress: clerkUser.primaryEmailAddress,
         updatedAt: clerkUser.updatedAt,
       })
-      .where(eq(user.clerkId, clerkUserId));
+      .where(eq(users.clerkId, clerkUserId));
 
     // invalidate cache on settings page to load new user info
     revalidatePath(`/settings`);
@@ -51,7 +51,7 @@ export async function updatedUser(
 
 export async function deleteUser(clerkId: User['clerkId']): Promise<void> {
   try {
-    await db.delete(user).where(eq(user.clerkId, clerkId));
+    await db.delete(users).where(eq(users.clerkId, clerkId));
     redirect('/sign-up');
   } catch (error) {
     console.error(error);
@@ -60,7 +60,7 @@ export async function deleteUser(clerkId: User['clerkId']): Promise<void> {
 
 export async function getUserById(clerkId: User['clerkId']): Promise<queryResult<User>> {
   try {
-    const result = await db.select().from(user).where(eq(user.clerkId, clerkId));
+    const result = await db.select().from(users).where(eq(users.clerkId, clerkId));
     return {
       success: true,
       message: 'User succesfully retrieved',

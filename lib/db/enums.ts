@@ -3,12 +3,7 @@ import * as enums from '@/lib/constants/enums';
 
 export const projectStatusEnum = pgEnum('project_status', enums.PROJECT_STATUS_VALUES);
 
-export const taskStatusEnum = pgEnum('task_status', [
-  'in_progress',
-  'planning',
-  'review',
-  'done',
-]);
+export const taskStatusEnum = pgEnum('task_status', enums.TASK_STATUS_VALUES);
 
 export const taskPriorityEnum = pgEnum('task_priority', enums.TASK_PRIORITY_VALUES);
 

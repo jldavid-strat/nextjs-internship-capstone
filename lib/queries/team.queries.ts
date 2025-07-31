@@ -1,15 +1,14 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../db/connect_db';
-import { team, teamMember, user } from '../db/schema';
+import { teams, teamMembers, users } from '../db/schema';
 import { queryResult } from '@/types';
 import { Team, CreateTeam, User, UpdateTeam } from '@/types/db.types';
 
 export async function createTeam(teamData: CreateTeam): Promise<queryResult> {
   try {
-    await db.insert(team).values({
+    await db.insert(teams).values({
       name: teamData.name,
       description: teamData.description,
-      projectId: teamData.projectId,
       color: teamData.color,
       createdBy: teamData.createdBy,
       createdAt: new Date(),
@@ -30,17 +29,16 @@ export async function updateTeam(
 ): Promise<queryResult> {
   try {
     await db
-      .update(team)
+      .update(teams)
       .set({
         name: teamData.name,
         description: teamData.description,
-        projectId: teamData.projectId,
         color: teamData.color,
         createdBy: teamData.createdBy,
         createdAt: new Date(),
         updatedAt: teamData.updatedAt,
       })
-      .where(eq(team.id, teamId));
+      .where(eq(teams.id, teamId));
 
     return { success: true, message: `Team successfully updated` };
   } catch (error) {
@@ -54,7 +52,7 @@ export async function updateTeam(
 
 export async function deleteTeam(teamId: Team['id']): Promise<queryResult> {
   try {
-    await db.delete(team).where(eq(team.id, teamId));
+    await db.delete(teams).where(eq(teams.id, teamId));
 
     // TODO: also delete the records of team in teamMember
 
@@ -71,13 +69,13 @@ export async function deleteTeam(teamId: Team['id']): Promise<queryResult> {
 // retrieves teams where user is a member
 export async function getUserTeams(userId: User['id']) {
   try {
-    const teams = await db
+    const teamList = await db
       .select()
-      .from(user)
-      .innerJoin(teamMember, eq(teamMember.userId, userId))
-      .innerJoin(team, eq(team.id, teamMember.teamId));
+      .from(users)
+      .innerJoin(teamMembers, eq(teamMembers.userId, userId))
+      .innerJoin(teams, eq(teams.id, teamMembers.teamId));
 
-    return { success: true, message: `Successfully retrieved teams`, data: teams };
+    return { success: true, message: `Successfully retrieved teams`, data: teamList };
   } catch (error) {
     return {
       success: false,
@@ -92,9 +90,9 @@ export async function getTeam(userId: Team['id'], teamId: Team['id']) {
   try {
     const userTeam = await db
       .select()
-      .from(user)
-      .innerJoin(teamMember, eq(teamMember.userId, userId))
-      .innerJoin(team, eq(teamMember.teamId, teamId));
+      .from(users)
+      .innerJoin(teamMembers, eq(teamMembers.userId, userId))
+      .innerJoin(teams, eq(teamMembers.teamId, teamId));
 
     return { success: true, message: `Successfully retrieved team`, data: userTeam };
   } catch (error) {
