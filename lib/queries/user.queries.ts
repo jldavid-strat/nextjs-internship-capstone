@@ -3,22 +3,13 @@
 'use server';
 import { db } from '@/lib/db/connect_db';
 import { user } from '@/lib/db/schema';
+import { InsertUser, SelectUser, UpdateUser } from '@/types/db.types';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-interface clerkUserProps {
-  clerkId: string;
-  firstName: string;
-  lastName: string;
-  imgUrl: string;
-  emailAddress: string;
-  createdAt: Date;
-  updatedAt: Date | undefined;
-}
-
 export async function createUser(
-  clerkUser: Omit<clerkUserProps, 'updatedAt'>,
+  clerkUser: Omit<InsertUser, 'updatedAt'>,
 ): Promise<void> {
   try {
     await db.insert(user).values({
@@ -26,7 +17,7 @@ export async function createUser(
       firstName: clerkUser.firstName,
       lastName: clerkUser.lastName,
       imgUrl: clerkUser.imgUrl,
-      emailAddress: clerkUser.emailAddress,
+      primaryEmailAddress: clerkUser.primaryEmailAddress,
       createdAt: clerkUser.createdAt,
     });
   } catch (error) {
@@ -34,7 +25,10 @@ export async function createUser(
   }
 }
 
-export async function updatedUser(clerkUser: clerkUserProps): Promise<void> {
+export async function updatedUser(
+  clerkUserId: string,
+  clerkUser: UpdateUser,
+): Promise<void> {
   try {
     await db
       .update(user)
@@ -42,10 +36,10 @@ export async function updatedUser(clerkUser: clerkUserProps): Promise<void> {
         firstName: clerkUser.firstName,
         lastName: clerkUser.lastName,
         imgUrl: clerkUser.imgUrl,
-        emailAddress: clerkUser.emailAddress,
+        primaryEmailAddress: clerkUser.primaryEmailAddress,
         updatedAt: clerkUser.updatedAt,
       })
-      .where(eq(user.clerkId, clerkUser.clerkId));
+      .where(eq(user.clerkId, clerkUserId));
 
     // invalidate cache on settings page to load new user info
     revalidatePath(`/settings`);
@@ -54,7 +48,7 @@ export async function updatedUser(clerkUser: clerkUserProps): Promise<void> {
   }
 }
 
-export async function deleteUser(clerkId: clerkUserProps['clerkId']): Promise<void> {
+export async function deleteUser(clerkId: SelectUser['clerkId']): Promise<void> {
   try {
     await db.delete(user).where(eq(user.clerkId, clerkId));
     redirect('/sign-up');

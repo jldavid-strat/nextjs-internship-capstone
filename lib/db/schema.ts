@@ -6,6 +6,7 @@ import {
   timestamp,
   primaryKey,
   index,
+  uuid,
 } from 'drizzle-orm/pg-core';
 import {
   jobPositionNameEnum,
@@ -18,7 +19,7 @@ import {
 export const user = pgTable(
   'user',
   {
-    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid('id').primaryKey().defaultRandom(),
     clerkId: varchar('clerk_id').unique().notNull(),
     firstName: varchar('first_name', { length: 255 }).notNull(),
     lastName: varchar('last_name', { length: 255 }).notNull(),
@@ -43,9 +44,9 @@ export const jobPosition = pgTable(
 export const project = pgTable(
   'project',
   {
-    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
-    title: varchar('title', { length: 255 }).notNull(),
-    description: text('description'),
+    id: uuid('id').primaryKey().defaultRandom(),
+    title: varchar('title', { length: 300 }).notNull(),
+    description: varchar('description', { length: 300 }),
     status: projectStatusEnum('status').notNull().default('active'),
     statusChangedAt: timestamp('status_changed_at'),
     statusChangedBy: integer('status_changed_by').references(() => user.id),
@@ -62,10 +63,10 @@ export const project = pgTable(
 export const projectMember = pgTable(
   'project_member',
   {
-    userId: integer('user_id')
+    userId: uuid('user_id')
       .references(() => user.id)
       .notNull(),
-    projectId: integer('project_id')
+    projectId: uuid('project_id')
       .references(() => project.id)
       .notNull(),
     projectMemberRole: memberRoleEnum('project_member_role').notNull().default('member'),
@@ -81,7 +82,7 @@ export const projectMember = pgTable(
 
 export const projectDiscussion = pgTable('project_discussion', {
   id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
-  projectId: integer('project_id')
+  projectId: uuid('project_id')
     .references(() => project.id)
     .notNull(),
   title: varchar('title', { length: 255 }).notNull(),
@@ -93,10 +94,10 @@ export const projectDiscussion = pgTable('project_discussion', {
 export const team = pgTable(
   'team',
   {
-    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
-    name: varchar('name', { length: 255 }).notNull(),
-    description: text('description'),
-    projectId: integer('project_id').references(() => project.id),
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: varchar('name', { length: 300 }).notNull(),
+    description: varchar('description', { length: 300 }),
+    projectId: uuid('project_id').references(() => project.id),
     color: varchar('color', { length: 7 }),
     createdBy: integer('created_by')
       .references(() => user.id)
@@ -110,10 +111,10 @@ export const team = pgTable(
 export const teamMember = pgTable(
   'team_member',
   {
-    userId: integer('user_id')
+    userId: uuid('user_id')
       .references(() => user.id)
       .notNull(),
-    teamId: integer('team_id')
+    teamId: uuid('team_id')
       .references(() => team.id)
       .notNull(),
     teamMemberRole: memberRoleEnum('team_member_role').notNull().default('member'),
@@ -130,7 +131,7 @@ export const teamMember = pgTable(
 export const milestone = pgTable('milestone', {
   id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
   milestoneName: varchar('milestone_name', { length: 255 }).notNull(),
-  projectId: integer('project_id')
+  projectId: uuid('project_id')
     .references(() => project.id)
     .notNull(),
   createdAt: timestamp('created_at').defaultNow(),
@@ -142,8 +143,8 @@ export const kanbanColumn = pgTable(
   {
     id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
     name: varchar('name', { length: 255 }).notNull(),
-    description: text('description'),
-    projectId: integer('project_id')
+    description: varchar('description', { length: 300 }),
+    projectId: uuid('project_id')
       .references(() => project.id)
       .notNull(),
     position: integer('position').notNull(),
@@ -167,10 +168,10 @@ export const task = pgTable(
   'task',
   {
     id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
-    title: varchar('title', { length: 255 }).notNull(),
-    description: text('description'),
+    title: varchar('title', { length: 300 }).notNull(),
+    description: varchar('description', { length: 300 }),
     detail: text('detail'),
-    projectId: integer('project_id')
+    projectId: uuid('project_id')
       .references(() => project.id)
       .notNull(),
     kanbanColumnId: integer('kanban_column_id')
@@ -202,11 +203,11 @@ export const taskLabel = pgTable(
 );
 
 export const taskHistory = pgTable('task_history', {
-  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+  id: uuid('id').primaryKey().defaultRandom(),
   taskId: integer('task_id')
     .references(() => task.id)
     .notNull(),
-  changedBy: integer('changed_by')
+  changedBy: uuid('changed_by')
     .references(() => user.id)
     .notNull(),
   changeDescription: text('change_description').notNull(),
@@ -219,7 +220,7 @@ export const taskAssignee = pgTable(
     taskId: integer('task_id')
       .references(() => task.id)
       .notNull(),
-    assigneeId: integer('assignee_id')
+    assigneeId: uuid('assignee_id')
       .references(() => user.id)
       .notNull(),
     assignedAt: timestamp('assigned_at').defaultNow(),
@@ -233,25 +234,28 @@ export const taskAssignee = pgTable(
 );
 
 export const taskAttachment = pgTable('task_attachment', {
-  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+  id: uuid('id').primaryKey().defaultRandom(),
   taskId: integer('task_id').references(() => task.id),
   filename: varchar('filename', { length: 255 }).notNull(),
   filetype: varchar('filetype', { length: 100 }).notNull(),
   filepath: varchar('filepath', { length: 500 }).notNull(),
+  uploadedBy: uuid('uploaded_by_id')
+    .references(() => user.id)
+    .notNull(),
   uploadedAt: timestamp('uploaded_at').defaultNow(),
 });
 
 // TODO: add ability for comments to have replies
 export const taskComment = pgTable('task_comment', {
-  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+  id: uuid('id').primaryKey().defaultRandom(),
   content: text('content').notNull(),
   taskId: integer('task_id')
     .references(() => task.id)
     .notNull(),
 
   // check if viable
-  parentCommentId: integer('parent_comment_id'),
-  authorId: integer('author_id')
+  parentCommentId: uuid('parent_comment_id'),
+  authorId: uuid('author_id')
     .references(() => user.id)
     .notNull(),
   createdAt: timestamp('created_at').defaultNow(),
