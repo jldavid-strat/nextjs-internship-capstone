@@ -27,6 +27,7 @@ export const users = pgTable(
     primaryEmailAddress: varchar('primary_email_address', { length: 255 }).notNull(),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => [index('clerk_id_idx').on(table.clerkId)],
 );
@@ -46,6 +47,7 @@ export const projects = pgTable(
     dueDate: timestamp('due_date'),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => [index('project_id_idx').on(table.id)],
 );
@@ -62,6 +64,7 @@ export const projectMembers = pgTable(
     projectTeamId: uuid('project_team_id').references(() => projectTeams.id),
     projectMemberRole: memberRoleEnum('project_member_role').notNull().default('member'),
     joinedAt: timestamp('joined_at').defaultNow(),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => [
     primaryKey({
@@ -81,8 +84,10 @@ export const projectTeams = pgTable('project_teams', {
   createdById: uuid('created_by_id')
     .references(() => users.id)
     .notNull(),
+  color: varchar('color', { length: 7 }),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('created_at').defaultNow(),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const projectDiscussions = pgTable('project_discussions', {
@@ -94,6 +99,7 @@ export const projectDiscussions = pgTable('project_discussions', {
   content: text('content').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
   closedAt: timestamp('closed_at'),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const projectDiscussionsComment = pgTable('project_discussion_comments', {
@@ -104,9 +110,13 @@ export const projectDiscussionsComment = pgTable('project_discussion_comments', 
   projectDiscussionId: uuid('project_discussion_id')
     .references(() => projectDiscussions.id)
     .notNull(),
+
+  // TODO check if viable
+  parentCommentId: bigint('parent_comment_id', { mode: 'number' }),
   content: text('content').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('created_at').defaultNow(),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const milestones = pgTable('milestones', {
@@ -117,6 +127,7 @@ export const milestones = pgTable('milestones', {
     .notNull(),
   createdAt: timestamp('created_at').defaultNow(),
   achievedAt: timestamp('achieved_at'),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const kanbanColumns = pgTable(
@@ -131,6 +142,7 @@ export const kanbanColumns = pgTable(
     position: integer('position').notNull(),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => [index('kanban_column_id_idx').on(table.id)],
 );
@@ -141,6 +153,7 @@ export const labels = pgTable(
     id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     name: varchar('name', { length: 255 }).notNull().unique(),
     color: varchar('color', { length: 7 }),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => [index('label_id_idx').on(table.id)],
 );
@@ -165,6 +178,7 @@ export const tasks = pgTable(
     dueDate: timestamp('due_date'),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => [index('task_id_idx').on(table.id)],
 );
@@ -178,6 +192,7 @@ export const taskLabels = pgTable(
     labelId: integer('label_id')
       .references(() => labels.id)
       .notNull(),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => [
     primaryKey({ name: 'custom_task_label_pk', columns: [table.taskId, table.labelId] }),
@@ -194,6 +209,7 @@ export const taskHistory = pgTable('task_history', {
     .notNull(),
   changeDescription: text('change_description').notNull(),
   changedAt: timestamp('changed_at').notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const taskAssignees = pgTable(
@@ -206,6 +222,7 @@ export const taskAssignees = pgTable(
       .references(() => users.id)
       .notNull(),
     assignedAt: timestamp('assigned_at').defaultNow(),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => [
     primaryKey({
@@ -225,6 +242,7 @@ export const taskAttachments = pgTable('task_attachments', {
     .references(() => users.id)
     .notNull(),
   uploadedAt: timestamp('uploaded_at').defaultNow(),
+  deletedAt: timestamp('deleted_at'),
 });
 
 // TODO: add ability for comments to have replies
@@ -236,10 +254,11 @@ export const taskComments = pgTable('task_comments', {
     .notNull(),
 
   // check if viable
-  parentCommentId: uuid('parent_comment_id'),
+  parentCommentId: bigint('parent_comment_id', { mode: 'number' }),
   authorId: uuid('author_id')
     .references(() => users.id)
     .notNull(),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
+  deletedAt: timestamp('deleted_at'),
 });
