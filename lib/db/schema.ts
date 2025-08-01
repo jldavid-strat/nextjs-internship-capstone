@@ -74,6 +74,7 @@ export const projectMembers = pgTable(
     projectId: uuid('project_id')
       .references(() => projects.id)
       .notNull(),
+    projectTeamId: uuid('project_team_id').references(() => projectTeams.id),
     projectMemberRole: memberRoleEnum('project_member_role').notNull().default('member'),
     joinedAt: timestamp('joined_at').defaultNow(),
   },
@@ -84,6 +85,20 @@ export const projectMembers = pgTable(
     }),
   ],
 );
+
+export const projectTeams = pgTable('project_teams', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id')
+    .references(() => projects.id)
+    .notNull(),
+  teamName: varchar('team_name', { length: 300 }).notNull(),
+  description: varchar('description', { length: 300 }),
+  createdById: uuid('created_by_id')
+    .references(() => users.id)
+    .notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('created_at').defaultNow(),
+});
 
 export const projectDiscussions = pgTable('project_discussions', {
   id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
@@ -96,55 +111,18 @@ export const projectDiscussions = pgTable('project_discussions', {
   closedAt: timestamp('closed_at'),
 });
 
-export const teamProjects = pgTable(
-  'team_projects',
-  {
-    teamId: uuid('team_id').references(() => teams.id),
-    projectId: uuid('project_id').references(() => projects.id),
-  },
-  (table) => [
-    primaryKey({
-      name: 'custom_team_projects_pk',
-      columns: [table.teamId, table.projectId],
-    }),
-  ],
-);
-
-export const teams = pgTable(
-  'teams',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    name: varchar('name', { length: 300 }).notNull(),
-    description: varchar('description', { length: 300 }),
-    color: varchar('color', { length: 7 }),
-    createdBy: uuid('created_by')
-      .references(() => users.id)
-      .notNull(),
-    createdAt: timestamp('created_at').defaultNow(),
-    updatedAt: timestamp('updated_at').defaultNow(),
-  },
-  (table) => [index('team_id_idx').on(table.id)],
-);
-
-export const teamMembers = pgTable(
-  'team_members',
-  {
-    userId: uuid('user_id')
-      .references(() => users.id)
-      .notNull(),
-    teamId: uuid('team_id')
-      .references(() => teams.id)
-      .notNull(),
-    teamMemberRole: memberRoleEnum('team_member_role').notNull().default('member'),
-    joinedAt: timestamp('joined_at').defaultNow(),
-  },
-  (table) => [
-    primaryKey({
-      name: 'custom_team_member_pk',
-      columns: [table.userId, table.teamId],
-    }),
-  ],
-);
+export const projectDiscussionsComment = pgTable('project_discussion_comments', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  authorId: uuid('author_id')
+    .references(() => users.id)
+    .notNull(),
+  projectDiscussionId: uuid('project_discussion_id')
+    .references(() => projectDiscussions.id)
+    .notNull(),
+  content: text('content').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('created_at').defaultNow(),
+});
 
 export const milestones = pgTable('milestones', {
   id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
