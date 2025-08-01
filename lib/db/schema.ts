@@ -10,7 +10,6 @@ import {
   bigint,
 } from 'drizzle-orm/pg-core';
 import {
-  jobPositionNameEnum,
   memberRoleEnum,
   projectStatusEnum,
   taskPriorityEnum,
@@ -26,24 +25,10 @@ export const users = pgTable(
     lastName: varchar('last_name', { length: 255 }).notNull(),
     imgLink: varchar('img_url').notNull(),
     primaryEmailAddress: varchar('primary_email_address', { length: 255 }).notNull(),
-
-    // default to 'none'
-    jobPositionId: bigint('job_position_id', { mode: 'number' })
-      .references(() => jobPositions.id)
-      .default(1),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },
   (table) => [index('clerk_id_idx').on(table.clerkId)],
-);
-
-export const jobPositions = pgTable(
-  'job_positions',
-  {
-    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
-    name: jobPositionNameEnum('name').notNull().unique(),
-  },
-  (table) => [index('job_position_id').on(table.id)],
 );
 
 export const projects = pgTable(

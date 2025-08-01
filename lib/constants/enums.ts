@@ -19,17 +19,8 @@ export const TASK_PRIORITY_VALUES = ['none', 'low', 'medium', 'high'] as const;
 
 export const MEMBER_ROLE_VALUES = ['owner', 'admin', 'viewer', 'member'] as const;
 
-export const JOB_POSITION_VALUES = [
-  'none',
-  'project_manager',
-  'developer',
-  'qa',
-  'designer',
-] as const;
-
 // derived types
 export type ProjectStatus = (typeof PROJECT_STATUS_VALUES)[number];
 export type TaskStatus = (typeof TASK_STATUS_VALUES)[number];
 export type TaskPriority = (typeof TASK_PRIORITY_VALUES)[number];
 export type MemberRole = (typeof MEMBER_ROLE_VALUES)[number];
-export type JobPosition = (typeof JOB_POSITION_VALUES)[number];
