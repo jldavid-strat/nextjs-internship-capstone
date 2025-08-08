@@ -1,11 +1,8 @@
 // TODO: Task 3.6 - Set up data validation with Zod schemas
 
 import { z } from 'zod';
-import {
-  PROJECT_STATUS_VALUES,
-  TASK_PRIORITY_VALUES,
-  TASK_STATUS_VALUES,
-} from './constants/enums';
+import { PROJECT_STATUS_VALUES, TASK_PRIORITY_VALUES, TASK_STATUS_VALUES } from './constants/enums';
+import { isFuture } from './utils/validation.utils';
 
 /*
 TODO: Implementation Notes for Interns:
@@ -22,80 +19,188 @@ Example schemas needed:
 - List/column management
 - Comment creation
 */
+
+const MIN_CHAR = 1;
+const MAX_CHAR = 300;
+const MAX_COLOR_LENGTH = 7;
+
+const errorMessages = {
+  required: (field: string = 'Field') => `${field} is required`,
+  invalidType: (field: string = 'Field', type: string) => `${field} must be ${type}`,
+
+  // string validations
+  empty: (field: string = 'Field') => `${field} cannot be empty`,
+
+  minChar: (field: string, min: number) => `${field} must be at least ${min} character/s`,
+  maxChar: (field: string, max: number) => `${field} must be no more than ${max} characters`,
+
+  // number validations
+  positive: (field: string = 'Number') => `${field} must be positive`,
+  negative: (field: string = 'Number') => `${field} must be negative`,
+  integer: (field: string = 'Number') => `${field} must be a whole number`,
+
+  // format validations
+  email: 'Please enter a valid email address',
+  url: 'Please enter a valid URL',
+  uuid: (field: string) => `${field} must be a valid UUID`,
+
+  // date validations
+
+  // TODO include correct format for time
+  invalidDate: (field: string) => `${field} must be in correct date format (YYYY-MM-DD)`,
+
+  // custom patterns
+  phonePattern: 'Please enter a valid phone number',
+  strongPassword:
+    'Password must contain at least 8 characters, including uppercase, lowercase, number and special character',
+} as const;
+
 const BaseProjectSchema = z.object({
-  id: z.uuid(),
-  title: z.string().max(300, 'Title is too long. 300 max characters'),
-  description: z.string().max(300, 'Description too long. 300 max characters').optional(),
+  title: z
+    .string(errorMessages.invalidType('Project Title', 'text'))
+    .min(MIN_CHAR, errorMessages.required('Project Title'))
+    .max(MAX_CHAR, errorMessages.maxChar('Project title', MAX_CHAR)),
+  description: z
+    .string(errorMessages.invalidType('Project description', 'text'))
+    .max(MAX_CHAR, errorMessages.maxChar('Project description', MAX_CHAR))
+    .optional(),
   status: z.enum(PROJECT_STATUS_VALUES).default('active'),
-  statusChangedAt: z.date().optional(),
-  statusChangedBy: z.int().positive().optional(),
-  ownerId: z.uuid(),
-  dueDate: z.date().optional(),
-  createdAt: z.date().default(new Date()),
-  updatedAt: z.date().default(new Date()),
+  statusChangedAt: z.iso.date(errorMessages.invalidDate('Status changed date')).optional(),
+  slug: z.string().trim(),
+  statusChangedBy: z.uuid().optional(),
+  ownerId: z.string().startsWith('user_', 'OwnerID must start with user_'),
+  dueDate: z.iso
+    .date(errorMessages.invalidDate('Due date'))
+    .refine((dateString) => isFuture(dateString), {
+      error: 'Due date must be set in the future',
+    })
+    .optional(),
+  updatedAt: z.iso.date(errorMessages.invalidDate('Updated date')).optional(),
 });
 
 export const ProjectSchema = {
-  response: BaseProjectSchema,
   insert: BaseProjectSchema.omit({
-    id: true,
     statusChangedAt: true,
     statusChangedBy: true,
     updatedAt: true,
   }),
-  update: BaseProjectSchema.partial().omit({
-    id: true,
-  }),
+  update: BaseProjectSchema,
 };
 
 const BaseTaskSchema = z.object({
-  title: z.string().max(300, 'Title is too long. 300 max characters'),
-  description: z.string().max(300, 'Description too long. 300 max characters').optional(),
-  detail: z.string().optional(),
+  title: z
+    .string(errorMessages.invalidType('Task name', 'text'))
+    .min(MIN_CHAR, errorMessages.minChar('Task name', MIN_CHAR))
+    .max(MAX_CHAR, errorMessages.maxChar('Task name', MAX_CHAR)),
+  description: z
+    .string(errorMessages.invalidType('Task description', 'text'))
+    .min(MIN_CHAR, errorMessages.minChar('Task description', MIN_CHAR))
+    .max(MAX_CHAR, errorMessages.maxChar('Task description', MAX_CHAR))
+    .optional(),
+  detail: z.string(errorMessages.invalidType('Task detail', 'text')).optional(),
   status: z.enum(TASK_STATUS_VALUES).default('planning'),
   priority: z.enum(TASK_PRIORITY_VALUES).default('low'),
-  projectId: z.uuid(),
-  kanbanColumnId: z.int().positive(),
-  milestoneId: z.int().positive().optional(),
-  dueDate: z.date().optional(),
-  createdAt: z.date().default(new Date()),
+  projectId: z.uuidv4(errorMessages.uuid('Project ID')),
+  kanbanColumnId: z
+    .int(errorMessages.integer('Kanban Column ID'))
+    .positive(errorMessages.positive('Kanban Column ID')),
+  milestoneId: z
+    .int(errorMessages.integer('Milestone ID'))
+    .positive(errorMessages.positive('Milestone ID')),
+  startDate: z.iso.datetime(errorMessages.invalidDate('Task start date')).optional(),
+  updatedAt: z.iso.datetime(errorMessages.invalidDate('Task updated date')).optional(),
+  dueDate: z.iso.datetime(errorMessages.invalidDate('Task due date')).optional(),
 });
 
 export const TaskSchema = {
-  response: BaseTaskSchema,
   insert: BaseTaskSchema,
-  update: BaseTaskSchema,
+  update: BaseTaskSchema.partial()
+    .omit({
+      projectId: true,
+    })
+    .required({
+      updatedAt: true,
+    }),
 };
 
-export const BaseTeamSchema = z.object({
-  title: z.string().max(256, 'Title is too long. 300 max characters'),
-  description: z.string().max(300, 'Description too long. 300 max characters').optional(),
+const BaseProjecTeamSchema = z.object({
+  teamName: z
+    .string(errorMessages.invalidType('Team name', 'text'))
+    .min(MIN_CHAR, errorMessages.minChar('Team name', MIN_CHAR))
+    .max(MAX_CHAR, errorMessages.maxChar('Team name', MAX_CHAR)),
+  description: z
+    .string(errorMessages.invalidType('Team description', 'text'))
+    .min(MIN_CHAR, errorMessages.minChar('Team description', MIN_CHAR))
+    .max(MAX_CHAR, errorMessages.maxChar('Team description', MAX_CHAR))
+    .optional(),
   // TODO create advance string format for hex colors
-  color: z.string().max(7, 'Color format is too long. Not a in valid hex format'),
-  projectId: z.uuid().optional(),
-  createdBy: z.int().positive(),
-  createdAt: z.date().default(new Date()),
+  createdBy: z.uuidv4(errorMessages.uuid('Created by ID')),
+  projectId: z.uuidv4(errorMessages.uuid('Project ID')),
+  color: z
+    .string(errorMessages.invalidType('Team color', 'a string'))
+    .min(MIN_CHAR, errorMessages.minChar('Team color', MIN_CHAR))
+    .max(MAX_COLOR_LENGTH, errorMessages.maxChar('Team color', MAX_COLOR_LENGTH))
+    .refine((color) => {
+      // Regex for hex colors: #000 or #000000 (with optional #)
+      const hexRegex = /^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+      return hexRegex.test(color);
+    }, 'Color must be in valid hex format (#000000 or #000)'),
+  updatedAt: z.iso.datetime(errorMessages.invalidDate('Update at')),
 });
 
+export const ProjectTeamSchema = {
+  insert: BaseProjecTeamSchema.omit({
+    updatedAt: true,
+  }),
+  update: BaseProjecTeamSchema.partial()
+    .omit({
+      projectId: true,
+    })
+    .required({ updatedAt: true }),
+};
 const BaseProjecDiscussionSchema = z.object({
-  id: z.int().positive(),
-  projectId: z.uuid(),
-  title: z.string().max(255, 'Title'),
-  content: z.string(),
-  createdAt: z.date(),
-  closedAt: z.date(),
+  projectId: z.uuidv4(errorMessages.uuid('Project ID')),
+  title: z
+    .string(errorMessages.invalidType('Project discussion title', 'text'))
+    .min(MIN_CHAR, errorMessages.minChar('Project discussion title', MIN_CHAR))
+    .max(MAX_CHAR, errorMessages.maxChar('Project discussion title', MAX_CHAR)),
+  content: z.string(errorMessages.invalidType('Project discussion content', 'text')),
+  closedAt: z.iso.datetime(errorMessages.invalidDate('Project discussion closed at date')),
+  updatedAt: z.iso.datetime(errorMessages.invalidDate('Project discussion updated date')),
 });
 
 export const ProjectDiscussionSchema = {
-  response: BaseProjecDiscussionSchema,
-  insert: BaseProjecDiscussionSchema,
-  update: BaseProjecDiscussionSchema,
+  insert: BaseProjecDiscussionSchema.omit({
+    closedAt: true,
+  }),
+  update: BaseProjecDiscussionSchema.partial()
+    .omit({
+      projectId: true,
+    })
+    .required({
+      updatedAt: true,
+    }),
 };
 
-export const TeamSchema = {
-  response: BaseTeamSchema,
-  insert: BaseTeamSchema,
-  update: BaseTeamSchema,
+const BaseProjectDiscussionCommentSchema = z.object({
+  authorId: z.uuidv4(errorMessages.uuid('Project discussion comment author ID')),
+  content: z.string(errorMessages.invalidType('Project discussion comment content', 'text')),
+  projectDiscussionId: z.uuidv4(errorMessages.uuid('Project ID')),
+  parentCommentId: z.uuidv4('Project discussion parent comment ID'),
+  updatedAt: z.iso.datetime(errorMessages.invalidDate('Project discussion comment update date')),
+});
+
+export const ProjectDiscussionsCommentSchema = {
+  insert: BaseProjectDiscussionCommentSchema.omit({
+    updatedAt: true,
+  }),
+  update: BaseProjectDiscussionCommentSchema.partial()
+    .omit({
+      projectDiscussionId: true,
+    })
+    .required({
+      updatedAt: true,
+    }),
 };
 
 const BaseUserSchema = z.object({
