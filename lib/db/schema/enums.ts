@@ -5,17 +5,11 @@ export const PROJECT_STATUS_VALUES = [
   'active',
   'completed',
   'archived',
-  'on_going',
+  'on-going',
   'cancelled',
 ] as const;
 
-export const TASK_STATUS_VALUES = [
-  'none',
-  'in_progress',
-  'planning',
-  'review',
-  'done',
-] as const;
+export const TASK_STATUS_VALUES = ['none', 'in-progress', 'planning', 'review', 'done'] as const;
 
 export const TASK_PRIORITY_VALUES = ['none', 'low', 'medium', 'high'] as const;
 

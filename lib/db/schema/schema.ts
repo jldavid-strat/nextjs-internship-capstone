@@ -8,13 +8,12 @@ import {
   index,
   uuid,
   bigint,
+  foreignKey,
+  date,
+  boolean,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import {
-  memberRoleEnum,
-  projectStatusEnum,
-  taskPriorityEnum,
-  taskStatusEnum,
-} from './enums';
+import { memberRoleEnum, projectStatusEnum, taskPriorityEnum, taskStatusEnum } from './enums';
 
 export const users = pgTable(
   'users',
@@ -29,8 +28,22 @@ export const users = pgTable(
     updatedAt: timestamp('updated_at'),
     deletedAt: timestamp('deleted_at'),
   },
-  (table) => [index('clerk_id_idx').on(table.clerkId)],
+  (table) => [index('user_id_idx').on(table.id)],
 );
+
+// TODO create project permission list
+// export const rolePermission = pgTable('role_permissions', {
+//   id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
+//   permission: jsonb('permission_list').
+// });
+
+/*
+role_permissions = {
+
+    owner: ["user:create", "user:delete", "user:update"],
+    member: ["task:update status", "tasks:add comment", "task:delete comment"]
+}
+*/
 
 export const projects = pgTable(
   'projects',
@@ -38,14 +51,13 @@ export const projects = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     title: varchar('title', { length: 300 }).notNull(),
     description: varchar('description', { length: 300 }),
-    slug: varchar('slug', { length: 300 }).notNull(),
-    status: projectStatusEnum().notNull().default('active'),
+    status: projectStatusEnum().default('on-going').notNull(),
     statusChangedAt: timestamp('status_changed_at'),
-    statusChangedBy: uuid('status_changed_by').references(() => users.id),
+    statusChangedById: uuid('status_changed_by').references(() => users.id),
     ownerId: uuid('owner_id')
       .references(() => users.id)
       .notNull(),
-    dueDate: timestamp('due_date'),
+    dueDate: date('due_date'),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at'),
     deletedAt: timestamp('deleted_at'),
@@ -63,7 +75,7 @@ export const projectMembers = pgTable(
       .references(() => projects.id)
       .notNull(),
     projectTeamId: uuid('project_team_id').references(() => projectTeams.id),
-    projectMemberRole: memberRoleEnum().notNull().default('member'),
+    role: memberRoleEnum().notNull().default('member'),
     joinedAt: timestamp('joined_at').defaultNow(),
     deletedAt: timestamp('deleted_at'),
   },
@@ -98,7 +110,7 @@ export const projectDiscussions = pgTable('project_discussions', {
     .notNull(),
   title: varchar('title', { length: 255 }).notNull(),
   content: text('content').notNull(),
-  createdBy: uuid('created_by')
+  createdById: uuid('created_by')
     .references(() => users.id)
     .notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -107,24 +119,30 @@ export const projectDiscussions = pgTable('project_discussions', {
   deletedAt: timestamp('deleted_at'),
 });
 
-export const projectDiscussionComments = pgTable('project_discussion_comments', {
-  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
-  authorId: uuid('author_id')
-    .references(() => users.id)
-    .notNull(),
-  projectDiscussionId: uuid('project_discussion_id')
-    .references(() => projectDiscussions.id)
-    .notNull(),
-
-  // TODO check if viable
-  // parentCommentId: bigint('parent_comment_id', { mode: 'number' }).references(
-  //   () => projectDiscussionComments.id,
-  // ),
-  content: text('content').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at'),
-  deletedAt: timestamp('deleted_at'),
-});
+export const projectDiscussionComments = pgTable(
+  'project_discussion_comments',
+  {
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    authorId: uuid('author_id')
+      .references(() => users.id)
+      .notNull(),
+    projectDiscussionId: uuid('project_discussion_id')
+      .references(() => projectDiscussions.id)
+      .notNull(),
+    parentCommentId: bigint('parent_comment_id', { mode: 'number' }),
+    content: text('content').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at'),
+    deletedAt: timestamp('deleted_at'),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.parentCommentId],
+      foreignColumns: [table.id],
+      name: 'project_discussion_comments_parent_comment_id_fk',
+    }),
+  ],
+);
 
 export const milestones = pgTable('milestones', {
   id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
@@ -140,18 +158,41 @@ export const milestones = pgTable('milestones', {
 export const kanbanColumns = pgTable(
   'kanban_columns',
   {
-    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid('id').defaultRandom().primaryKey(),
     name: varchar('name', { length: 255 }).notNull(),
-    description: varchar('description', { length: 300 }),
+  },
+  (table) => [
+    index('kanban_column_id_idx').on(table.id),
+    uniqueIndex('kanban_name_unique_idx').on(table.name),
+  ],
+);
+
+export const projectKanbanColumns = pgTable(
+  'project_kanban_column',
+  {
+    kanbanColumnId: uuid('kanban_column_id')
+      .references(() => kanbanColumns.id)
+      .notNull(),
     projectId: uuid('project_id')
       .references(() => projects.id)
       .notNull(),
+    description: varchar('description', { length: 300 }),
+    color: varchar('color', { length: 300 }),
+
+    // position order within in the project
     position: integer('position').notNull(),
+
+    // determines if kanban column is user created
+    isCustom: boolean('is_custom').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at'),
-    deletedAt: timestamp('deleted_at'),
   },
-  (table) => [index('kanban_column_id_idx').on(table.id)],
+  (table) => [
+    primaryKey({
+      name: 'custom_project_kanban_column_pk',
+      columns: [table.kanbanColumnId, table.projectId],
+    }),
+  ],
 );
 
 export const labels = pgTable(
@@ -173,12 +214,8 @@ export const tasks = pgTable(
     title: varchar('title', { length: 300 }).notNull(),
     description: varchar('description', { length: 300 }),
     detail: text('detail'),
-    projectId: uuid('project_id')
-      .references(() => projects.id)
-      .notNull(),
-    kanbanColumnId: integer('kanban_column_id')
-      .references(() => kanbanColumns.id)
-      .notNull(),
+    projectId: uuid('project_id').notNull(),
+    kanbanColumnId: uuid('kanban_column_id').notNull(),
     milestoneId: integer('milestone_id').references(() => milestones.id),
     status: taskStatusEnum().notNull().default('none'),
     priority: taskPriorityEnum().notNull().default('none'),
@@ -188,7 +225,14 @@ export const tasks = pgTable(
     updatedAt: timestamp('updated_at'),
     deletedAt: timestamp('deleted_at'),
   },
-  (table) => [index('task_id_idx').on(table.id)],
+  (table) => [
+    foreignKey({
+      columns: [table.projectId, table.kanbanColumnId],
+      foreignColumns: [projectKanbanColumns.kanbanColumnId, projectKanbanColumns.projectId],
+      name: 'custom_kanban_task_column_fk',
+    }),
+    index('task_id_idx').on(table.id),
+  ],
 );
 
 export const taskLabels = pgTable(
@@ -202,9 +246,7 @@ export const taskLabels = pgTable(
       .notNull(),
     deletedAt: timestamp('deleted_at'),
   },
-  (table) => [
-    primaryKey({ name: 'custom_task_label_pk', columns: [table.taskId, table.labelId] }),
-  ],
+  (table) => [primaryKey({ name: 'custom_task_label_pk', columns: [table.taskId, table.labelId] })],
 );
 
 export const taskHistory = pgTable('task_history', {
@@ -246,7 +288,7 @@ export const taskAttachments = pgTable('task_attachments', {
   filename: varchar('filename', { length: 255 }).notNull(),
   filetype: varchar('filetype', { length: 100 }).notNull(),
   filepath: text('filepath').notNull(),
-  uploadedBy: uuid('uploaded_by_id')
+  uploadedById: uuid('uploaded_by_id')
     .references(() => users.id)
     .notNull(),
   uploadedAt: timestamp('uploaded_at').defaultNow().notNull(),
@@ -254,21 +296,28 @@ export const taskAttachments = pgTable('task_attachments', {
 });
 
 // TODO: add ability for comments to have replies
-export const taskComments = pgTable('task_comments', {
-  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
-  content: text('content').notNull(),
-  taskId: bigint('task_id', { mode: 'number' })
-    .references(() => tasks.id)
-    .notNull(),
+export const taskComments = pgTable(
+  'task_comments',
+  {
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    content: text('content').notNull(),
+    taskId: bigint('task_id', { mode: 'number' })
+      .references(() => tasks.id)
+      .notNull(),
 
-  // check if viable
-  // parentCommentId: bigint('parent_comment_id', { mode: 'number' }).references(
-  //   () => taskComments.id,
-  // ),
-  authorId: uuid('author_id')
-    .references(() => users.id)
-    .notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at'),
-  deletedAt: timestamp('deleted_at'),
-});
+    parentCommentId: bigint('parent_comment_id', { mode: 'number' }),
+    authorId: uuid('author_id')
+      .references(() => users.id)
+      .notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at'),
+    deletedAt: timestamp('deleted_at'),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.parentCommentId],
+      foreignColumns: [table.id],
+      name: 'task_comments_parent_column_id_fk',
+    }),
+  ],
+);
