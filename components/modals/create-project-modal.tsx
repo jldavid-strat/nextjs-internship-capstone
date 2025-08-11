@@ -42,12 +42,12 @@ Integration:
 
 // remove validation for values not included in form fields
 
-const FormProjectSchema = ProjectSchema.insert.omit({
-  status: true,
-  ownerId: true,
-  slug: true,
+const FormProjectSchema = ProjectSchema.pick({
+  title: true,
+  description: true,
+  dueDate: true,
 });
-type InserProjectType = z.input<typeof FormProjectSchema>;
+type FormProjectType = z.input<typeof FormProjectSchema>;
 
 export function CreateProjectModal({ setIsOpen }: { setIsOpen: (setValue: boolean) => void }) {
   const [state, createProjectAction, isPending] = useActionState(createProject, undefined);
@@ -56,12 +56,8 @@ export function CreateProjectModal({ setIsOpen }: { setIsOpen: (setValue: boolea
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<InserProjectType>({
+  } = useForm<FormProjectType>({
     resolver: zodResolver(FormProjectSchema),
-    defaultValues: {
-      // pass as undefined when empty
-      dueDate: undefined,
-    },
   });
 
   const formRef = useRef(null);
@@ -106,6 +102,8 @@ export function CreateProjectModal({ setIsOpen }: { setIsOpen: (setValue: boolea
             <label className="text-outer_space-500 dark:text-platinum-500 mb-2 block text-sm font-medium">
               Project Title *
             </label>
+
+            {/* TODO: add way to auto-focus title input */}
             <input
               {...register('title')}
               type="text"
@@ -135,10 +133,7 @@ export function CreateProjectModal({ setIsOpen }: { setIsOpen: (setValue: boolea
               Due Date
             </label>
             <input
-              {...register('dueDate', {
-                // default input to undefine when clear button is pressed
-                setValueAs: (val) => (val === '' ? undefined : val),
-              })}
+              {...register('dueDate', { setValueAs: (val) => (val === '' ? null : val) })}
               type="date"
               name="dueDate"
               className="border-french_gray-300 dark:border-payne's_gray-400 dark:bg-outer_space-400 text-outer_space-500 dark:text-platinum-500 focus:ring-blue_munsell-500 w-full rounded-lg border bg-white px-3 py-2 focus:ring-2 focus:outline-hidden"
