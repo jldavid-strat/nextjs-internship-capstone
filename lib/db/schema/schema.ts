@@ -13,7 +13,7 @@ import {
   boolean,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { memberRoleEnum, projectStatusEnum, taskPriorityEnum, taskStatusEnum } from './enums';
+import { memberRoleEnum, projectStatusEnum, taskPriorityEnum } from './enums';
 
 export const users = pgTable(
   'users',
@@ -168,7 +168,7 @@ export const kanbanColumns = pgTable(
 );
 
 export const projectKanbanColumns = pgTable(
-  'project_kanban_column',
+  'project_kanban_columns',
   {
     kanbanColumnId: uuid('kanban_column_id')
       .references(() => kanbanColumns.id)
@@ -217,8 +217,11 @@ export const tasks = pgTable(
     projectId: uuid('project_id').notNull(),
     kanbanColumnId: uuid('kanban_column_id').notNull(),
     milestoneId: integer('milestone_id').references(() => milestones.id),
-    status: taskStatusEnum().notNull().default('none'),
+    status: varchar('status').notNull(),
     priority: taskPriorityEnum().notNull().default('none'),
+    createdById: uuid('created_by_id')
+      .references(() => users.id)
+      .notNull(),
     dueDate: timestamp('due_date'),
     startDate: timestamp('start_date'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -269,6 +272,9 @@ export const taskAssignees = pgTable(
       .references(() => tasks.id)
       .notNull(),
     assigneeId: uuid('assignee_id')
+      .references(() => users.id)
+      .notNull(),
+    assignedById: uuid('assigned_by_id')
       .references(() => users.id)
       .notNull(),
     assignedAt: timestamp('assigned_at').defaultNow().notNull(),
