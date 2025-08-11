@@ -1,15 +1,17 @@
 import { getAllUserProject } from '@/lib/queries/project.queries';
+import { formatDate } from '@/lib/utils/format_date';
 import { Calendar, MoreHorizontal, Users } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function ProjectList({ userClerkId }: { userClerkId: string }) {
-  const response = await getAllUserProject(userClerkId);
-  if (!response.success) return <div>Cannot find user projects</div>;
-  const projectList = response.data;
+  const { success, data } = await getAllUserProject(userClerkId);
+  if (!success || !data) return <div>Cannot find user projects</div>;
+  const projectList = data;
+
   return (
     <>
       {projectList?.map((project) => (
-        <Link prefetch={true} key={project.id} href={`/projects/${project?.slug}`}>
+        <Link prefetch={true} key={project.id} href={`/projects/${project.id}`}>
           <div className="dark:bg-outer_space-500 border-french_gray-300 dark:border-payne's_gray-400 cursor-pointer rounded-lg border bg-white p-6 transition-shadow hover:shadow-lg">
             <div className="mb-4 flex items-start justify-between">
               <div className={`h-3 w-3 rounded-full ${'bg-green-400'}`} />
@@ -30,9 +32,9 @@ export default async function ProjectList({ userClerkId }: { userClerkId: string
                 {/* {project.members} members */}
                 14
               </div>
-              <div className="flex items-center">
-                <Calendar size={16} className="mr-1" />
-                {project?.dueDate?.toLocaleDateString()}
+              <div className="flex items-center gap-2">
+                {project?.dueDate ? formatDate(project.dueDate) : ''}
+                {project?.dueDate && <Calendar size={16} className="mr-1" />}
               </div>
             </div>
             <div className="mb-4">
@@ -56,7 +58,7 @@ export default async function ProjectList({ userClerkId }: { userClerkId: string
             <div className="flex items-center justify-between">
               <span
                 className={`rounded-full px-2 py-1 text-xs font-medium ${
-                  project.status === 'on_going'
+                  project.status === 'on-going'
                     ? 'bg-blue_munsell-100 text-blue_munsell-700 dark:bg-blue_munsell-900 dark:text-blue_munsell-300'
                     : project.status === 'active'
                       ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
