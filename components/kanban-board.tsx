@@ -1,6 +1,8 @@
-"use client"
-
-import { useState } from "react"
+import { getKanbanColumnsByProjectId } from '@/lib/queries/kanban-column.queries';
+import { Project } from '@/types/db.types';
+import { MoreHorizontal } from 'lucide-react';
+import CreateTaskButton from './create-task-button';
+import { TaskList } from './task-list';
 
 // TODO: Task 5.1 - Design responsive Kanban board layout
 // TODO: Task 5.2 - Implement drag-and-drop functionality with dnd-kit
@@ -39,114 +41,135 @@ State management:
 
 const initialColumns = [
   {
-    id: "todo",
-    title: "To Do",
+    id: 'todo',
+    title: 'To Do',
     tasks: [
       {
-        id: "1",
-        title: "Design homepage mockup",
-        description: "Create initial design concepts",
-        priority: "high",
-        assignee: "John Doe",
+        id: '1',
+        title: 'Design homepage mockup',
+        description: 'Create initial design concepts',
+        priority: 'high',
+        assignee: 'John Doe',
       },
       {
-        id: "2",
-        title: "Research competitors",
-        description: "Analyze competitor websites",
-        priority: "medium",
-        assignee: "Jane Smith",
+        id: '2',
+        title: 'Research competitors',
+        description: 'Analyze competitor websites',
+        priority: 'medium',
+        assignee: 'Jane Smith',
       },
       {
-        id: "3",
-        title: "Define user personas",
-        description: "Create detailed user personas",
-        priority: "low",
-        assignee: "Mike Johnson",
+        id: '3',
+        title: 'Define user personas',
+        description: 'Create detailed user personas',
+        priority: 'low',
+        assignee: 'Mike Johnson',
       },
     ],
   },
   {
-    id: "in-progress",
-    title: "In Progress",
+    id: 'in-progress',
+    title: 'In Progress',
     tasks: [
       {
-        id: "4",
-        title: "Develop navigation component",
-        description: "Build responsive navigation",
-        priority: "high",
-        assignee: "Sarah Wilson",
+        id: '4',
+        title: 'Develop navigation component',
+        description: 'Build responsive navigation',
+        priority: 'high',
+        assignee: 'Sarah Wilson',
       },
       {
-        id: "5",
-        title: "Content strategy",
-        description: "Plan content structure",
-        priority: "medium",
-        assignee: "Tom Brown",
+        id: '5',
+        title: 'Content strategy',
+        description: 'Plan content structure',
+        priority: 'medium',
+        assignee: 'Tom Brown',
       },
     ],
   },
   {
-    id: "review",
-    title: "Review",
+    id: 'review',
+    title: 'Review',
     tasks: [
       {
-        id: "6",
-        title: "Logo design options",
-        description: "Present logo variations",
-        priority: "high",
-        assignee: "Lisa Davis",
+        id: '6',
+        title: 'Logo design options',
+        description: 'Present logo variations',
+        priority: 'high',
+        assignee: 'Lisa Davis',
       },
     ],
   },
   {
-    id: "done",
-    title: "Done",
+    id: 'done',
+    title: 'Done',
     tasks: [
       {
-        id: "7",
-        title: "Project kickoff meeting",
-        description: "Initial team meeting completed",
-        priority: "medium",
-        assignee: "John Doe",
+        id: '7',
+        title: 'Project kickoff meeting',
+        description: 'Initial team meeting completed',
+        priority: 'medium',
+        assignee: 'John Doe',
       },
       {
-        id: "8",
-        title: "Requirements gathering",
-        description: "Collected all requirements",
-        priority: "high",
-        assignee: "Jane Smith",
+        id: '8',
+        title: 'Requirements gathering',
+        description: 'Collected all requirements',
+        priority: 'high',
+        assignee: 'Jane Smith',
       },
     ],
   },
-]
+];
 
-export function KanbanBoard({ projectId }: { projectId: string }) {
-  const [columns, setColumns] = useState(initialColumns)
+export async function KanbanBoard({ projectId }: { projectId: Project['id'] }) {
+  // const [columns, setColumns] = useState(initialColumns);
+  const { success, message, data: kanbanColumns } = await getKanbanColumnsByProjectId(projectId);
+
+  if (!success || !kanbanColumns) return <div>{message}</div>;
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "high":
-        return "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
-      case "medium":
-        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
-      case "low":
-        return "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+      case 'high':
+        return 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300';
+      case 'low':
+        return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
       default:
-        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
     }
-  }
+  };
 
   return (
-    <div className="bg-white dark:bg-outer_space-500 rounded-lg border border-french_gray-300 dark:border-payne's_gray-400 p-6">
-      <div className="text-center text-payne's_gray-500 dark:text-french_gray-400">
-        <h3 className="text-lg font-semibold mb-2">TODO: Implement Kanban Board</h3>
-        <p className="text-sm mb-4">Project ID: {projectId}</p>
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded border border-yellow-200 dark:border-yellow-800">
-          <p className="text-sm text-yellow-800 dark:text-yellow-200">
-            📋 This will be the main interactive Kanban board with drag-and-drop functionality
-          </p>
-        </div>
+    <div className="dark:bg-outer_space-500 border-french_gray-300 dark:border-payne's_gray-400 rounded-lg border bg-white p-6">
+      <div className="flex space-x-6 overflow-x-auto pb-4">
+        {kanbanColumns.map((column, index) => (
+          <div key={index} className="w-80 shrink-0">
+            <div className="bg-platinum-800 dark:bg-outer_space-400 border-french_gray-300 dark:border-payne's_gray-400 rounded-lg border">
+              <div className="border-french_gray-300 dark:border-payne's_gray-400 border-b p-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-outer_space-500 dark:text-platinum-500 font-semibold">
+                    {column.name}
+                    <span className="bg-french_gray-300 dark:bg-payne's_gray-400 ml-2 rounded-full px-2 py-1 text-xs">
+                      {Math.floor(Math.random() * 5) + 1}
+                    </span>
+                  </h3>
+                  <button className="hover:bg-platinum-500 dark:hover:bg-payne's_gray-400 rounded p-1">
+                    <MoreHorizontal size={16} />
+                  </button>
+                </div>
+              </div>
+              <TaskList projectId={projectId} taskStatus={column.name} />
+              <CreateTaskButton
+                kanbanColumnId={column.kanbanColumnId}
+                kanbanName={column.name}
+                projectId={projectId}
+              />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
-  )
+  );
 }
