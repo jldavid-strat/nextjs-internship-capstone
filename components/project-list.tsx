@@ -1,10 +1,11 @@
 import { getAllUserProject } from '@/lib/queries/project.queries';
 import { formatDate } from '@/lib/utils/format_date';
+import { User as DBUser } from '@/types/db.types';
 import { Calendar, MoreHorizontal, Users } from 'lucide-react';
 import Link from 'next/link';
 
-export default async function ProjectList({ userClerkId }: { userClerkId: string }) {
-  const { success, data } = await getAllUserProject(userClerkId);
+export default async function ProjectList({ userId }: { userId: DBUser['id'] }) {
+  const { success, data } = await getAllUserProject(userId);
   if (!success || !data) return <div>Cannot find user projects</div>;
   const projectList = data;
 
