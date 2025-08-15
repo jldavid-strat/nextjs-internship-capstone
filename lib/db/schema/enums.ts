@@ -13,7 +13,14 @@ export const TASK_STATUS_VALUES = ['none', 'in-progress', 'planning', 'review', 
 
 export const TASK_PRIORITY_VALUES = ['none', 'low', 'medium', 'high'] as const;
 
-export const MEMBER_ROLE_VALUES = ['owner', 'admin', 'viewer', 'member'] as const;
+export const MEMBER_ROLE_VALUES = [
+  'public',
+  'owner',
+  'admin',
+  'team_leader',
+  'viewer',
+  'member',
+] as const;
 
 // derived types
 export type ProjectStatus = (typeof PROJECT_STATUS_VALUES)[number];
