@@ -12,6 +12,7 @@ import {
   date,
   boolean,
   uniqueIndex,
+  jsonb,
 } from 'drizzle-orm/pg-core';
 import { memberRoleEnum, projectStatusEnum, taskPriorityEnum } from './enums';
 
@@ -31,11 +32,11 @@ export const users = pgTable(
   (table) => [index('user_id_idx').on(table.id)],
 );
 
-// TODO create project permission list
-// export const rolePermission = pgTable('role_permissions', {
-//   id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
-//   permission: jsonb('permission_list').
-// });
+export const rolePermissions = pgTable('role_permissions', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  role: memberRoleEnum().notNull(),
+  permissions: jsonb('permissions').notNull(),
+});
 
 /*
 role_permissions = {
@@ -64,6 +65,26 @@ export const projects = pgTable(
   },
   (table) => [index('project_id_idx').on(table.id)],
 );
+
+// [CONSIDER] dynamic project permission list
+// export const projectPermissions = pgTable(
+//   'project_permissions',
+//   {
+//     projectId: uuid('project_id')
+//       .references(() => projects.id)
+//       .notNull(),
+//     role: memberRoleEnum().notNull(),
+//     permissions: jsonb('permissions').notNull(),
+//     createdAt: timestamp('created_at').defaultNow(),
+//     updatedAt: timestamp('updated_at').defaultNow(),
+//   },
+//   (table) => [
+//     primaryKey({
+//       name: 'project_role_unique_idx',
+//       columns: [table.projectId, table.role],
+//     }),
+//   ],
+// );
 
 export const projectMembers = pgTable(
   'project_members',
@@ -94,6 +115,9 @@ export const projectTeams = pgTable('project_teams', {
     .notNull(),
   teamName: varchar('team_name', { length: 300 }).notNull(),
   description: varchar('description', { length: 300 }),
+  leaderId: uuid('leader_id')
+    .references(() => users.id)
+    .notNull(),
   createdById: uuid('created_by_id')
     .references(() => users.id)
     .notNull(),
@@ -206,36 +230,35 @@ export const labels = pgTable(
   (table) => [index('label_id_idx').on(table.id)],
 );
 
-// consider: create detail column (as markdown) for entering details about the task
 export const tasks = pgTable(
   'tasks',
   {
     id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     title: varchar('title', { length: 300 }).notNull(),
     description: varchar('description', { length: 300 }),
+
+    // will take text in markdown format
     detail: text('detail'),
-    projectId: uuid('project_id').notNull(),
-    kanbanColumnId: uuid('kanban_column_id').notNull(),
+    projectId: uuid('project_id')
+      .references(() => projects.id)
+      .notNull(),
+    kanbanColumnId: uuid('kanban_column_id')
+      .references(() => kanbanColumns.id)
+      .notNull(),
     milestoneId: integer('milestone_id').references(() => milestones.id),
     status: varchar('status').notNull(),
-    priority: taskPriorityEnum().notNull().default('none'),
+    priority: taskPriorityEnum().default('none').notNull(),
+    isCompleted: boolean('is_compeleted').notNull(),
     createdById: uuid('created_by_id')
       .references(() => users.id)
       .notNull(),
-    dueDate: timestamp('due_date'),
-    startDate: timestamp('start_date'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+    dueDate: date('due_date'),
+    startDate: date('start_date'),
+    createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at'),
     deletedAt: timestamp('deleted_at'),
   },
-  (table) => [
-    foreignKey({
-      columns: [table.projectId, table.kanbanColumnId],
-      foreignColumns: [projectKanbanColumns.kanbanColumnId, projectKanbanColumns.projectId],
-      name: 'custom_kanban_task_column_fk',
-    }),
-    index('task_id_idx').on(table.id),
-  ],
+  (table) => [index('task_id_idx').on(table.id)],
 );
 
 export const taskLabels = pgTable(
@@ -283,7 +306,7 @@ export const taskAssignees = pgTable(
   (table) => [
     primaryKey({
       name: 'custom_task_assignee_pk',
-      columns: [table.taskId, table.assigneeId],
+      columns: [table.taskId, table.assigneeId, table.assignedById],
     }),
   ],
 );
