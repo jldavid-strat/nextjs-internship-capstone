@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../db/connect_db';
 import { projects } from '../db/schema/schema';
 import { ActionResult, QueryResult } from '@/types';
-import { Project, UpdateProject } from '@/types/db.types';
+import { Project } from '@/types/db.types';
 import { revalidatePath } from 'next/cache';
 import { ProjectSchema } from '../validations';
 import { ZodError } from 'zod';
@@ -12,6 +12,9 @@ import { getCurrentUserId } from './user.queries';
 import { addProjectMember } from './project_member.queries';
 import { projectMembers, users } from '@/migrations/schema';
 import getDataDiff from '../utils/data_diff';
+import { createDefaultKanbanColumns } from './kanban-column.queries';
+import { checkMemberPermission, checkPermission } from './permssions.queries';
+import { ACTIONS, RESOURCES } from '@/constants/permissions';
 
 const InsertProjectSchema = ProjectSchema.omit({
   status: true,
@@ -26,34 +29,48 @@ export async function createProject(
 ): Promise<QueryResult<Project['id'], string[] | string>> {
   try {
     const currentUserId = await getCurrentUserId();
-
     console.log(currentUserId);
+
+    // all users by default can create projects
+    const { success } = await checkPermission('public', RESOURCES.PROJECTS, ACTIONS.CREATE);
+
+    if (!success) throw new Error('User is unauthorized to create project');
+
+    // [CONSIDER] const data = Object.fromEntries(projectData.entries())
 
     // must be formatted as "YYYY-MM-DD"
     // default to null to handle empty string
-    const dateString = projectData.get('dueDate') || null;
-    console.log(typeof dateString);
+    const dueDateString = projectData.get('dueDate') || null;
+    // console.log(typeof dueDateString);
 
     const validatedData = InsertProjectSchema.parse({
       title: projectData.get('title') as string,
       description: projectData.get('description') as string,
       ownerId: currentUserId as string,
-      dueDate: dateString,
+      dueDate: dueDateString,
     });
 
-    const [createdProject] = await db
+    const [{ newProjectId }] = await db
       .insert(projects)
       .values(validatedData)
-      .returning({ newProjecId: projects.id });
+      .returning({ newProjectId: projects.id });
 
+    // TODO wrap in a db transaction
     // add owner in member list as owner
-    await addProjectMember(validatedData.ownerId, createdProject.newProjecId, 'owner');
+    console.log('added owner as member');
+    await addProjectMember(validatedData.ownerId, newProjectId, 'owner');
+
+    // create default kanban boards
+    console.log('created default kanban boards');
+    const kanbanResponse = await createDefaultKanbanColumns(newProjectId);
+
+    if (!kanbanResponse.success) throw new Error(kanbanResponse.message);
 
     revalidatePath('/projects');
     return {
       success: true,
       message: `Project successfully created`,
-      data: createdProject.newProjecId,
+      data: newProjectId,
     };
   } catch (error) {
     if (error instanceof ZodError) {
@@ -78,7 +95,7 @@ export async function createProject(
   2. create specific update functions for fields reference other fields 
 */
 
-const EditProjectSchema = ProjectSchema.pick({
+const EditProjectSchema = ProjectSchema.partial().pick({
   title: true,
   description: true,
   status: true,
@@ -94,47 +111,55 @@ export async function updateProject(
   projectData: FormData,
 ) {
   try {
-    const dateString = projectData.get('dueDate') || null;
+    const currentUserId = await getCurrentUserId();
+
+    const { success: isAuthorize } = await checkMemberPermission(
+      currentUserId,
+      editProjectId,
+      RESOURCES.PROJECTS,
+      ACTIONS.UPDATE,
+    );
+
+    if (!isAuthorize) throw new Error('User is unauthorized to update project');
+
+    const dueDateString = projectData.get('dueDate') || null;
 
     const { success, data: currentProject } = await getProjectById(editProjectId);
 
     if (!success || !currentProject) {
       throw new Error('Something went wrong, Please try again');
     }
-    const editableData = {
+    const originalProjectData = {
       title: currentProject.title as string,
       description: currentProject.description as string,
       status: currentProject.status as string,
       dueDate: currentProject.dueDate as string,
     };
 
-    const currentData = {
+    const currentProjectData = {
       title: projectData.get('title') as string,
       description: projectData.get('description') as string,
       status: projectData.get('status') as string,
-      dueDate: dateString as string,
+      dueDate: dueDateString as string,
     };
-    const changes = getDataDiff(currentData, editableData);
+    const changes = getDataDiff(originalProjectData, currentProjectData);
     if (!changes) throw new Error('No changes made');
 
     let statusChangedById = null;
     let statusChangedAt = null;
     if (changes.status) {
-      statusChangedById = await getCurrentUserId();
+      statusChangedById = currentUserId;
       statusChangedAt = new Date();
     }
 
     const validatedData = EditProjectSchema.parse({
-      title: projectData.get('title') as string,
-      description: projectData.get('description') as string,
-      status: projectData.get('status'),
+      ...changes,
       statusChangedAt: statusChangedAt,
       statusChangedById: statusChangedById,
-      dueDate: dateString,
       updatedAt: new Date(),
     });
 
-    console.log(validatedData);
+    // console.log(validatedData);
 
     await db.update(projects).set(validatedData).where(eq(projects.id, editProjectId));
     revalidatePath('/(dashboard)');
@@ -169,6 +194,8 @@ export async function deleteProject(projectId: Project['id']): Promise<ActionRes
     };
   }
 }
+
+// TODO [CONSIDER] check read authorization in fetching projects
 
 // NOTE: change to Partial<SelectProject[]> if you don't need all the columns
 export async function getAllProjects(): Promise<QueryResult<Project[]>> {
@@ -217,7 +244,7 @@ export async function getAllUserProject(userId: string) {
   } catch (error) {
     return {
       success: false,
-      message: `Failed retrieve all projects. Error ${error}`,
+      message: `Failed retrieve all projects. ${error}`,
       error: JSON.stringify(error),
     };
   }
