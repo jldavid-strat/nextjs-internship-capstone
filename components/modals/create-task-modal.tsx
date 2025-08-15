@@ -8,7 +8,6 @@ import { TaskSchema } from '@/lib/validations';
 import z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { error } from 'console';
 import { TASK_PRIORITY_VALUES } from '@/lib/db/schema/enums';
 // TODO: Task 4.4 - Build task creation and editing functionality
 // TODO: Task 5.6 - Create task detail modals and editing interfaces
@@ -47,14 +46,22 @@ Integration:
 // TODO: Task 4.1 - Implement project CRUD operations
 // TODO: Task 4.4 - Build task creation and editing functionality
 
+// TODO add toast promise to UNDO mutation via drizzle transaction
+// do tx.rollback when the users undo the mutation
+// commit the statement to apply the mutation
+
 // TODO add ability to add labels
 // TODO add way to assign a member
-const FormTaskSchema = TaskSchema.omit({
-  createdById: true,
-  status: true,
-  kanbanColumnId: true,
-  projectId: true,
-  updatedAt: true,
+const FormTaskSchema = TaskSchema.pick({
+  title: true,
+  description: true,
+  detail: true,
+  priority: true,
+  startDate: true,
+  dueDate: true,
+
+  // add milestoneId
+  // milestoneId: true
 });
 type FormTaskType = z.input<typeof FormTaskSchema>;
 
@@ -85,7 +92,7 @@ export function CreateTaskModal({
     defaultValues: {
       priority: 'none',
       // TODO change to actual value when milestone creation is added
-      milestoneId: null,
+      // milestoneId: null,
     },
   });
 
@@ -214,6 +221,16 @@ export function CreateTaskModal({
             </select>
           </div>
 
+          {/* TODO add assignees */}
+          <div>
+            <p className="text-outer_space-500 dark:text-platinum-500 mb-2 block text-sm font-medium">
+              Add assignees:
+            </p>
+            <p className="text-outer_space-500 dark:text-platinum-500 mb-2 block text-sm font-medium">
+              [DEFAULT]
+            </p>
+          </div>
+
           {/* Server validation error messages */}
           {/* TODO display all error messages not just one */}
           <div>
@@ -234,6 +251,7 @@ export function CreateTaskModal({
             </button>
             <button
               type="submit"
+              disabled={isPending}
               className={`bg-blue_munsell-500 hover:bg-blue_munsell-600 rounded-lg px-4 py-2 text-white transition-colors ${isPending ? 'cursor-progress' : 'cursor-pointer'}`}
             >
               {isPending ? 'Creating' : `Create Task`}
