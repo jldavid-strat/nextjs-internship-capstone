@@ -1,7 +1,7 @@
 // TODO: Task 3.6 - Set up data validation with Zod schemas
 
 import { z } from 'zod';
-import { PROJECT_STATUS_VALUES, TASK_PRIORITY_VALUES, TASK_STATUS_VALUES } from './constants/enums';
+import { PROJECT_STATUS_VALUES, TASK_PRIORITY_VALUES } from './db/schema/enums';
 import { isFuture } from './utils/validation.utils';
 
 /*
@@ -55,7 +55,7 @@ const errorMessages = {
     'Password must contain at least 8 characters, including uppercase, lowercase, number and special character',
 } as const;
 
-const BaseProjectSchema = z.object({
+export const ProjectSchema = z.object({
   title: z
     .string(errorMessages.invalidType('Project Title', 'text'))
     .min(MIN_CHAR, errorMessages.required('Project Title'))
@@ -63,67 +63,66 @@ const BaseProjectSchema = z.object({
   description: z
     .string(errorMessages.invalidType('Project description', 'text'))
     .max(MAX_CHAR, errorMessages.maxChar('Project description', MAX_CHAR))
-    .optional(),
-  status: z.enum(PROJECT_STATUS_VALUES).default('active'),
-  statusChangedAt: z.iso.date(errorMessages.invalidDate('Status changed date')).optional(),
-  slug: z.string().trim(),
-  statusChangedBy: z.uuid().optional(),
-  ownerId: z.string().startsWith('user_', 'OwnerID must start with user_'),
+    .nullable(),
+  status: z.enum(PROJECT_STATUS_VALUES, 'Only select status from the listed options'),
+  statusChangedAt: z.date().nullable(),
+  statusChangedById: z.uuidv4(errorMessages.uuid('Status Modifier ID')).nullable(),
+  ownerId: z.uuidv4(errorMessages.uuid('Owner ID')),
+
+  //  date inputs will be validate as strings
+  // in update and insert these inputs will be transformed into date instances
+
+  // [CONSIDER]
+
   dueDate: z.iso
     .date(errorMessages.invalidDate('Due date'))
     .refine((dateString) => isFuture(dateString), {
-      error: 'Due date must be set in the future',
+      error: 'Due date must be set today or in the future',
     })
-    .optional(),
-  updatedAt: z.iso.date(errorMessages.invalidDate('Updated date')).optional(),
+    .nullable(),
+
+  // will be omitted in insertion
+  updatedAt: z.date(errorMessages.invalidDate('Updated date')),
 });
 
-export const ProjectSchema = {
-  insert: BaseProjectSchema.omit({
-    statusChangedAt: true,
-    statusChangedBy: true,
-    updatedAt: true,
-  }),
-  update: BaseProjectSchema,
-};
-
-const BaseTaskSchema = z.object({
+export const TaskSchema = z.object({
   title: z
     .string(errorMessages.invalidType('Task name', 'text'))
     .min(MIN_CHAR, errorMessages.minChar('Task name', MIN_CHAR))
     .max(MAX_CHAR, errorMessages.maxChar('Task name', MAX_CHAR)),
   description: z
     .string(errorMessages.invalidType('Task description', 'text'))
-    .min(MIN_CHAR, errorMessages.minChar('Task description', MIN_CHAR))
     .max(MAX_CHAR, errorMessages.maxChar('Task description', MAX_CHAR))
-    .optional(),
-  detail: z.string(errorMessages.invalidType('Task detail', 'text')).optional(),
-  status: z.enum(TASK_STATUS_VALUES).default('planning'),
-  priority: z.enum(TASK_PRIORITY_VALUES).default('low'),
+    .nullable(),
+  detail: z.string(errorMessages.invalidType('Task detail', 'text')).nullable(),
+  status: z.string(errorMessages.invalidType('Task status', 'text')),
+  priority: z.enum(TASK_PRIORITY_VALUES),
   projectId: z.uuidv4(errorMessages.uuid('Project ID')),
-  kanbanColumnId: z
-    .int(errorMessages.integer('Kanban Column ID'))
-    .positive(errorMessages.positive('Kanban Column ID')),
+  createdById: z.uuidv4(errorMessages.uuid('Created By ID')),
+  kanbanColumnId: z.uuidv4(errorMessages.uuid('Kanban Column ID')),
+  isCompleted: z.boolean(errorMessages.invalidType('is_completed', 'true or false')),
   milestoneId: z
     .int(errorMessages.integer('Milestone ID'))
-    .positive(errorMessages.positive('Milestone ID')),
-  startDate: z.iso.datetime(errorMessages.invalidDate('Task start date')).optional(),
-  updatedAt: z.iso.datetime(errorMessages.invalidDate('Task updated date')).optional(),
-  dueDate: z.iso.datetime(errorMessages.invalidDate('Task due date')).optional(),
+    .positive(errorMessages.positive('Milestone ID'))
+    .nullable(),
+  startDate: z.iso
+    .date(errorMessages.invalidDate('Due date'))
+    .refine((dateString) => isFuture(dateString), {
+      error: 'Start date must be set today or in the future',
+    })
+    .nullable(),
+  dueDate: z.iso
+    .date(errorMessages.invalidDate('Due date'))
+    .refine((dateString) => isFuture(dateString), {
+      error: 'Due date must be set today or in the future',
+    })
+    .nullable(),
+
+  // will be omitted in insertion
+  updatedAt: z.date(errorMessages.invalidDate('Task updated date')),
 });
 
-export const TaskSchema = {
-  insert: BaseTaskSchema,
-  update: BaseTaskSchema.partial()
-    .omit({
-      projectId: true,
-    })
-    .required({
-      updatedAt: true,
-    }),
-};
-
-const BaseProjecTeamSchema = z.object({
+const BaseProjectTeamSchema = z.object({
   teamName: z
     .string(errorMessages.invalidType('Team name', 'text'))
     .min(MIN_CHAR, errorMessages.minChar('Team name', MIN_CHAR))
@@ -149,10 +148,10 @@ const BaseProjecTeamSchema = z.object({
 });
 
 export const ProjectTeamSchema = {
-  insert: BaseProjecTeamSchema.omit({
+  insert: BaseProjectTeamSchema.omit({
     updatedAt: true,
   }),
-  update: BaseProjecTeamSchema.partial()
+  update: BaseProjectTeamSchema.partial()
     .omit({
       projectId: true,
     })
