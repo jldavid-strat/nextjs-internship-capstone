@@ -169,6 +169,21 @@ export async function KanbanBoard({ projectId }: { projectId: Project['id'] }) {
             </div>
           </div>
         ))}
+
+        {/* add user created kanban columns */}
+        <div className="w-80 shrink-0">
+          <div className="bg-platinum-800 dark:bg-outer_space-400 border-french_gray-300 dark:border-payne's_gray-400 rounded-lg border">
+            <div className="border-french_gray-300 dark:border-payne's_gray-400 border-b p-4">
+              <div className="flex items-center justify-center">
+                <button className="border-french_gray-300 dark:border-payne's_gray-400 text-payne's_gray-500 dark:text-french_gray-400 hover:border-blue_munsell-500 hover:text-blue_munsell-500 w-full rounded-lg border-2 border-dashed p-3 transition-colors">
+                  + Add Kanban Board
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* */}
       </div>
     </div>
   );
