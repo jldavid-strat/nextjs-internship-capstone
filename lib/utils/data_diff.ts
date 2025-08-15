@@ -1,12 +1,6 @@
-import {
-  JobPosition,
-  MemberRole,
-  ProjectStatus,
-  TaskPriority,
-  TaskStatus,
-} from '../constants/enums';
+import { MemberRole, ProjectStatus, TaskPriority } from '@/lib/db/schema/enums';
 
-type Enums = MemberRole | ProjectStatus | JobPosition | TaskPriority | TaskStatus;
+type Enums = MemberRole | ProjectStatus | TaskPriority;
 type DataValueType = string | Date | number | Enums;
 type Data = Record<string, DataValueType>;
 
@@ -17,9 +11,12 @@ type ChangeRecord = {
 
 type Changes = Record<string, ChangeRecord>;
 
+// TODO make unit tests for this function
+
 // retrieved from: https://dev.to/digitaldrreamer/how-to-compare-diff-two-objects-2ocd
-export default function getDataDiff(original: Data, current: Data): Changes | null {
+export default function getDataDiff(original: Data, current: Data): Changes | Data | null {
   const changes: Changes = {};
+  const newValues: Data = {};
 
   // Check current object's properties
   for (const [key, value] of Object.entries(current)) {
@@ -44,6 +41,8 @@ export default function getDataDiff(original: Data, current: Data): Changes | nu
         oldValue: originalValue,
         newValue: currentValue,
       };
+
+      newValues[key] = currentValue;
     }
   }
 
@@ -57,5 +56,5 @@ export default function getDataDiff(original: Data, current: Data): Changes | nu
     }
   }
 
-  return Object.keys(changes).length === 0 ? null : changes;
+  return Object.keys(changes).length === 0 ? null : newValues;
 }
