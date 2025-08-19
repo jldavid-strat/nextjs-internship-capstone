@@ -25,7 +25,7 @@ export async function checkPermission(
       .from(rolePermissions)
       .where(eq(rolePermissions.role, role));
 
-    if (!result) {
+    if (!result.isAllowed) {
       return {
         success: true,
         result: PermissionResult.DENIED,
