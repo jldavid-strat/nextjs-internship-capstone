@@ -9,7 +9,7 @@ import { revalidatePath } from 'next/cache';
 import { ProjectSchema } from '../validations';
 import { ZodError } from 'zod';
 import { getCurrentUserId } from './user.queries';
-import { addProjectMember } from './project_member.queries';
+import { addOwnerInProjectMembers } from './project_member.queries';
 import { projectMembers, users } from '@/migrations/schema';
 import getDataDiff from '../utils/data_diff';
 import { createDefaultKanbanColumns } from './kanban-column.queries';
@@ -58,7 +58,7 @@ export async function createProject(
     // TODO wrap in a db transaction
     // add owner in member list as owner
     console.log('added owner as member');
-    await addProjectMember(validatedData.ownerId, newProjectId, 'owner');
+    await addOwnerInProjectMembers(validatedData.ownerId, newProjectId);
 
     // create default kanban boards
     console.log('created default kanban boards');
