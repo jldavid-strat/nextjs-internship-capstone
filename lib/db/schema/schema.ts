@@ -54,7 +54,7 @@ export const projects = pgTable(
     description: varchar('description', { length: 300 }),
     status: projectStatusEnum().default('on-going').notNull(),
     statusChangedAt: timestamp('status_changed_at'),
-    statusChangedById: uuid('status_changed_by').references(() => users.id),
+    statusChangedById: uuid('status_changed_by_id').references(() => users.id),
     ownerId: uuid('owner_id')
       .references(() => users.id)
       .notNull(),
@@ -136,7 +136,7 @@ export const projectDiscussions = pgTable('project_discussions', {
     .notNull(),
   title: varchar('title', { length: 255 }).notNull(),
   content: text('content').notNull(),
-  createdById: uuid('created_by')
+  createdById: uuid('created_by_id')
     .references(() => users.id)
     .notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),

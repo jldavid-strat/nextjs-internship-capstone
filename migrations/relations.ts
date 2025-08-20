@@ -7,7 +7,7 @@ export const projectDiscussionsRelations = relations(projectDiscussions, ({one, 
 		references: [projects.id]
 	}),
 	user: one(users, {
-		fields: [projectDiscussions.createdBy],
+		fields: [projectDiscussions.createdById],
 		references: [users.id]
 	}),
 	projectDiscussionComments: many(projectDiscussionComments),
@@ -15,15 +15,15 @@ export const projectDiscussionsRelations = relations(projectDiscussions, ({one, 
 
 export const projectsRelations = relations(projects, ({one, many}) => ({
 	projectDiscussions: many(projectDiscussions),
-	user_statusChangedBy: one(users, {
-		fields: [projects.statusChangedBy],
-		references: [users.id],
-		relationName: "projects_statusChangedBy_users_id"
-	}),
 	user_ownerId: one(users, {
 		fields: [projects.ownerId],
 		references: [users.id],
 		relationName: "projects_ownerId_users_id"
+	}),
+	user_statusChangedById: one(users, {
+		fields: [projects.statusChangedById],
+		references: [users.id],
+		relationName: "projects_statusChangedById_users_id"
 	}),
 	projectTeams: many(projectTeams),
 	milestones: many(milestones),
@@ -35,11 +35,11 @@ export const projectsRelations = relations(projects, ({one, many}) => ({
 export const usersRelations = relations(users, ({many}) => ({
 	projectDiscussions: many(projectDiscussions),
 	projectDiscussionComments: many(projectDiscussionComments),
-	projects_statusChangedBy: many(projects, {
-		relationName: "projects_statusChangedBy_users_id"
-	}),
 	projects_ownerId: many(projects, {
 		relationName: "projects_ownerId_users_id"
+	}),
+	projects_statusChangedById: many(projects, {
+		relationName: "projects_statusChangedById_users_id"
 	}),
 	projectTeams_createdById: many(projectTeams, {
 		relationName: "projectTeams_createdById_users_id"
