@@ -11,14 +11,16 @@ export interface User {
 }
 
 export interface Project {
-  id: string;
-  name: string;
+  id: number;
+  title: string;
   description?: string;
-  ownerId: string;
+  status: string[];
+  statusChangedAt?: Date;
+  statusChangedby?: number;
+  ownerId: number;
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt?: Date;
   dueDate?: Date;
-  lists: List[];
 }
 
 export interface List {
@@ -53,6 +55,29 @@ export interface Comment {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type QueryResult<TData = undefined, Error = string> =
+  | {
+      success: true;
+      message: string;
+      data: TData;
+    }
+  | {
+      success: false;
+      message: string;
+      error: Error;
+    };
+export type ActionResult<TData = undefined, Error = string> =
+  | {
+      success: true;
+      message: string;
+      data?: TData;
+    }
+  | {
+      success: false;
+      message: string;
+      error: Error;
+    };
 
 // Note for interns: These types should match your database schema
 // Update as needed when implementing the actual database schema

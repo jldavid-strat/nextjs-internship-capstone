@@ -17,6 +17,13 @@ body:
         **Estimated Time**: X hours \n
         **Week**: Week X \n
         **Category**: Frontend/Backend/Database/Testing"
+      value: "
+        ## Task: [Phase] - [Feature Name]
+
+        **Priority**: High/Medium/Low \n
+        **Estimated Time**: X hours \n
+        **Week**: Week X \n
+        **Category**: Frontend/Backend/Database/Testing"
     validations:
       required: true
 
@@ -39,7 +46,11 @@ body:
         - [] That define when the task is complete \n
         - [] Include testing requirements \n
         "
-
+      value: "
+        - [] Specific, measurable criteria \n
+        - [] That define when the task is complete \n
+        - [] Include testing requirements \n
+        "
   - type: textarea
     id: implementation_notes
     attributes:
@@ -52,6 +63,14 @@ body:
     attributes:
       label: Definition of Done
       placeholder: "
+        - [] Code written and working locally \n
+        - [] Self-reviewed for quality and best practices \n
+        - [] Tests written (if applicable) \n
+        - [] Documentation updated \n
+        - [] Feature deployed and tested \n
+        - [] Ready for optional peer review \n
+        "
+      value: "
         - [] Code written and working locally \n
         - [] Self-reviewed for quality and best practices \n
         - [] Tests written (if applicable) \n

@@ -1,12 +1,14 @@
-import { getAllProjects } from '@/lib/db';
-import { Calendar, Users, MoreHorizontal } from 'lucide-react';
+'use client';
+
+import { createProject } from '@/lib/queries/project.queries';
+import { useUser } from '@clerk/nextjs';
+import React, { useActionState } from 'react';
 
 const projects = [
   {
     id: '1',
     name: 'Website Redesign',
-    description:
-      'Complete overhaul of company website with modern design and improved UX',
+    description: 'Complete overhaul of company website with modern design and improved UX',
     progress: 75,
     members: 5,
     dueDate: '2024-02-15',
@@ -65,74 +67,84 @@ const projects = [
   },
 ];
 
-export async function ProjectGrid() {
-  const projectList = await getAllProjects();
-  console.log(projectList);
+export function AddProjectForm() {
+  const [state, createProjectAction, isPending] = useActionState(createProject, undefined);
+
+  const currentClerkId = 'user_30G2JK1c23qECrgbwdKUyRF3LZi';
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {projects.map((project) => (
-        <div
-          key={project.id}
-          className="dark:bg-outer_space-500 border-french_gray-300 dark:border-payne's_gray-400 cursor-pointer rounded-lg border bg-white p-6 transition-shadow hover:shadow-lg"
-        >
-          <div className="mb-4 flex items-start justify-between">
-            <div className={`h-3 w-3 rounded-full ${project.color}`} />
-            <button className="hover:bg-platinum-500 dark:hover:bg-payne's_gray-400 rounded p-1">
-              <MoreHorizontal size={16} />
-            </button>
-          </div>
-
-          <h3 className="text-outer_space-500 dark:text-platinum-500 mb-2 text-lg font-semibold">
-            {project.name}
-          </h3>
-
-          <p className="text-payne's_gray-500 dark:text-french_gray-400 mb-4 line-clamp-2 text-sm">
-            {project.description}
-          </p>
-
-          <div className="text-payne's_gray-500 dark:text-french_gray-400 mb-4 flex items-center justify-between text-sm">
-            <div className="flex items-center">
-              <Users size={16} className="mr-1" />
-              {project.members} members
+    <>
+      <CurrentUserDataBox />
+      <section className="mb-4 w-full bg-gray-300 p-6">
+        <form action={createProjectAction}>
+          <div className="flex w-1/2 flex-col gap-4">
+            <input
+              className="rounded-xl border border-black p-2"
+              type="text"
+              name="title"
+              required
+              placeholder="Project Title"
+            />
+            <input
+              className="rounded-xl border border-black p-2"
+              type="text"
+              name="description"
+              placeholder="Project Description"
+            />
+            <div className="mb-2 flex flex-col">
+              <label htmlFor="due-date">Due Date</label>
+              <div className="flex flex-row gap-2">
+                <input className="rounded-xl border border-black p-2" type="date" name="due-date" />
+                <input
+                  className="rounded-xl border border-black p-2"
+                  type="time"
+                  name="due-date-time"
+                />
+              </div>
             </div>
-            <div className="flex items-center">
-              <Calendar size={16} className="mr-1" />
-              {project.dueDate}
-            </div>
+            <input type="hidden" name="owner-id" value={currentClerkId} />
           </div>
+          <p className="text-lg text-gray-800">{!state?.success ? state?.error : state.message}</p>
 
-          <div className="mb-4">
-            <div className="mb-2 flex items-center justify-between text-sm">
-              <span className="text-payne's_gray-500 dark:text-french_gray-400">
-                Progress
-              </span>
-              <span className="text-outer_space-500 dark:text-platinum-500 font-medium">
-                {project.progress}%
-              </span>
-            </div>
-            <div className="bg-french_gray-300 dark:bg-payne's_gray-400 h-2 w-full rounded-full">
-              <div
-                className={`h-2 rounded-full transition-all duration-300 ${project.color}`}
-                style={{ width: `${project.progress}%` }}
-              />
-            </div>
-          </div>
+          <button
+            type="submit"
+            className={`w-fit rounded-xl bg-gray-500 p-2 text-white ${isPending ? 'hover:cursor-progress' : 'hover:cursor-pointer'}`}
+          >
+            {isPending ? 'Submitting' : 'Submit'}
+          </button>
+        </form>
+      </section>
+    </>
+  );
+}
 
-          <div className="flex items-center justify-between">
-            <span
-              className={`rounded-full px-2 py-1 text-xs font-medium ${
-                project.status === 'In Progress'
-                  ? 'bg-blue_munsell-100 text-blue_munsell-700 dark:bg-blue_munsell-900 dark:text-blue_munsell-300'
-                  : project.status === 'Review'
-                    ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
-                    : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-              }`}
-            >
-              {project.status}
-            </span>
-          </div>
-        </div>
-      ))}
+function CurrentUserDataBox() {
+  const { user, isLoaded, isSignedIn } = useUser();
+
+  if (!isLoaded) return <div>Clerk Loading</div>;
+  if (!isSignedIn) return <div>User not logged in</div>;
+  const userData = {
+    clerkId: user.id,
+    firsName: user.firstName,
+    lastName: user.lastName,
+    email: user.emailAddresses[0].emailAddress,
+    imgUrl: user.imageUrl,
+    createdAt: user.createdAt,
+  };
+
+  return (
+    <div className="border bg-gray-300 p-6">
+      <h3 className="mb-4 p-2 text-2xl font-bold">Current User</h3>
+      <pre className="font-auto overflow-auto whitespace-pre-wrap">
+        {JSON.stringify(userData, null, 2)}
+      </pre>
     </div>
+  );
+}
+
+export function ProjectGrid({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">{children}</div>
+    </>
   );
 }
