@@ -1,3 +1,0 @@
-/*  TODO create validate functions for queries
-    ex: validateProjectData() ... 
-*/
