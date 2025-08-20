@@ -1,6 +1,7 @@
 import { db } from '@/lib/db/connect_db';
 import { reset, seed } from 'drizzle-seed';
-import * as schema from '@/lib/db/schema';
+import * as schema from '@/lib/db/schema/schema';
+import { sql } from 'drizzle-orm';
 
 const projectStatus = ['active', 'completed', 'archived', 'on_going', 'cancelled'];
 
@@ -21,6 +22,21 @@ const project_uuids = [
   '87654321-0fed-4cba-9876-543210987654',
   'deadbeef-cafe-4babe-dead-beefcafebabe',
 ];
+
+async function deleteDB() {
+  // Drop all tables (be very careful!)
+  await db.execute(sql`
+    DROP SCHEMA public CASCADE;
+  `);
+  await db.execute(sql`
+    CREATE SCHEMA public;
+  `);
+  console.log('All tables dropped');
+}
+
+async function resetDB() {
+  await reset(db, schema);
+}
 async function main() {
   await reset(db, schema);
   await seed(db, {
@@ -59,5 +75,5 @@ async function main() {
     },
   }));
 }
-
-main();
+deleteDB();
+// main();
