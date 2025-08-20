@@ -2,7 +2,7 @@
 
 import { QueryResult } from '@/types';
 import { db } from '../db/connect_db';
-import { projects, taskAssignees, tasks } from '../db/schema/schema';
+import { taskAssignees, tasks } from '../db/schema/schema';
 import { and, eq, max } from 'drizzle-orm';
 import { Project, Task } from '@/types/db.types';
 import { TaskSchema } from '../validations';
