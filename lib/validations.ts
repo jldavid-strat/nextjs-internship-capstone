@@ -97,6 +97,9 @@ export const TaskSchema = z.object({
   detail: z.string(errorMessages.invalidType('Task detail', 'text')).nullable(),
   status: z.string(errorMessages.invalidType('Task status', 'text')),
   priority: z.enum(TASK_PRIORITY_VALUES),
+  position: z.int(errorMessages.integer('Task position')).refine((n) => n >= 0, {
+    error: 'Task position must be zero or positive',
+  }),
   projectId: z.uuidv4(errorMessages.uuid('Project ID')),
   createdById: z.uuidv4(errorMessages.uuid('Created By ID')),
   kanbanColumnId: z.uuidv4(errorMessages.uuid('Kanban Column ID')),
@@ -122,7 +125,7 @@ export const TaskSchema = z.object({
   updatedAt: z.date(errorMessages.invalidDate('Task updated date')),
 });
 
-const BaseProjectTeamSchema = z.object({
+export const ProjectTeamSchema = z.object({
   teamName: z
     .string(errorMessages.invalidType('Team name', 'text'))
     .min(MIN_CHAR, errorMessages.minChar('Team name', MIN_CHAR))
@@ -147,17 +150,7 @@ const BaseProjectTeamSchema = z.object({
   updatedAt: z.iso.datetime(errorMessages.invalidDate('Update at')),
 });
 
-export const ProjectTeamSchema = {
-  insert: BaseProjectTeamSchema.omit({
-    updatedAt: true,
-  }),
-  update: BaseProjectTeamSchema.partial()
-    .omit({
-      projectId: true,
-    })
-    .required({ updatedAt: true }),
-};
-const BaseProjecDiscussionSchema = z.object({
+export const ProjecDiscussionSchema = z.object({
   projectId: z.uuidv4(errorMessages.uuid('Project ID')),
   title: z
     .string(errorMessages.invalidType('Project discussion title', 'text'))
@@ -168,20 +161,7 @@ const BaseProjecDiscussionSchema = z.object({
   updatedAt: z.iso.datetime(errorMessages.invalidDate('Project discussion updated date')),
 });
 
-export const ProjectDiscussionSchema = {
-  insert: BaseProjecDiscussionSchema.omit({
-    closedAt: true,
-  }),
-  update: BaseProjecDiscussionSchema.partial()
-    .omit({
-      projectId: true,
-    })
-    .required({
-      updatedAt: true,
-    }),
-};
-
-const BaseProjectDiscussionCommentSchema = z.object({
+export const ProjectDiscussionCommentSchema = z.object({
   authorId: z.uuidv4(errorMessages.uuid('Project discussion comment author ID')),
   content: z.string(errorMessages.invalidType('Project discussion comment content', 'text')),
   projectDiscussionId: z.uuidv4(errorMessages.uuid('Project ID')),
@@ -189,38 +169,18 @@ const BaseProjectDiscussionCommentSchema = z.object({
   updatedAt: z.iso.datetime(errorMessages.invalidDate('Project discussion comment update date')),
 });
 
-export const ProjectDiscussionsCommentSchema = {
-  insert: BaseProjectDiscussionCommentSchema.omit({
-    updatedAt: true,
-  }),
-  update: BaseProjectDiscussionCommentSchema.partial()
-    .omit({
-      projectDiscussionId: true,
-    })
-    .required({
-      updatedAt: true,
-    }),
-};
-
-const BaseUserSchema = z.object({
+export const UserSchema = z.object({
   id: z.uuid(),
-  clerkId: z.string(),
-  firstName: z.string().max(255, 'First name is too long'),
-  lastName: z.string().max(255, 'Last name is too long'),
-  imgLink: z.string().max(255, 'Last name is too long'),
-  primaryEmailAdress: z.email(),
-  jobPositionId: z.int().positive(),
+  clerkId: z.string().trim(),
+  firstName: z.string().trim().max(255, 'First name is too long'),
+  lastName: z.string().trim().max(255, 'Last name is too long'),
+  imgLink: z.string().trim().max(255, 'Last name is too long'),
+  primaryEmailAdress: z.email().trim(),
   createdAt: z.date(),
-  updatedAt: z.date(),
+  updatedAt: z.date().nullable(),
 });
 
-export const UserSchema = {
-  response: BaseUserSchema,
-  insert: BaseUserSchema,
-  update: BaseUserSchema,
-};
-
-const BaseTaskCommentSchema = z.object({
+export const TaskCommentSchema = z.object({
   id: z.uuid(),
   content: z.string(),
   taskId: z.int().positive(),
@@ -230,13 +190,7 @@ const BaseTaskCommentSchema = z.object({
   updatedAt: z.date(),
 });
 
-export const TaskCommentSchema = {
-  response: BaseTaskCommentSchema,
-  insert: BaseTaskCommentSchema,
-  update: BaseTaskCommentSchema,
-};
-
-const BaseKanbanColumnSchema = z.object({
+export const KanbanColumnSchema = z.object({
   id: z.int().positive(),
   name: z.string().max(255, 'Column name is too long'),
   description: z.string().max(255, 'Descriptio name is too long'),
@@ -246,13 +200,7 @@ const BaseKanbanColumnSchema = z.object({
   updatedAt: z.date(),
 });
 
-export const KanbanColumnSchema = {
-  response: BaseKanbanColumnSchema,
-  insert: BaseKanbanColumnSchema,
-  update: BaseKanbanColumnSchema,
-};
-
-const BaseMilestoneSchema = z.object({
+export const MilestoneSchema = z.object({
   id: z.int().positive(),
   milestoneName: z.string().max(255, 'Milestone name is too long'),
 
@@ -260,13 +208,7 @@ const BaseMilestoneSchema = z.object({
   achievedAt: z.date(),
 });
 
-export const MilestoneSchema = {
-  response: BaseMilestoneSchema,
-  insert: BaseMilestoneSchema,
-  update: BaseMilestoneSchema,
-};
-
-const BaseTaskAttachmentSchema = z.object({
+export const TaskAttachmentSchema = z.object({
   id: z.int().positive(),
   taskId: z.int().positive(),
 
@@ -278,15 +220,7 @@ const BaseTaskAttachmentSchema = z.object({
   uploadedAt: z.date(),
 });
 
-export const TaskAttachmentSchema = {
-  response: BaseTaskAttachmentSchema,
-  insert: BaseTaskAttachmentSchema,
-
-  // TODO verify if this is needed
-  update: BaseTaskAttachmentSchema,
-};
-
-const BaseTaskHistorySchema = z.object({
+export const TaskHistorySchema = z.object({
   id: z.int().positive(),
   taskId: z.int().positive(),
   changedBy: z.uuid(),
@@ -294,23 +228,12 @@ const BaseTaskHistorySchema = z.object({
   changedAt: z.date(),
 });
 
-export const taskHistorySchema = z.object({
-  response: BaseTaskHistorySchema,
-  insert: BaseTaskHistorySchema,
-});
-
-const BaseLabelSchema = z.object({
+export const LabelSchema = z.object({
   id: z.int().positive(),
   name: z.string().max(255, 'Label name is too long'),
 
   // TODO create advance string format for hex colors
   color: z.string().max(7, 'Color format is too long. Not a in valid hex format'),
 });
-
-export const LabelSchema = {
-  response: BaseLabelSchema,
-  insert: BaseLabelSchema,
-  update: BaseLabelSchema,
-};
 
 // TODO add validations for join tables
