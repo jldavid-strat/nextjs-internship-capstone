@@ -22,10 +22,14 @@ export const MEMBER_ROLE_VALUES = [
   'member',
 ] as const;
 
+// the only roles that can be selectable from a form
+export const SELECT_ROLE_VALUES = ['admin', 'viewer', 'member'] as const;
+
 // derived types
 export type ProjectStatus = (typeof PROJECT_STATUS_VALUES)[number];
 export type TaskPriority = (typeof TASK_PRIORITY_VALUES)[number];
 export type MemberRole = (typeof MEMBER_ROLE_VALUES)[number];
+export type SelectMemberRole = (typeof SELECT_ROLE_VALUES)[number];
 
 export const projectStatusEnum = pgEnum('project_status', PROJECT_STATUS_VALUES);
 

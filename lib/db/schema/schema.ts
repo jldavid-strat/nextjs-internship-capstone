@@ -96,6 +96,8 @@ export const projectMembers = pgTable(
       .references(() => projects.id)
       .notNull(),
     projectTeamId: uuid('project_team_id').references(() => projectTeams.id),
+
+    // [CONSIDER] adding addedBy columns
     role: memberRoleEnum().notNull().default('member'),
     joinedAt: timestamp('joined_at').defaultNow(),
     deletedAt: timestamp('deleted_at'),
@@ -247,6 +249,7 @@ export const tasks = pgTable(
       .notNull(),
     milestoneId: integer('milestone_id').references(() => milestones.id),
     status: varchar('status').notNull(),
+    position: integer('position').notNull(),
     priority: taskPriorityEnum().default('none').notNull(),
     isCompleted: boolean('is_compeleted').notNull(),
     createdById: uuid('created_by_id')

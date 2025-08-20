@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { projects, projectDiscussions, users, projectDiscussionComments, projectTeams, milestones, tasks, kanbanColumns, taskAttachments, taskComments, taskHistory, taskLabels, labels, taskAssignees, projectMembers, projectKanbanColumns } from "./schema";
+import { projects, projectDiscussions, users, projectDiscussionComments, projectTeams, tasks, taskAttachments, milestones, kanbanColumns, taskComments, taskHistory, taskLabels, labels, taskAssignees, projectMembers, projectKanbanColumns } from "./schema";
 
 export const projectDiscussionsRelations = relations(projectDiscussions, ({one, many}) => ({
 	project: one(projects, {
@@ -26,8 +26,8 @@ export const projectsRelations = relations(projects, ({one, many}) => ({
 		relationName: "projects_ownerId_users_id"
 	}),
 	projectTeams: many(projectTeams),
-	tasks: many(tasks),
 	milestones: many(milestones),
+	tasks: many(tasks),
 	projectMembers: many(projectMembers),
 	projectKanbanColumns: many(projectKanbanColumns),
 }));
@@ -47,8 +47,8 @@ export const usersRelations = relations(users, ({many}) => ({
 	projectTeams_leaderId: many(projectTeams, {
 		relationName: "projectTeams_leaderId_users_id"
 	}),
-	tasks: many(tasks),
 	taskAttachments: many(taskAttachments),
+	tasks: many(tasks),
 	taskComments: many(taskComments),
 	taskHistories: many(taskHistory),
 	taskAssignees_assignedById: many(taskAssignees, {
@@ -97,7 +97,19 @@ export const projectTeamsRelations = relations(projectTeams, ({one, many}) => ({
 	projectMembers: many(projectMembers),
 }));
 
+export const taskAttachmentsRelations = relations(taskAttachments, ({one}) => ({
+	task: one(tasks, {
+		fields: [taskAttachments.taskId],
+		references: [tasks.id]
+	}),
+	user: one(users, {
+		fields: [taskAttachments.uploadedById],
+		references: [users.id]
+	}),
+}));
+
 export const tasksRelations = relations(tasks, ({one, many}) => ({
+	taskAttachments: many(taskAttachments),
 	milestone: one(milestones, {
 		fields: [tasks.milestoneId],
 		references: [milestones.id]
@@ -114,7 +126,6 @@ export const tasksRelations = relations(tasks, ({one, many}) => ({
 		fields: [tasks.kanbanColumnId],
 		references: [kanbanColumns.id]
 	}),
-	taskAttachments: many(taskAttachments),
 	taskComments: many(taskComments),
 	taskHistories: many(taskHistory),
 	taskLabels: many(taskLabels),
@@ -122,27 +133,16 @@ export const tasksRelations = relations(tasks, ({one, many}) => ({
 }));
 
 export const milestonesRelations = relations(milestones, ({one, many}) => ({
-	tasks: many(tasks),
 	project: one(projects, {
 		fields: [milestones.projectId],
 		references: [projects.id]
 	}),
+	tasks: many(tasks),
 }));
 
 export const kanbanColumnsRelations = relations(kanbanColumns, ({many}) => ({
 	tasks: many(tasks),
 	projectKanbanColumns: many(projectKanbanColumns),
-}));
-
-export const taskAttachmentsRelations = relations(taskAttachments, ({one}) => ({
-	task: one(tasks, {
-		fields: [taskAttachments.taskId],
-		references: [tasks.id]
-	}),
-	user: one(users, {
-		fields: [taskAttachments.uploadedById],
-		references: [users.id]
-	}),
 }));
 
 export const taskCommentsRelations = relations(taskComments, ({one, many}) => ({
