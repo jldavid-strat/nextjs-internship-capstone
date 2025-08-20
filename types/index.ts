@@ -1,4 +1,3 @@
-import { ProjectStatus } from '@/lib/constants/enums';
 // TypeScript type definitions
 // Task 1.3: Set up project structure and folder organization
 
@@ -15,7 +14,7 @@ export interface Project {
   id: number;
   title: string;
   description?: string;
-  status: ProjectStatus;
+  status: string[];
   statusChangedAt?: Date;
   statusChangedby?: number;
   ownerId: number;
@@ -57,16 +56,27 @@ export interface Comment {
   updatedAt: Date;
 }
 
-export type queryResult<T = undefined> =
+export type QueryResult<TData = undefined, Error = string> =
   | {
       success: true;
       message: string;
-      data?: T;
+      data: TData;
     }
   | {
       success: false;
       message: string;
-      error: string;
+      error: Error;
+    };
+export type ActionResult<TData = undefined, Error = string> =
+  | {
+      success: true;
+      message: string;
+      data?: TData;
+    }
+  | {
+      success: false;
+      message: string;
+      error: Error;
     };
 
 // Note for interns: These types should match your database schema
