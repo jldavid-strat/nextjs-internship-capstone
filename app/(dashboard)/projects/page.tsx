@@ -1,12 +1,11 @@
-import { ProjectGrid } from '@/components/project-grid';
 import { Search, Filter } from 'lucide-react';
 import { AddProjectForm } from '../../../components/project-grid';
 import { CreateProjectButton } from '@/components/create-project-button';
-import { getCurrentUserClerkId } from '@/lib/queries/user.queries';
+import { getCurrentUserId } from '@/lib/queries/user.queries';
 import ProjectList from '@/components/project-list';
 
 export default async function ProjectsPage() {
-  const currentClerkId = await getCurrentUserClerkId();
+  const currentUserId = await getCurrentUserId();
 
   return (
     <div className="space-y-6">
@@ -57,7 +56,7 @@ export default async function ProjectsPage() {
 
       {/* project grid */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <ProjectList userClerkId={currentClerkId} />
+        <ProjectList userId={currentUserId} />
       </div>
       {/* Component Placeholders */}
       <div className="mt-8 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6 dark:border-gray-600 dark:bg-gray-800/50">
