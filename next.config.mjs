@@ -7,7 +7,6 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: false,
     remotePatterns: [new URL('https://img.clerk.com/*')],
   },
 };
