@@ -1,6 +1,6 @@
 import { queryResult } from '@/types';
 import { db } from '../db/connect_db';
-import { tasks, taskComments, taskLabels } from '../db/schema';
+import { tasks, taskComments, taskLabels } from '../db/schema/schema';
 import { eq } from 'drizzle-orm';
 import { TaskComment, CreateTaskComment, UpdateTaskComment } from '@/types/db.types';
 
