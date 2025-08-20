@@ -1,6 +1,7 @@
 export const RESOURCES = {
   PROJECTS: 'projects',
   PROJECT_TEAMS: 'project_teams',
+  PROJECT_MEMBERS: 'project_members',
   PROJECT_DISCUSSIONS: 'project_discussions',
   PROJECT_COMMENTS: 'projects_comments',
   TASKS: 'tasks',
@@ -15,6 +16,7 @@ export const ACTIONS = {
   DELETE: 'delete',
   REMOVE: 'remove',
   ASSIGN: 'assign',
+  INVITE: 'invite',
   ASSIGN_MEMBERS: 'assign_members',
   TRANSFER: 'transfer',
   ARCHIVE: 'archive',
