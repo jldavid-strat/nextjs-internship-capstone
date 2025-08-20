@@ -46,7 +46,9 @@ export function EditProjectModal({
       title: projectData.title,
       description: projectData.description,
       status: projectData.status,
-      dueDate: new Date(projectData.dueDate!).toISOString().split('T')[0],
+
+      // only applies date string format when not null
+      dueDate: projectData.dueDate && new Date(projectData.dueDate!).toISOString().split('T')[0],
     },
   });
 
