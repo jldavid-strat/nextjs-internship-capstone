@@ -2,8 +2,8 @@
 
 import { QueryResult } from '@/types';
 import { db } from '../db/connect_db';
-import { taskAssignees, tasks } from '../db/schema/schema';
-import { and, eq } from 'drizzle-orm';
+import { projects, taskAssignees, tasks } from '../db/schema/schema';
+import { and, eq, max } from 'drizzle-orm';
 import { Project, Task } from '@/types/db.types';
 import { TaskSchema } from '../validations';
 import { getCurrentUserId } from './user.queries';
@@ -42,6 +42,16 @@ export async function createTask(
     if (!isAuthorize) throw new Error('User is unauthorized to create task');
     console.log(currentUserId);
 
+    // default to null if empty
+    const currentMaxPosition =
+      (await getMaxPositionByColumnId(kanbanData.kanbanColumnId, kanbanData.projectId)) ?? null;
+
+    // default position to zero if empty
+    let position = 0;
+
+    // increment position if not empty
+    if (currentMaxPosition !== null) position = currentMaxPosition + 1;
+
     const startDateString = taskData.get('startDate') || null;
     const dueDateString = taskData.get('dueDate') || null;
     console.log(startDateString);
@@ -49,13 +59,14 @@ export async function createTask(
     console.log(kanbanData.kanbanName);
     console.log(kanbanData.kanbanColumnId);
     console.log(kanbanData.projectId);
+    console.log('postion', position);
 
     const validatedData = InsertTaskSchema.parse({
       title: taskData.get('title') as string,
       description: taskData.get('description') as string,
       detail: taskData.get('detail') as string,
       priority: taskData.get('priority') as string,
-
+      position: position,
       // only set true if task is in 'completed' column
       isCompleted: kanbanData.kanbanName.toLowerCase() === 'completed' ? true : false,
 
@@ -70,7 +81,6 @@ export async function createTask(
     });
 
     const [newTask] = await db.insert(tasks).values(validatedData).returning({ taskId: tasks.id });
-    // await db.insert(tasks).values(validatedData).returning({ taskId: tasks.id });
 
     // assign task to self
     // TODO validate using zod
@@ -196,6 +206,24 @@ export async function deleteTask(taskId: Task['id']): Promise<QueryResult> {
   }
 }
 
+export async function getMaxPositionByColumnId(
+  kanbanColumnId: Task['kanbanColumnId'],
+  projectId: Task['projectId'],
+) {
+  try {
+    const [result] = await db
+      .select({
+        maxPosition: max(tasks.position),
+      })
+      .from(tasks)
+      .where(and(eq(tasks.projectId, projectId), eq(tasks.kanbanColumnId, kanbanColumnId)));
+
+    return result.maxPosition;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 // return type : Promise<QueryResult<Partial<Task[]>>>
 export async function getTaskListByStatus(projectId: Project['id'], status: string) {
   try {
@@ -210,7 +238,8 @@ export async function getTaskListByStatus(projectId: Project['id'], status: stri
         dueDate: tasks.dueDate,
       })
       .from(tasks)
-      .where(and(eq(tasks.projectId, projectId), eq(tasks.status, status)));
+      .where(and(eq(tasks.projectId, projectId), eq(tasks.status, status)))
+      .orderBy(tasks.position);
 
     return { success: true, message: `Successfully fetched task list`, data: taskList };
   } catch (error) {
