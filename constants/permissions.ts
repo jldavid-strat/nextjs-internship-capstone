@@ -68,6 +68,6 @@ export enum PermissionResult {
 }
 
 export interface IAuthorizationResult {
-  success: boolean;
+  isAuthorize: boolean;
   result: PermissionResult;
 }

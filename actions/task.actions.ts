@@ -3,15 +3,16 @@ import { ACTIONS, RESOURCES } from '@/constants/permissions';
 import { db } from '@/lib/db/connect_db';
 import { taskAssignees, tasks } from '@/lib/db/schema/schema';
 import { checkMemberPermission } from '@/lib/queries/permssions.queries';
-import { getMaxPositionByColumnId, getTaskById } from '@/lib/queries/task.queries';
+import { getMaxNumPositionByColumnId, getTaskById } from '@/lib/queries/task.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
 import getDataDiff from '@/lib/utils/data_diff';
 import { TaskSchema } from '@/lib/validations';
-import { QueryResult } from '@/types';
+import { QueryResult } from '@/types/types';
 import { Project, Task } from '@/types/db.types';
 import { and, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { ZodError } from 'zod';
+import { MoveTaskDataType } from '../types/types';
 
 const InsertTaskSchema = TaskSchema.omit({
   updatedAt: true,
@@ -44,7 +45,7 @@ export async function createTask(
 
     // default to null if empty
     const currentMaxPosition =
-      (await getMaxPositionByColumnId(kanbanData.kanbanColumnId, kanbanData.projectId)) ?? null;
+      (await getMaxNumPositionByColumnId(kanbanData.kanbanColumnId, kanbanData.projectId)) ?? null;
 
     // default position to zero if empty
     let position = 0;
@@ -135,7 +136,7 @@ export async function updateTask(
     const startDateString = taskData.get('startDate') || null;
     const dueDateString = taskData.get('dueDate') || null;
 
-    const { success, data: currentTask } = await getTaskById(queryIds.taskId, queryIds.projectId);
+    const { success, data: currentTask } = await getTaskById(queryIds.taskId);
     console.log(currentTask);
     if (!success || !currentTask) {
       throw new Error('Something went wrong, Please try again');
@@ -173,6 +174,8 @@ export async function updateTask(
       .set(validatedData)
       .where(and(eq(tasks.id, queryIds.taskId), eq(tasks.projectId, queryIds.projectId)));
 
+    revalidatePath(`/(dashboard)`);
+
     return { success: true, message: `Task successfully updated`, data: undefined };
   } catch (error) {
     if (error instanceof ZodError) {
@@ -201,6 +204,39 @@ export async function deleteTask(taskId: Task['id']): Promise<QueryResult> {
     return {
       success: false,
       message: `Failed to delete task. Error ${error}`,
+      error: JSON.stringify(error),
+    };
+  }
+}
+
+// moves task to another column
+export async function moveTask(moveTaskData: MoveTaskDataType) {
+  try {
+    // authenticate and authorize user
+    const currentUserId = await getCurrentUserId();
+
+    const { isAuthorize } = await checkMemberPermission(
+      currentUserId,
+      moveTaskData.projectId,
+      RESOURCES.TASKS,
+      ACTIONS.UPDATE,
+    );
+
+    if (!isAuthorize) throw new Error('User is unauthorized to update task');
+
+    const { success, data: currentTask } = await getTaskById(moveTaskData.taskId);
+    console.log(currentTask);
+    if (!success || !currentTask) {
+      throw new Error('Something went wrong, Please try again');
+      // get orig position of task
+      // reorder original column tasks
+      // reorder current column tasks with new position
+      //
+      console.log('todo move tasks');
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
       error: JSON.stringify(error),
     };
   }

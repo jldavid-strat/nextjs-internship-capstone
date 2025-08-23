@@ -5,7 +5,7 @@ import { projects } from '@/lib/db/schema/schema';
 import { checkMemberPermission, checkPermission } from '@/lib/queries/permssions.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
 import { ProjectSchema } from '@/lib/validations';
-import { ActionResult, QueryResult } from '@/types';
+import { ActionResult, QueryResult } from '@/types/types';
 import { Project } from '@/types/db.types';
 import { addOwnerInProjectMembers } from './project_member.actions';
 import { createDefaultKanbanColumns } from './kanban_column.actions';
@@ -31,9 +31,9 @@ export async function createProject(
     console.log(currentUserId);
 
     // all users by default can create projects
-    const { success } = await checkPermission('public', RESOURCES.PROJECTS, ACTIONS.CREATE);
+    const { isAuthorize } = await checkPermission('public', RESOURCES.PROJECTS, ACTIONS.CREATE);
 
-    if (!success) throw new Error('User is unauthorized to create project');
+    if (!isAuthorize) throw new Error('User is unauthorized to create project');
 
     // [CONSIDER] const data = Object.fromEntries(projectData.entries())
 
@@ -112,7 +112,7 @@ export async function updateProject(
   try {
     const currentUserId = await getCurrentUserId();
 
-    const { success: isAuthorize } = await checkMemberPermission(
+    const { isAuthorize } = await checkMemberPermission(
       currentUserId,
       editProjectId,
       RESOURCES.PROJECTS,

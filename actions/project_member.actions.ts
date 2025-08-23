@@ -16,7 +16,7 @@ export async function addProjectMember(
   try {
     const currentUserId = await getCurrentUserId();
 
-    const { success: isAuthorize } = await checkMemberPermission(
+    const { isAuthorize } = await checkMemberPermission(
       currentUserId,
       additionalInfo.projectId,
       RESOURCES.PROJECTS,
