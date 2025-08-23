@@ -4,7 +4,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from '@/components/theme-provider';
-
+import Providers from '@/providers/query-provider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
@@ -19,7 +19,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       {/* TODO: add universal loading on top of the app */}
       <html lang="en">
         <body className={inter.className}>
-          <ThemeProvider>{children}</ThemeProvider>
+          <Providers>
+            <ThemeProvider>{children}</ThemeProvider>
+          </Providers>
         </body>
       </html>
     </ClerkProvider>
