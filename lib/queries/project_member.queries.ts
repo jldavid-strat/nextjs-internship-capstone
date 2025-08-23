@@ -1,5 +1,4 @@
-'use server';
-
+import 'server-only';
 import { projectMembers, users } from '@/lib/db/schema/schema';
 import { db } from '../db/connect_db';
 import { projects } from '../db/schema/schema';

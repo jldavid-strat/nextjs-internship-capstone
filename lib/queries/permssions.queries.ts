@@ -1,3 +1,4 @@
+import 'server-only';
 import { eq, sql } from 'drizzle-orm';
 import { db } from '../db/connect_db';
 import { rolePermissions } from '@/migrations/schema';
