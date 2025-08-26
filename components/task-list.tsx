@@ -1,18 +1,15 @@
-import { getTaskListByStatus } from '@/lib/queries/task.queries';
-import { Project } from '@/types/db.types';
+import { getTaskList } from '@/lib/queries/task.queries';
+import { KanbanColumn, Project } from '@/types/db.types';
 import ViewTaskDetailButton from './view-task-detail-button';
 
 export async function TaskList({
   projectId,
-  taskStatus,
+  kanbanColumnId,
 }: {
-  taskStatus: string;
+  kanbanColumnId: KanbanColumn['id'];
   projectId: Project['id'];
 }) {
-  const response = await getTaskListByStatus(projectId, taskStatus);
-
-  let taskList = null;
-  if (response.success) taskList = response.data;
+  const { data: taskList } = await getTaskList(projectId, kanbanColumnId);
 
   return (
     <div className="min-h-[400px] space-y-3 p-4">
