@@ -13,10 +13,10 @@ export default clerkMiddleware(
     // redirects the user to sign-in page
     if (isProtectedRoute(req)) await auth.protect();
   },
-  {
-    // only enable debugging in development environment
-    debug: process.env.NODE_ENV === 'development',
-  },
+  // {
+  //   // only enable debugging in development environment
+  //   debug: process.env.NODE_ENV === 'development',
+  // },
 );
 
 export const config = {
@@ -26,6 +26,7 @@ export const config = {
     // Always run for API routes
     '/(api|trpc)(.*)',
   ],
+  publicRoutes: ['/api/events'],
 };
 
 /*
