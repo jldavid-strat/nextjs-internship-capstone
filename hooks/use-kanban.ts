@@ -17,8 +17,12 @@ export function useKanbanColumns(projectId: string): useKanbanColumnResult {
       if (!res.ok) throw new Error('Failed to retrieved kanban columns');
       return res.json();
     },
-    // 5 minutes
-    staleTime: 1000 * 60 * 5,
+
+    // refetch every 5 seconds for now
+    refetchInterval: 5000,
+    refetchIntervalInBackground: false,
+    // 1 minutes
+    // staleTime: 1000 * 60 * 5,
   });
 
   return {
@@ -44,7 +48,13 @@ export function useTaskList(projectId: Project['id']): useTasksByColumnResult {
       if (!res.ok) throw new Error('Failed to retrieve task list');
       return res.json();
     },
-    staleTime: 1000 * 60 * 2,
+
+    // refetch every 5 seconds for now
+    refetchInterval: 5000,
+    refetchIntervalInBackground: false,
+
+    // 2 minutes
+    // staleTime: 1000 * 60 * 2,
   });
 
   return {
