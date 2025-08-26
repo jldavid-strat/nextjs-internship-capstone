@@ -1,14 +1,26 @@
 import 'server-only';
-import { Project } from '@/types/db.types';
+import { KanbanColumn, Project } from '@/types/db.types';
 import { db } from '../db/connect_db';
 import { kanbanColumns, projectKanbanColumns } from '../db/schema/schema';
 import { eq } from 'drizzle-orm';
 import { projects } from '@/migrations/schema';
 
-export async function getKanbanColumnByName(kanbanName: string) {
-  const result = await db.select().from(kanbanColumns).where(eq(kanbanColumns.name, kanbanName));
+export async function getKanbanColumnByName(kanbanName: KanbanColumn['id']) {
+  const kanbanColumn = await db.query.kanbanColumns.findFirst({
+    where: (kanbanColumns, { eq }) => eq(kanbanColumns.name, kanbanName),
+  });
 
-  return result[0];
+  return kanbanColumn;
+}
+
+export async function getCompletedColumnId(): Promise<KanbanColumn['id'] | undefined> {
+  const completedColumnId = await db.query.kanbanColumns.findFirst({
+    columns: {
+      id: true,
+    },
+    where: (kanbanColumns, { eq }) => eq(kanbanColumns.name, 'Completed'),
+  });
+  return completedColumnId?.id;
 }
 
 export async function getKanbanColumnsByProjectId(projectId: Project['id']) {
