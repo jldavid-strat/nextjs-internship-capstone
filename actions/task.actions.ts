@@ -7,12 +7,13 @@ import { getMaxNumPositionByColumnId, getTaskById } from '@/lib/queries/task.que
 import { getCurrentUserId } from '@/lib/queries/user.queries';
 import getDataDiff from '@/lib/utils/data_diff';
 import { TaskSchema } from '@/lib/validations';
-import { QueryResult } from '@/types/types';
+import { QueryResult, MoveTaskDataType } from '@/types/types';
 import { Project, Task } from '@/types/db.types';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { ZodError } from 'zod';
-import { MoveTaskDataType } from '../types/types';
+import { getCompletedColumnId } from '@/lib/queries/kanban_column.queries';
+import { serverEvents } from '@/lib/events/event-emitter';
 
 const InsertTaskSchema = TaskSchema.omit({
   updatedAt: true,
@@ -33,7 +34,7 @@ export async function createTask(
   try {
     const currentUserId = await getCurrentUserId();
 
-    const { success: isAuthorize } = await checkMemberPermission(
+    const { isAuthorize } = await checkMemberPermission(
       currentUserId,
       kanbanData.projectId,
       RESOURCES.TASKS,
@@ -125,7 +126,7 @@ export async function updateTask(
     const currentUserId = await getCurrentUserId();
 
     // TODO consider if user is the task creator
-    const { success: isAuthorize } = await checkMemberPermission(
+    const { isAuthorize } = await checkMemberPermission(
       currentUserId,
       queryIds.projectId,
       RESOURCES.TASKS,
@@ -210,34 +211,156 @@ export async function deleteTask(taskId: Task['id']): Promise<QueryResult> {
 }
 
 // moves task to another column
+// TODO add validations
+
 export async function moveTask(moveTaskData: MoveTaskDataType) {
   try {
-    // authenticate and authorize user
-    const currentUserId = await getCurrentUserId();
+    const { taskId, sourceColumnId, targetColumnId, projectId, newPosition } = moveTaskData;
 
-    const { isAuthorize } = await checkMemberPermission(
-      currentUserId,
-      moveTaskData.projectId,
-      RESOURCES.TASKS,
-      ACTIONS.UPDATE,
-    );
+    // retrieve tasks that need position updates
+    const affectedTasks = await db
+      .select()
+      .from(tasks)
+      .where(
+        and(
+          eq(tasks.projectId, projectId),
+          inArray(tasks.kanbanColumnId, [sourceColumnId, targetColumnId]),
+        ),
+      );
 
-    if (!isAuthorize) throw new Error('User is unauthorized to update task');
+    // get new positions for all affected tasks
+    const positionUpdates = getNewTaskPositions(affectedTasks, moveTaskData);
 
-    const { success, data: currentTask } = await getTaskById(moveTaskData.taskId);
-    console.log(currentTask);
-    if (!success || !currentTask) {
-      throw new Error('Something went wrong, Please try again');
-      // get orig position of task
-      // reorder original column tasks
-      // reorder current column tasks with new position
-      //
-      console.log('todo move tasks');
+    if (!positionUpdates) throw new Error('Something went wrong. Please try again');
+
+    // a way to update multiple rows with different values
+    // retrieved from: https://orm.drizzle.team/docs/guides/update-many-with-different-value
+    const taskSqlChunks: SQL[] = [];
+    const taskIds: Array<Task['id']> = [];
+
+    taskSqlChunks.push(sql`(case`);
+    for (const update of positionUpdates) {
+      taskSqlChunks.push(sql`when ${tasks.id} = ${update?.taskId} then ${update?.newTaskPosition}`);
+      taskIds.push(update.taskId);
+    }
+    taskSqlChunks.push(sql`else ${tasks.position}`);
+    taskSqlChunks.push(sql`end)`);
+
+    const TaskPositionCaseSql: SQL = sql.join(taskSqlChunks, sql.raw(' '));
+
+    // if task is moved to another column
+    if (sourceColumnId !== targetColumnId) {
+      const completedColumnId = await getCompletedColumnId();
+      const updateKanbanColumnCase = sql`case 
+      when ${tasks.id} = ${taskId} then ${targetColumnId} 
+      else ${tasks.kanbanColumnId} 
+    end`;
+      // update task position and kanban column id
+      await db
+        .update(tasks)
+        .set({
+          position: TaskPositionCaseSql,
+          // only update the kanban column of moved task
+          kanbanColumnId: updateKanbanColumnCase,
+          isCompleted: targetColumnId === completedColumnId,
+          updatedAt: new Date(),
+        })
+        .where(inArray(tasks.id, taskIds));
+    }
+    // only update task positions
+    else {
+      await db
+        .update(tasks)
+        .set({ position: TaskPositionCaseSql })
+        .where(inArray(tasks.id, taskIds));
+    }
+    console.log('emiting task move event');
+    // emit event to update task list
+    serverEvents.emit('task-moved', {
+      type: 'task-moved',
+      taskId: taskId,
+      sourceColumnId: sourceColumnId,
+      targetColumnId: targetColumnId,
+      newPosition: newPosition,
+      projectId: projectId,
+    });
+    console.log('task move event triggered');
+    return {
+      success: true,
+      message: 'Task has been move successfully',
+    };
   } catch (error) {
     console.error(error);
     return {
       success: false,
       error: JSON.stringify(error),
     };
+  }
+}
+
+function getNewTaskPositions(allTasks: Task[], moveData: MoveTaskDataType) {
+  try {
+    const { taskId, sourceColumnId, targetColumnId, newPosition } = moveData;
+
+    const taskToMove = allTasks.find((t) => t.id === taskId);
+    if (!taskToMove) return [];
+
+    // reorder task in the same column
+    if (sourceColumnId === targetColumnId) {
+      const columnTasks = allTasks.filter((t) => t.kanbanColumnId === sourceColumnId);
+      const taskToMove = columnTasks.find((t) => t.id === taskId)!;
+
+      // remove the task from original position and then insert it at new position
+      const reorderedTasks = columnTasks
+        .filter((t) => t.id !== taskId)
+        .sort((a, b) => a.position - b.position)
+        .toSpliced(newPosition, 0, taskToMove)
+        .map((t, index) => ({
+          taskId: t.id,
+          oldTaskPosition: t.position,
+          newTaskPosition: index,
+          currentColumnId: sourceColumnId,
+        }))
+
+        // excludes unnecesary changes to tasks where position is unchanged
+        .filter((update) => {
+          return update.oldTaskPosition !== update.newTaskPosition;
+        });
+
+      return reorderedTasks;
+    }
+
+    // moved task to another column
+    else {
+      const sourceColumnTasks = allTasks
+        .filter((t) => t.kanbanColumnId === sourceColumnId && t.id !== taskId)
+        .sort((a, b) => a.position - b.position)
+        .map((t, index) => ({
+          taskId: t.id,
+          oldTaskPosition: t.position,
+          newTaskPosition: index,
+          currentColumnId: sourceColumnId,
+        }));
+
+      const allTargetColumnTasks = allTasks
+        .filter((t) => t.kanbanColumnId === targetColumnId)
+        .sort((a, b) => a.position - b.position);
+
+      const position = Math.min(Math.max(newPosition, 0), allTargetColumnTasks.length);
+
+      const targetColumnTasks = [...allTargetColumnTasks];
+      targetColumnTasks.splice(position, 0, { ...taskToMove, kanbanColumnId: targetColumnId });
+
+      const targetUpdates = targetColumnTasks.map((t, index) => ({
+        taskId: t.id,
+        oldTaskPosition: t.position,
+        newTaskPosition: index,
+        currentColumnId: targetColumnId,
+      }));
+
+      return [...sourceColumnTasks, ...targetUpdates];
+    }
+  } catch (error) {
+    console.error(error);
   }
 }
