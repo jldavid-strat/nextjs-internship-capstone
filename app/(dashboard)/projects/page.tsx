@@ -1,7 +1,12 @@
-import { ProjectGrid } from '@/components/project-grid';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
+import { AddProjectForm } from '../../../components/project-grid';
+import { CreateProjectButton } from '@/components/create-project-button';
+import { getCurrentUserId } from '@/lib/queries/user.queries';
+import ProjectList from '@/components/project-list';
 
-export default function ProjectsPage() {
+export default async function ProjectsPage() {
+  const currentUserId = await getCurrentUserId();
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -13,10 +18,7 @@ export default function ProjectsPage() {
             Manage and organize your team projects
           </p>
         </div>
-        <button className="bg-blue_munsell-500 hover:bg-blue_munsell-600 inline-flex items-center rounded-lg px-4 py-2 text-white transition-colors">
-          <Plus size={20} className="mr-2" />
-          New Project
-        </button>
+        <CreateProjectButton />
       </div>
       {/* Implementation Tasks Banner */}
       <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20">
@@ -30,6 +32,7 @@ export default function ProjectsPage() {
           <li>• Task 4.6: Add project and task search/filtering capabilities</li>
         </ul>
       </div>
+
       {/* Search and Filter Bar */}
       <div className="flex flex-col gap-4 sm:flex-row">
         <div className="relative flex-1">
@@ -48,45 +51,13 @@ export default function ProjectsPage() {
           Filter
         </button>
       </div>
-      {/* Projects Grid Placeholder */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div
-            key={i}
-            className="dark:bg-outer_space-500 border-french_gray-300 dark:border-payne's_gray-400 rounded-lg border bg-white p-6 transition-shadow hover:shadow-lg"
-          >
-            <div className="mb-4 flex items-start justify-between">
-              <div className="bg-blue_munsell-500 h-3 w-3 rounded-full"></div>
-              <div className="text-payne's_gray-500 dark:text-french_gray-400 text-sm">
-                {Math.floor(Math.random() * 30) + 1} days left
-              </div>
-            </div>
-
-            <h3 className="text-outer_space-500 dark:text-platinum-500 mb-2 text-lg font-semibold">
-              Sample Project {i}
-            </h3>
-
-            <p className="text-payne's_gray-500 dark:text-french_gray-400 mb-4 text-sm">
-              This is a placeholder project description that will be replaced with actual
-              project data.
-            </p>
-
-            <div className="text-payne's_gray-500 dark:text-french_gray-400 mb-4 flex items-center justify-between text-sm">
-              <span>{Math.floor(Math.random() * 8) + 2} members</span>
-              <span>{Math.floor(Math.random() * 20) + 5} tasks</span>
-            </div>
-
-            <div className="bg-french_gray-300 dark:bg-payne's_gray-400 h-2 w-full rounded-full">
-              <div
-                className="bg-blue_munsell-500 h-2 rounded-full"
-                style={{ width: `${Math.floor(Math.random() * 80) + 20}%` }}
-              ></div>
-            </div>
-          </div>
-        ))}
-      </div>
       {/* try project list */}
-      <ProjectGrid />
+      <AddProjectForm />
+
+      {/* project grid */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <ProjectList userId={currentUserId} />
+      </div>
       {/* Component Placeholders */}
       <div className="mt-8 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6 dark:border-gray-600 dark:bg-gray-800/50">
         <h3 className="mb-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
