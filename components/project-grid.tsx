@@ -1,6 +1,6 @@
 'use client';
 
-import { createProject } from '@/lib/queries/project.queries';
+import { createProject } from '@/actions/project.actions';
 import { useUser } from '@clerk/nextjs';
 import React, { useActionState } from 'react';
 

@@ -3,7 +3,7 @@
 
 'use client';
 
-import { createProject } from '@/lib/queries/project.queries';
+import { createProject } from '@/actions/project.actions';
 import { X } from 'lucide-react';
 import { startTransition, useActionState, useLayoutEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';

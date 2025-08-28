@@ -1,6 +1,8 @@
 /*  == INFERRED TYPES FROM DB SCHEMA == */
 
-import { projects, tasks, taskComments, users } from '@/lib/db/schema/schema';
+import { projects, tasks, taskComments, users, projectKanbanColumns } from '@/lib/db/schema/schema';
+import { kanbanColumns } from '@/migrations/schema';
+import KanbanColumn from '../components/kanban-column';
 
 export type Project = typeof projects.$inferSelect;
 export type CreateProject = typeof projects.$inferInsert;
@@ -17,3 +19,6 @@ export type UpdateTask = Partial<typeof tasks.$inferInsert>;
 export type User = typeof users.$inferSelect;
 export type CreateUser = typeof users.$inferInsert;
 export type UpdateUser = Partial<typeof users.$inferInsert>;
+
+export type KanbanColumn = typeof kanbanColumns.$inferSelect;
+export type ProjectKanbanColumn = typeof projectKanbanColumns.$inferSelect;

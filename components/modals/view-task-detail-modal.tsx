@@ -1,6 +1,6 @@
 'use client';
 
-import { updateTask } from '@/lib/queries/task.queries';
+import { updateTask } from '@/actions/task.actions';
 import { X } from 'lucide-react';
 import { startTransition, useActionState, useLayoutEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';

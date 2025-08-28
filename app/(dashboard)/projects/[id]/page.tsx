@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { getProjectById } from '@/lib/queries/project.queries';
 import { EditProjectButton } from '../../../../components/edit-project-button';
 import { KanbanBoard } from '@/components/kanban-board';
-import { DnDKanbanBoard } from '@/components/dnd-kanban-board/kanban-board';
+import { DBKanbanBoard } from '@/components/kanban/kanban-board';
 
 export default async function ProjectPage({ params }: { params: { id: string } }) {
   const projectId = (await params).id;
@@ -81,7 +81,8 @@ export default async function ProjectPage({ params }: { params: { id: string } }
 
       {/* Kanban Board Placeholder */}
       <KanbanBoard projectId={project.id} />
-      <DnDKanbanBoard />
+      <DBKanbanBoard projectId={project.id} />
+      {/* <DnDKanbanBoard /> */}
 
       {/* Component Implementation Guide */}
       <div className="mt-8 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6 dark:border-gray-600 dark:bg-gray-800/50">

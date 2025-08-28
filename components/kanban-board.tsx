@@ -1,4 +1,4 @@
-import { getKanbanColumnsByProjectId } from '@/lib/queries/kanban-column.queries';
+import { getKanbanColumnsByProjectId } from '@/lib/queries/kanban_column.queries';
 import { Project } from '@/types/db.types';
 import { MoreHorizontal } from 'lucide-react';
 import CreateTaskButton from './create-task-button';
@@ -122,24 +122,23 @@ const initialColumns = [
   },
 ];
 
+const getPriorityColor = (priority: string) => {
+  switch (priority) {
+    case 'high':
+      return 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300';
+    case 'medium':
+      return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300';
+    case 'low':
+      return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
+    default:
+      return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+  }
+};
+
 export async function KanbanBoard({ projectId }: { projectId: Project['id'] }) {
-  // const [columns, setColumns] = useState(initialColumns);
   const { success, message, data: kanbanColumns } = await getKanbanColumnsByProjectId(projectId);
 
   if (!success || !kanbanColumns) return <div>{message}</div>;
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'low':
-        return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
-      default:
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
-    }
-  };
 
   return (
     <div className="dark:bg-outer_space-500 border-french_gray-300 dark:border-payne's_gray-400 rounded-lg border bg-white p-6">
@@ -160,7 +159,7 @@ export async function KanbanBoard({ projectId }: { projectId: Project['id'] }) {
                   </button>
                 </div>
               </div>
-              <TaskList projectId={projectId} taskStatus={column.name} />
+              <TaskList projectId={projectId} kanbanColumnId={column.kanbanColumnId} />
               <CreateTaskButton
                 kanbanColumnId={column.kanbanColumnId}
                 kanbanName={column.name}
