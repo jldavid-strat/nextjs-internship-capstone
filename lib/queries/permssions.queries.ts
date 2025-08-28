@@ -58,11 +58,16 @@ export async function checkMemberPermission(
   projectId: Project['id'],
   resource: Resource,
   action: Action,
+  isOwner?: boolean,
 ): Promise<IAuthorizationResult> {
   try {
     // for anonymous users, use viewer role
     if (!userId) {
       return await checkPermission('viewer', resource, action);
+    }
+
+    if (isOwner) {
+      return await checkPermission('owner', resource, action);
     }
 
     // get user's role
