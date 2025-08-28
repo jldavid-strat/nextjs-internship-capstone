@@ -1,7 +1,7 @@
 // TODO: Task 3.6 - Set up data validation with Zod schemas
 
 import { z } from 'zod';
-import { PROJECT_STATUS_VALUES, TASK_PRIORITY_VALUES } from './db/schema/enums';
+import { TASK_PRIORITY_VALUES } from './db/schema/enums';
 import { isFuture } from './utils/validation.utils';
 
 /*
@@ -54,36 +54,6 @@ const errorMessages = {
   strongPassword:
     'Password must contain at least 8 characters, including uppercase, lowercase, number and special character',
 } as const;
-
-export const ProjectSchema = z.object({
-  title: z
-    .string(errorMessages.invalidType('Project Title', 'text'))
-    .min(MIN_CHAR, errorMessages.required('Project Title'))
-    .max(MAX_CHAR, errorMessages.maxChar('Project title', MAX_CHAR)),
-  description: z
-    .string(errorMessages.invalidType('Project description', 'text'))
-    .max(MAX_CHAR, errorMessages.maxChar('Project description', MAX_CHAR))
-    .nullable(),
-  status: z.enum(PROJECT_STATUS_VALUES, 'Only select status from the listed options'),
-  statusChangedAt: z.date().nullable(),
-  statusChangedById: z.uuidv4(errorMessages.uuid('Status Modifier ID')).nullable(),
-  ownerId: z.uuidv4(errorMessages.uuid('Owner ID')),
-
-  //  date inputs will be validate as strings
-  // in update and insert these inputs will be transformed into date instances
-
-  // [CONSIDER]
-
-  dueDate: z.iso
-    .date(errorMessages.invalidDate('Due date'))
-    .refine((dateString) => isFuture(dateString), {
-      error: 'Due date must be set today or in the future',
-    })
-    .nullable(),
-
-  // will be omitted in insertion
-  updatedAt: z.date(errorMessages.invalidDate('Updated date')),
-});
 
 export const TaskSchema = z.object({
   title: z
