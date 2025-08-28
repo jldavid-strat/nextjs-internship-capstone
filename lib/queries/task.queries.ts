@@ -50,7 +50,7 @@ export async function getTaskList(projectId: Project['id'], withColumnId?: Kanba
 export async function getTaskById(taskId: Task['id']) {
   try {
     const task = await db.query.tasks.findFirst({
-      where: (tasks, { and, eq }) => and(eq(tasks.id, taskId)),
+      where: (tasks, { eq }) => eq(tasks.id, taskId),
     });
 
     return { success: true, message: `Successfully fetched task `, data: task };
