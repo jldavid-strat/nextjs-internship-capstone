@@ -4,31 +4,25 @@ import { db } from '@/lib/db/connect_db';
 import { projects } from '@/lib/db/schema/schema';
 import { checkMemberPermission, checkPermission } from '@/lib/queries/permssions.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
-import { ProjectSchema } from '@/lib/validations';
 import { ActionResult, QueryResult } from '@/types/types';
 import { Project } from '@/types/db.types';
-import { addOwnerInProjectMembers } from './project_member.actions';
+import { addProjectMembers } from './project_member.actions';
 import { createDefaultKanbanColumns } from './kanban_column.actions';
 import { revalidatePath } from 'next/cache';
 import { ZodError } from 'zod';
 import { getProjectById } from '@/lib/queries/project.queries';
 import getDataDiff from '@/lib/utils/data_diff';
 import { eq } from 'drizzle-orm';
-
-const InsertProjectSchema = ProjectSchema.omit({
-  status: true,
-  statusChangedAt: true,
-  statusChangedById: true,
-  updatedAt: true,
-});
+import { EditProjectSchema, InsertProjectSchema } from '@/lib/validations/project.validations';
+import { checkAuthenticationStatus } from '@/lib/utils/is_authenticated';
+import { MemberValue } from '@/components/ui/add-member-multiselect';
 
 export async function createProject(
   previousState: unknown,
   projectData: FormData,
 ): Promise<QueryResult<Project['id'], string[] | string>> {
   try {
-    const currentUserId = await getCurrentUserId();
-    console.log(currentUserId);
+    await checkAuthenticationStatus();
 
     // all users by default can create projects
     const { isAuthorize } = await checkPermission('public', RESOURCES.PROJECTS, ACTIONS.CREATE);
@@ -36,31 +30,32 @@ export async function createProject(
     if (!isAuthorize) throw new Error('User is unauthorized to create project');
 
     // [CONSIDER] const data = Object.fromEntries(projectData.entries())
-
     // must be formatted as "YYYY-MM-DD"
     // default to null to handle empty string
     const dueDateString = projectData.get('dueDate') || null;
-    // console.log(typeof dueDateString);
+    const members = JSON.parse(projectData.get('members') as string) as MemberValue[];
 
     const validatedData = InsertProjectSchema.parse({
       title: projectData.get('title') as string,
       description: projectData.get('description') as string,
-      ownerId: currentUserId as string,
+      ownerId: projectData.get('owner-id') as string,
       dueDate: dueDateString,
     });
+
+    console.log('creating new project...');
 
     const [{ newProjectId }] = await db
       .insert(projects)
       .values(validatedData)
       .returning({ newProjectId: projects.id });
 
-    // TODO wrap in a db transaction
-    // add owner in member list as owner
-    console.log('added owner as member');
-    await addOwnerInProjectMembers(validatedData.ownerId, newProjectId);
+    // // TODO wrap in a db transaction
+    console.log('adding project members...');
+    const { success } = await addProjectMembers(newProjectId, members, true);
+    if (!success) throw new Error('Something went wrong adding project members');
 
     // create default kanban boards
-    console.log('created default kanban boards');
+    console.log('creating default kanban boards...');
     const kanbanResponse = await createDefaultKanbanColumns(newProjectId);
 
     if (!kanbanResponse.success) throw new Error(kanbanResponse.message);
@@ -93,16 +88,6 @@ export async function createProject(
   1. only update the fields that have been modified
   2. create specific update functions for fields reference other fields 
 */
-
-const EditProjectSchema = ProjectSchema.partial().pick({
-  title: true,
-  description: true,
-  status: true,
-  statusChangedAt: true,
-  statusChangedById: true,
-  dueDate: true,
-  updatedAt: true,
-});
 
 export async function updateProject(
   editProjectId: string,
