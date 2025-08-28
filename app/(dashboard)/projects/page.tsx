@@ -1,8 +1,9 @@
 import { Search, Filter } from 'lucide-react';
 import { AddProjectForm } from '../../../components/project-grid';
-import { CreateProjectButton } from '@/components/create-project-button';
+import { CreateProjectButton } from '@/components/buttons/create-project-button';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
 import ProjectList from '@/components/project-list';
+import { Input } from '@/components/ui/input';
 
 export default async function ProjectsPage() {
   const currentUserId = await getCurrentUserId();
@@ -11,10 +12,8 @@ export default async function ProjectsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-outer_space-500 dark:text-platinum-500 text-3xl font-bold">
-            Projects
-          </h1>
-          <p className="text-payne's_gray-500 dark:text-french_gray-500 mt-2">
+          <h1 className="text-primary text-3xl font-bold">Projects</h1>
+          <p className="text-muted-foreground mt-2 text-sm">
             Manage and organize your team projects
           </p>
         </div>
@@ -36,28 +35,21 @@ export default async function ProjectsPage() {
       {/* Search and Filter Bar */}
       <div className="flex flex-col gap-4 sm:flex-row">
         <div className="relative flex-1">
-          <Search
-            className="text-payne's_gray-500 dark:text-french_gray-400 absolute top-1/2 left-3 -translate-y-1/2 transform"
-            size={16}
-          />
-          <input
+          <Search className="absolute top-1/2 left-3 -translate-y-1/2 transform" size={18} />
+          <Input
             type="text"
             placeholder="Search projects..."
-            className="dark:bg-outer_space-500 border-french_gray-300 dark:border-payne's_gray-400 text-outer_space-500 dark:text-platinum-500 placeholder-payne's_gray-500 dark:placeholder-french_gray-400 focus:ring-blue_munsell-500 w-full rounded-lg border bg-white py-2 pr-4 pl-10 focus:ring-2 focus:outline-hidden"
+            className="border-border h-12 w-full rounded-lg py-2 pr-4 pl-10 text-xl focus:ring focus:outline-hidden"
           />
         </div>
-        <button className="border-french_gray-300 dark:border-payne's_gray-400 text-outer_space-500 dark:text-platinum-500 hover:bg-platinum-500 dark:hover:bg-payne's_gray-400 inline-flex items-center rounded-lg border px-4 py-2 transition-colors">
+        <button className="bg-input inline-flex items-center rounded-lg px-4 py-2 transition-colors">
           <Filter size={16} className="mr-2" />
           Filter
         </button>
       </div>
-      {/* try project list */}
-      <AddProjectForm />
 
       {/* project grid */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <ProjectList userId={currentUserId} />
-      </div>
+      <ProjectList userId={currentUserId} />
       {/* Component Placeholders */}
       <div className="mt-8 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6 dark:border-gray-600 dark:bg-gray-800/50">
         <h3 className="mb-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
