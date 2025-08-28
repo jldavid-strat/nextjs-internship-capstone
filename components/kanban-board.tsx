@@ -1,7 +1,7 @@
 import { getKanbanColumnsByProjectId } from '@/lib/queries/kanban_column.queries';
 import { Project } from '@/types/db.types';
 import { MoreHorizontal } from 'lucide-react';
-import CreateTaskButton from './create-task-button';
+import CreateTaskButton from './buttons/create-task-button';
 import { TaskList } from './task-list';
 
 // TODO: Task 5.1 - Design responsive Kanban board layout
