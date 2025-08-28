@@ -1,5 +1,4 @@
 import { TrendingUp, Users, CheckCircle, Clock, Plus } from 'lucide-react';
-import { DashboardLayout } from '@/components/dashboard-layout';
 
 export default function DashboardPage() {
   return (
@@ -51,11 +50,11 @@ export default function DashboardPage() {
         ].map((stat) => (
           <div
             key={stat.name}
-            className="dark:bg-outer_space-500 border-french_gray-300 dark:border-payne's_gray-400 overflow-hidden rounded-lg border bg-white p-6"
+            className="bg-card border-border border-french_gray-300 dark:border-payne's_gray-400 overflow-hidden rounded-lg border p-6"
           >
             <div className="flex items-center">
               <div className="shrink-0">
-                <div className="bg-blue_munsell-100 dark:bg-blue_munsell-900 flex h-8 w-8 items-center justify-center rounded-lg">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg">
                   <stat.icon className="text-blue_munsell-500" size={20} />
                 </div>
               </div>
@@ -82,7 +81,7 @@ export default function DashboardPage() {
       {/* Recent Activity & Quick Actions */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Projects */}
-        <div className="dark:bg-outer_space-500 border-french_gray-300 dark:border-payne's_gray-400 rounded-lg border bg-white p-6">
+        <div className="bg-card border-border rounded-lg border-1 p-6">
           <h3 className="text-outer_space-500 dark:text-platinum-500 mb-4 text-lg font-semibold">
             Recent Projects
           </h3>
@@ -90,18 +89,16 @@ export default function DashboardPage() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="bg-platinum-800 dark:bg-outer_space-400 flex items-center justify-between rounded-lg p-3"
+                className="bg-card border-border flex items-center justify-between rounded-lg border-1 p-3"
               >
                 <div>
                   <div className="text-outer_space-500 dark:text-platinum-500 font-medium">
                     Project {i}
                   </div>
-                  <div className="text-payne's_gray-500 dark:text-french_gray-400 text-sm">
-                    Last updated 2 hours ago
-                  </div>
+                  <div className="text-muted-foreground text-sm">Last updated 2 hours ago</div>
                 </div>
-                <div className="bg-french_gray-300 dark:bg-payne's_gray-400 h-2 w-12 rounded-full">
-                  <div className="bg-blue_munsell-500 h-2 w-8 rounded-full"></div>
+                <div className="bg-accent h-2 w-12 rounded-full">
+                  <div className="h-2 w-8 rounded-full bg-blue-200"></div>
                 </div>
               </div>
             ))}
@@ -114,20 +111,20 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="dark:bg-outer_space-500 border-french_gray-300 dark:border-payne's_gray-400 rounded-lg border bg-white p-6">
+        <div className="bg-card border-border rounded-lg border-1 p-6">
           <h3 className="text-outer_space-500 dark:text-platinum-500 mb-4 text-lg font-semibold">
             Quick Actions
           </h3>
           <div className="space-y-3">
-            <button className="bg-blue_munsell-500 hover:bg-blue_munsell-600 flex w-full items-center justify-center rounded-lg px-4 py-3 text-white transition-colors">
+            <button className="hover:bg-accent flex w-full items-center justify-center rounded-lg border px-4 py-3 transition-colors hover:cursor-pointer">
               <Plus size={20} className="mr-2" />
               Create New Project
             </button>
-            <button className="border-french_gray-300 dark:border-payne's_gray-400 text-outer_space-500 dark:text-platinum-500 hover:bg-platinum-500 dark:hover:bg-payne's_gray-400 flex w-full items-center justify-center rounded-lg border px-4 py-3 transition-colors">
+            <button className="hover:bg-accent flex w-full items-center justify-center rounded-lg border px-4 py-3 transition-colors hover:cursor-pointer">
               <Plus size={20} className="mr-2" />
               Add Team Member
             </button>
-            <button className="border-french_gray-300 dark:border-payne's_gray-400 text-outer_space-500 dark:text-platinum-500 hover:bg-platinum-500 dark:hover:bg-payne's_gray-400 flex w-full items-center justify-center rounded-lg border px-4 py-3 transition-colors">
+            <button className="hover:bg-accent flex w-full items-center justify-center rounded-lg border px-4 py-3 transition-colors hover:cursor-pointer">
               <Plus size={20} className="mr-2" />
               Create Task
             </button>
