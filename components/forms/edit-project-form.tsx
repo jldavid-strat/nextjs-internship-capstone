@@ -88,9 +88,7 @@ export default function EditProjectForm({ projectData }: { projectData: Project 
         </div>
       </section>
       <div>
-        <label className="text-outer_space-500 dark:text-platinum-500 mb-2 block text-sm font-medium">
-          Project Title *
-        </label>
+        <label className="mb-2 block text-sm font-medium">Project Title *</label>
 
         <Input
           {...register('title')}
@@ -103,9 +101,7 @@ export default function EditProjectForm({ projectData }: { projectData: Project 
       </div>
 
       <div>
-        <label className="text-outer_space-500 dark:text-platinum-500 mb-2 block text-sm font-medium">
-          Description
-        </label>
+        <label className="mb-2 block text-sm font-medium">Description</label>
         <textarea
           {...register('description')}
           name="description"
