@@ -13,7 +13,7 @@ export default function ProjectSubHeader({
   color,
 }: ProjectSubHeaderProps) {
   return (
-    <header className={`my-4 flex flex-col gap-2 border-1 ${color}`}>
+    <header className={`my-4 flex flex-col gap-2 ${color}`}>
       <div className="flex flex-row items-center gap-2">
         {icon}
         <h2 className="text-md">{title}</h2>
