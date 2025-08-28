@@ -1,4 +1,4 @@
-import { ArrowLeft, Settings, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { getProjectById } from '@/lib/queries/project.queries';
 import { DBKanbanBoard } from '@/components/kanban/kanban-board';

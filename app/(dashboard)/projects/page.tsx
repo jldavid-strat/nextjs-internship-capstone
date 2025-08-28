@@ -1,5 +1,4 @@
 import { Search, Filter } from 'lucide-react';
-import { AddProjectForm } from '../../../components/project-grid';
 import { CreateProjectButton } from '@/components/buttons/create-project-button';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
 import ProjectList from '@/components/project-list';
