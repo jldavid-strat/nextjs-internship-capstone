@@ -11,7 +11,7 @@ import { GripVertical } from 'lucide-react';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Project, Task } from '@/types/db.types';
 import { ColumnQueryResult, KanbanColumnDragData } from '@/types/types';
-import CreateTaskButton from '../create-task-button';
+import CreateTaskButton from '../buttons/create-task-button';
 import { TaskCard } from './task-card';
 import { cn } from '@/lib/utils/shadcn-utils';
 
@@ -45,7 +45,7 @@ export function KanbanColumn({ column, isOverlay, tasks }: BoardColumnProps) {
   };
 
   const variants = cva(
-    'h-[500px] max-h-[500px] w-[350px] max-w-full bg-primary-foreground flex flex-col flex-shrink-0 snap-center',
+    'h-[500px] max-h-[800px] w-[350px] max-w-full bg-primary-foreground flex flex-col flex-shrink-0 snap-center',
     {
       variants: {
         dragging: {
@@ -65,17 +65,20 @@ export function KanbanColumn({ column, isOverlay, tasks }: BoardColumnProps) {
         dragging: isOverlay ? 'overlay' : isDragging ? 'over' : undefined,
       })}
     >
-      <CardHeader className="space-between flex flex-row items-center border-b-2 p-4 text-left font-semibold">
+      <CardHeader className="border-border flex flex-row items-center gap-2 border-b-2 p-4 text-left font-semibold">
         <Button
           variant={'ghost'}
           {...attributes}
           {...listeners}
-          className="text-primary/50 relative -ml-2 h-auto cursor-grab p-1"
+          className="text-primary/50 relative -ml-2 h-auto cursor-grab"
         >
           <span className="sr-only">{`Move column: ${column.name}`}</span>
           <GripVertical />
         </Button>
-        <span className="ml-auto"> {column.name}</span>
+        <div className="flex flex-col gap-1">
+          <span className="mr-auto"> {column.name}</span>
+          <span className="text-muted-foreground mr-auto text-xs"> {column.description}</span>
+        </div>
       </CardHeader>
       <ScrollArea>
         <CardContent className="flex flex-grow flex-col gap-2 p-2">
