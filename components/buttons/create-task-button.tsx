@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CreateTaskModal } from './modals/create-task-modal';
+import { CreateTaskModal } from '../modals/create-task-modal';
 
 type CreateTaskProps = {
   kanbanColumnId: string;
