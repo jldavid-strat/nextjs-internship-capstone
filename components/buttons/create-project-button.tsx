@@ -2,22 +2,23 @@
 
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { AddProjectMemberModal } from './modals/add-project-member-modal';
+import { Button } from '../ui/button';
+import CreateProjectModal from '../modals/ex-create-project-modal';
 
-export function AddProjectMemberButton() {
+export function CreateProjectButton() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
-      <button
+      <Button
         onClick={() => setIsOpen(true)}
         className="bg-blue_munsell-500 hover:bg-blue_munsell-600 inline-flex items-center rounded-lg px-4 py-2 text-white transition-colors"
       >
         <Plus size={20} className="mr-2" />
-        Add Project Member
-      </button>
+        New Project
+      </Button>
 
-      {isOpen && <AddProjectMemberModal setIsOpen={setIsOpen} />}
+      {isOpen && <CreateProjectModal isOpen={isOpen} setIsOpen={setIsOpen} />}
     </>
   );
 }

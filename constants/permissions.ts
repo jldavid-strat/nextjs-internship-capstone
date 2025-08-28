@@ -5,6 +5,7 @@ export const RESOURCES = {
   PROJECT_DISCUSSIONS: 'project_discussions',
   PROJECT_COMMENTS: 'projects_comments',
   TASKS: 'tasks',
+  KANBAN_COLUMN: 'kanban_columns',
   TASK_ATTACHMENTS: 'task_attachment',
   TASK_COMMENTS: 'task_comment',
 } as const;
@@ -68,6 +69,6 @@ export enum PermissionResult {
 }
 
 export interface IAuthorizationResult {
-  success: boolean;
+  isAuthorize: boolean;
   result: PermissionResult;
 }

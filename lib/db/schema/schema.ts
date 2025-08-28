@@ -52,9 +52,10 @@ export const projects = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     title: varchar('title', { length: 300 }).notNull(),
     description: varchar('description', { length: 300 }),
-    status: projectStatusEnum().default('on-going').notNull(),
+    status: projectStatusEnum().default('active').notNull(),
     statusChangedAt: timestamp('status_changed_at'),
     statusChangedById: uuid('status_changed_by_id').references(() => users.id),
+    isArchived: boolean('is_archived').default(false).notNull(),
     ownerId: uuid('owner_id')
       .references(() => users.id)
       .notNull(),

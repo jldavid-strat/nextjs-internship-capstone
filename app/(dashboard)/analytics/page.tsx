@@ -4,10 +4,8 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-outer_space-500 dark:text-platinum-500 text-3xl font-bold">
-          Analytics
-        </h1>
-        <p className="text-payne's_gray-500 dark:text-french_gray-500 mt-2">
+        <h1 className="text-3xl font-bold">Analytics</h1>
+        <p className="text-muted-foreground mt-2">
           Track project performance and team productivity
         </p>
       </div>
@@ -55,10 +53,7 @@ export default function AnalyticsPage() {
             color: 'orange',
           },
         ].map((metric, index) => (
-          <div
-            key={index}
-            className="border-french_gray-300 dark:border-payne's_gray-400 dark:bg-outer_space-500 rounded-lg border bg-white p-6"
-          >
+          <div key={index} className="bg-card border-border rounded-lg border p-6">
             <div className="mb-4 flex items-center justify-between">
               <div
                 className={`h-10 w-10 bg-${metric.color}-100 dark:bg-${metric.color}-900 flex items-center justify-center rounded-lg`}
@@ -81,25 +76,25 @@ export default function AnalyticsPage() {
 
       {/* Charts Placeholder */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="border-french_gray-300 dark:border-payne's_gray-400 dark:bg-outer_space-500 rounded-lg border bg-white p-6">
-          <h3 className="text-outer_space-500 dark:text-platinum-500 mb-4 text-lg font-semibold">
-            Project Progress
-          </h3>
-          <div className="bg-platinum-800 dark:bg-outer_space-400 flex h-64 items-center justify-center rounded-lg">
-            <div className="text-payne's_gray-500 dark:text-french_gray-400 text-center">
+        <div className="bg-card border-border rounded-lg border p-6">
+          <h3 className="mb-4 text-lg font-semibold">Project Progress</h3>
+          <div className="flex h-64 items-center justify-center rounded-lg">
+            <div className="text-center">
               <BarChart3 size={48} className="mx-auto mb-2" />
               <p>Chart Component Placeholder</p>
-              <p className="text-sm">TODO: Implement with Chart.js or Recharts</p>
+              <p className="text-muted-foreground text-sm">
+                TODO: Implement with Chart.js or Recharts
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="border-french_gray-300 dark:border-payne's_gray-400 dark:bg-outer_space-500 rounded-lg border bg-white p-6">
+        <div className="bg-card border-border rounded-lg border p-6">
           <h3 className="text-outer_space-500 dark:text-platinum-500 mb-4 text-lg font-semibold">
             Team Activity
           </h3>
-          <div className="bg-platinum-800 dark:bg-outer_space-400 flex h-64 items-center justify-center rounded-lg">
-            <div className="text-payne's_gray-500 dark:text-french_gray-400 text-center">
+          <div className="flex h-64 items-center justify-center rounded-lg">
+            <div className="text-center">
               <TrendingUp size={48} className="mx-auto mb-2" />
               <p>Activity Chart Placeholder</p>
               <p className="text-sm">TODO: Implement activity timeline</p>

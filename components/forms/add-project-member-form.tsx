@@ -2,7 +2,8 @@
 
 import { startTransition, useActionState, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { addProjectMember, getProjectMembers } from '@/lib/queries/project_member.queries';
+import { getProjectMembers } from '@/lib/queries/project_member.queries';
+import { addProjectMember } from '@/actions/project_member.actions';
 import { Project, User } from '@/types/db.types';
 import { Loader2 } from 'lucide-react';
 import { UserMultiSelect } from '../ui/user-multiselect';

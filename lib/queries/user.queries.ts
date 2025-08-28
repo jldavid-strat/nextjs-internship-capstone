@@ -1,59 +1,12 @@
-'use server';
+import 'server-only';
+
 import { db } from '@/lib/db/connect_db';
 import { users } from '@/lib/db/schema/schema';
-import { QueryResult } from '@/types';
-import { User, CreateUser, UpdateUser } from '@/types/db.types';
+import { QueryResult } from '@/types/types';
+import { User } from '@/types/db.types';
 import { auth } from '@clerk/nextjs/server';
-import { and, eq, ilike, notInArray } from 'drizzle-orm';
-import { revalidatePath } from 'next/cache';
+import { eq } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
-
-export async function createUser(clerkUser: Omit<CreateUser, 'updatedAt'>): Promise<void> {
-  try {
-    await db.insert(users).values({
-      clerkId: clerkUser.clerkId,
-      firstName: clerkUser.firstName,
-      lastName: clerkUser.lastName,
-      imgLink: clerkUser.imgLink,
-      primaryEmailAddress: clerkUser.primaryEmailAddress,
-      createdAt: clerkUser.createdAt,
-    });
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-export async function updatedUser(
-  clerkUserId: User['clerkId'],
-  clerkUser: UpdateUser,
-): Promise<void> {
-  try {
-    await db
-      .update(users)
-      .set({
-        firstName: clerkUser.firstName,
-        lastName: clerkUser.lastName,
-        imgLink: clerkUser.imgLink,
-        primaryEmailAddress: clerkUser.primaryEmailAddress,
-        updatedAt: clerkUser.updatedAt,
-      })
-      .where(eq(users.clerkId, clerkUserId));
-
-    // invalidate cache on settings page to load new user info
-    revalidatePath(`/settings`);
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-export async function deleteUser(clerkId: User['clerkId']): Promise<void> {
-  try {
-    await db.delete(users).where(eq(users.clerkId, clerkId));
-    redirect('/sign-up');
-  } catch (error) {
-    console.error(error);
-  }
-}
 
 export async function getCurrentUserId() {
   const { userId: clerkId, isAuthenticated } = await auth();
@@ -104,41 +57,22 @@ export async function getUserByClerkId(userClerkId: User['clerkId']): Promise<Qu
     };
   }
 }
-
-// TODO change to server component
-
-export async function getSuggestedUsersByEmail(
-  input: string | null,
-  filterIds: string[] = [],
-): Promise<User[] | []> {
+// return type: Promise<QueryResult<User | undefined>>
+export async function getUserById(userId: User['id']) {
   try {
-    console.log(filterIds);
-
-    // get suggested users by chunks of eight
-    const suggestedUsers = await db
-      .select()
-      .from(users)
-      .where(
-        and(
-          input ? ilike(users.primaryEmailAddress, `%${input.trim()}%`) : undefined,
-          filterIds.length > 0 ? notInArray(users.id, filterIds) : undefined,
-        ),
-      )
-      .limit(8);
-
-    return suggestedUsers;
-    // return {
-    //   success: true,
-    //   message: 'Successfully retrieve all users',
-    //   data: suggestedUsers,
-    // };
+    const user = await db.query.users.findFirst({
+      where: (users, { eq }) => eq(users.id, userId),
+    });
+    return {
+      success: true,
+      message: 'User succesfully retrieved',
+      data: user,
+    };
   } catch (error) {
-    console.error(error);
-    // return {
-    //   success: true,
-    //   message: 'Failed to retrieved users',
-    //   error: JSON.stringify(error),
-    // };
-    return [];
+    return {
+      success: false,
+      message: 'Failed to retrieve user',
+      error: JSON.stringify(error),
+    };
   }
 }

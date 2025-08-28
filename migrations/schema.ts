@@ -1,10 +1,37 @@
-import { pgTable, foreignKey, uuid, varchar, text, timestamp, index, uniqueIndex, unique, bigint, date, integer, boolean, jsonb, primaryKey, pgEnum } from "drizzle-orm/pg-core"
+import { pgTable, index, foreignKey, uuid, varchar, timestamp, date, boolean, text, uniqueIndex, unique, bigint, integer, jsonb, primaryKey, pgEnum } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 export const memberRoleName = pgEnum("member_role_name", ['public', 'owner', 'admin', 'team_leader', 'viewer', 'member'])
-export const projectStatus = pgEnum("project_status", ['active', 'completed', 'archived', 'on-going', 'cancelled'])
+export const projectStatus = pgEnum("project_status", ['active', 'completed'])
 export const taskPriority = pgEnum("task_priority", ['none', 'low', 'medium', 'high'])
 
+
+export const projects = pgTable("projects", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	title: varchar({ length: 300 }).notNull(),
+	description: varchar({ length: 300 }),
+	status: projectStatus().default('active').notNull(),
+	statusChangedAt: timestamp("status_changed_at", { mode: 'string' }),
+	statusChangedById: uuid("status_changed_by_id"),
+	ownerId: uuid("owner_id").notNull(),
+	dueDate: date("due_date"),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }),
+	deletedAt: timestamp("deleted_at", { mode: 'string' }),
+	isArchived: boolean("is_archived").default(false).notNull(),
+}, (table) => [
+	index("project_id_idx").using("btree", table.id.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.ownerId],
+			foreignColumns: [users.id],
+			name: "projects_owner_id_users_id_fk"
+		}),
+	foreignKey({
+			columns: [table.statusChangedById],
+			foreignColumns: [users.id],
+			name: "projects_status_changed_by_id_users_id_fk"
+		}),
+]);
 
 export const projectDiscussions = pgTable("project_discussions", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
@@ -74,32 +101,6 @@ export const projectDiscussionComments = pgTable("project_discussion_comments", 
 			columns: [table.projectDiscussionId],
 			foreignColumns: [projectDiscussions.id],
 			name: "project_discussion_comments_project_discussion_id_project_discu"
-		}),
-]);
-
-export const projects = pgTable("projects", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	title: varchar({ length: 300 }).notNull(),
-	description: varchar({ length: 300 }),
-	status: projectStatus().default('on-going').notNull(),
-	statusChangedAt: timestamp("status_changed_at", { mode: 'string' }),
-	statusChangedById: uuid("status_changed_by_id"),
-	ownerId: uuid("owner_id").notNull(),
-	dueDate: date("due_date"),
-	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }),
-	deletedAt: timestamp("deleted_at", { mode: 'string' }),
-}, (table) => [
-	index("project_id_idx").using("btree", table.id.asc().nullsLast().op("uuid_ops")),
-	foreignKey({
-			columns: [table.ownerId],
-			foreignColumns: [users.id],
-			name: "projects_owner_id_users_id_fk"
-		}),
-	foreignKey({
-			columns: [table.statusChangedById],
-			foreignColumns: [users.id],
-			name: "projects_status_changed_by_id_users_id_fk"
 		}),
 ]);
 
