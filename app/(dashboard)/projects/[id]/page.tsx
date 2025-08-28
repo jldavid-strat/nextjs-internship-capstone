@@ -1,10 +1,9 @@
-import { ArrowLeft, Settings, Users, Calendar, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, Settings, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { getProjectById } from '@/lib/queries/project.queries';
-import { EditProjectButton } from '../../../../components/buttons/edit-project-button';
-import { KanbanBoard } from '@/components/kanban-board';
 import { DBKanbanBoard } from '@/components/kanban/kanban-board';
 import ProjectNotFound from '@/components/project/project-not-found';
+import ProjectSettingsButton from '@/components/buttons/project-settings-button';
 
 export default async function ProjectPage({ params }: { params: { id: string } }) {
   const projectId = (await params).id;
@@ -33,25 +32,7 @@ export default async function ProjectPage({ params }: { params: { id: string } }
         </div>
 
         <div className="flex items-center space-x-2">
-          {/* <EditProjectButton
-            id={project.id}
-            title={project.title}
-            description={project.description}
-            status={project.status}
-            dueDate={project.dueDate}
-          /> */}
-          <button className="rounded-lg p-2 transition-colors">
-            <Users size={20} />
-          </button>
-          <button className="rounded-lg p-2 transition-colors">
-            <Calendar size={20} />
-          </button>
-          <button className="rounded-lg p-2 transition-colors">
-            <Settings size={20} />
-          </button>
-          <button className="rounded-lg p-2 transition-colors">
-            <MoreHorizontal size={20} />
-          </button>
+          <ProjectSettingsButton projectId={projectId} />
         </div>
       </div>
 
@@ -67,8 +48,6 @@ export default async function ProjectPage({ params }: { params: { id: string } }
           <li>• Task 5.6: Create task detail modals and editing interfaces</li>
         </ul>
       </div>
-
-      {/* <DnDKanbanBoard /> */}
 
       <DBKanbanBoard projectId={project.id} />
 
