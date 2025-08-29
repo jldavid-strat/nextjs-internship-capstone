@@ -27,7 +27,6 @@ export const users = pgTable(
     primaryEmailAddress: varchar('primary_email_address', { length: 255 }).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at'),
-    deletedAt: timestamp('deleted_at'),
   },
   (table) => [index('user_id_idx').on(table.id)],
 );
@@ -54,7 +53,6 @@ export const projects = pgTable(
     dueDate: date('due_date'),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at'),
-    deletedAt: timestamp('deleted_at'),
   },
   (table) => [index('project_id_idx').on(table.id)],
 );
@@ -95,7 +93,6 @@ export const projectMembers = pgTable(
     // [CONSIDER] adding addedBy columns
     role: memberRoleEnum().notNull().default('member'),
     joinedAt: timestamp('joined_at').defaultNow(),
-    deletedAt: timestamp('deleted_at'),
   },
   (table) => [
     primaryKey({
@@ -122,7 +119,6 @@ export const projectTeams = pgTable('project_teams', {
   color: varchar('color', { length: 7 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at'),
-  deletedAt: timestamp('deleted_at'),
 });
 
 export const projectDiscussions = pgTable('project_discussions', {
@@ -136,7 +132,6 @@ export const projectDiscussions = pgTable('project_discussions', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at'),
   closedAt: timestamp('closed_at'),
-  deletedAt: timestamp('deleted_at'),
 });
 
 export const projectDiscussionComments = pgTable(
@@ -153,7 +148,6 @@ export const projectDiscussionComments = pgTable(
     content: text('content').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at'),
-    deletedAt: timestamp('deleted_at'),
   },
   (table) => [
     foreignKey({
@@ -171,7 +165,6 @@ export const milestones = pgTable('milestones', {
     .references(() => projects.id, { onDelete: 'cascade' })
     .notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  deletedAt: timestamp('deleted_at'),
 });
 
 export const kanbanColumns = pgTable(
@@ -219,7 +212,6 @@ export const labels = pgTable(
   {
     id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     name: varchar('name', { length: 255 }).notNull().unique(),
-    deletedAt: timestamp('deleted_at'),
   },
   (table) => [index('label_id_idx').on(table.id)],
 );
@@ -252,7 +244,6 @@ export const tasks = pgTable(
     startDate: date('start_date'),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at'),
-    deletedAt: timestamp('deleted_at'),
   },
   (table) => [index('task_id_idx').on(table.id)],
 );
@@ -300,7 +291,6 @@ export const taskHistory = pgTable('task_history', {
   changedBy: uuid('changed_by').references(() => users.id, { onDelete: 'set null' }),
   changeDescription: text('change_description').notNull(),
   changedAt: timestamp('changed_at').notNull().defaultNow(),
-  deletedAt: timestamp('deleted_at'),
 });
 
 export const taskAssignees = pgTable(
@@ -314,7 +304,6 @@ export const taskAssignees = pgTable(
       .notNull(),
     assignedById: uuid('assigned_by_id').references(() => users.id, { onDelete: 'set null' }),
     assignedAt: timestamp('assigned_at').defaultNow().notNull(),
-    deletedAt: timestamp('deleted_at'),
   },
   (table) => [
     primaryKey({
@@ -351,7 +340,6 @@ export const taskComments = pgTable(
     authorId: uuid('author_id').references(() => users.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at'),
-    deletedAt: timestamp('deleted_at'),
   },
   (table) => [
     foreignKey({
