@@ -323,7 +323,6 @@ export const taskAttachments = pgTable('task_attachments', {
     .references(() => users.id)
     .notNull(),
   uploadedAt: timestamp('uploaded_at').defaultNow().notNull(),
-  deletedAt: timestamp('deleted_at'),
 });
 
 // TODO: add ability for comments to have replies
