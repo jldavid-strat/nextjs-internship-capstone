@@ -49,7 +49,7 @@ export const projects = pgTable(
     statusChangedById: uuid('status_changed_by_id').references(() => users.id),
     isArchived: boolean('is_archived').default(false).notNull(),
     ownerId: uuid('owner_id')
-      .references(() => users.id)
+      .references(() => users.id, { onDelete: 'restrict' })
       .notNull(),
     dueDate: date('due_date'),
     createdAt: timestamp('created_at').defaultNow(),
@@ -83,12 +83,14 @@ export const projectMembers = pgTable(
   'project_members',
   {
     userId: uuid('user_id')
-      .references(() => users.id)
+      .references(() => users.id, { onDelete: 'cascade' })
       .notNull(),
     projectId: uuid('project_id')
-      .references(() => projects.id)
+      .references(() => projects.id, { onDelete: 'cascade' })
       .notNull(),
-    projectTeamId: uuid('project_team_id').references(() => projectTeams.id),
+    projectTeamId: uuid('project_team_id').references(() => projectTeams.id, {
+      onDelete: 'restrict',
+    }),
 
     // [CONSIDER] adding addedBy columns
     role: memberRoleEnum().notNull().default('member'),
@@ -106,16 +108,17 @@ export const projectMembers = pgTable(
 export const projectTeams = pgTable('project_teams', {
   id: uuid('id').primaryKey().defaultRandom(),
   projectId: uuid('project_id')
-    .references(() => projects.id)
+    .references(() => projects.id, { onDelete: 'cascade' })
     .notNull(),
   teamName: varchar('team_name', { length: 300 }).notNull(),
   description: varchar('description', { length: 300 }),
-  leaderId: uuid('leader_id')
-    .references(() => users.id)
-    .notNull(),
-  createdById: uuid('created_by_id')
-    .references(() => users.id)
-    .notNull(),
+
+  // [CONSIDER]
+  // set to null if user deleted is the team leader
+  // and assign others team members to be team_leader in server action
+  leaderId: uuid('leader_id').references(() => users.id, { onDelete: 'set null' }),
+
+  createdById: uuid('created_by_id').references(() => users.id, { onDelete: 'set null' }),
   color: varchar('color', { length: 7 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at'),
@@ -125,13 +128,11 @@ export const projectTeams = pgTable('project_teams', {
 export const projectDiscussions = pgTable('project_discussions', {
   id: uuid('id').primaryKey().defaultRandom(),
   projectId: uuid('project_id')
-    .references(() => projects.id)
+    .references(() => projects.id, { onDelete: 'cascade' })
     .notNull(),
   title: varchar('title', { length: 255 }).notNull(),
   content: text('content').notNull(),
-  createdById: uuid('created_by_id')
-    .references(() => users.id)
-    .notNull(),
+  createdById: uuid('created_by_id').references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at'),
   closedAt: timestamp('closed_at'),
@@ -146,7 +147,7 @@ export const projectDiscussionComments = pgTable(
       .references(() => users.id)
       .notNull(),
     projectDiscussionId: uuid('project_discussion_id')
-      .references(() => projectDiscussions.id)
+      .references(() => projectDiscussions.id, { onDelete: 'cascade' })
       .notNull(),
     parentCommentId: bigint('parent_comment_id', { mode: 'number' }),
     content: text('content').notNull(),
@@ -167,10 +168,9 @@ export const milestones = pgTable('milestones', {
   id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
   milestoneName: varchar('milestone_name', { length: 255 }).notNull(),
   projectId: uuid('project_id')
-    .references(() => projects.id)
+    .references(() => projects.id, { onDelete: 'cascade' })
     .notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  achievedAt: timestamp('achieved_at'),
   deletedAt: timestamp('deleted_at'),
 });
 
@@ -190,10 +190,10 @@ export const projectKanbanColumns = pgTable(
   'project_kanban_columns',
   {
     kanbanColumnId: uuid('kanban_column_id')
-      .references(() => kanbanColumns.id)
+      .references(() => kanbanColumns.id, { onDelete: 'cascade' })
       .notNull(),
     projectId: uuid('project_id')
-      .references(() => projects.id)
+      .references(() => projects.id, { onDelete: 'cascade' })
       .notNull(),
     description: varchar('description', { length: 300 }),
     color: varchar('color', { length: 300 }),
@@ -234,18 +234,18 @@ export const tasks = pgTable(
     // will take text in markdown format
     detail: text('detail'),
     projectId: uuid('project_id')
-      .references(() => projects.id)
+      .references(() => projects.id, { onDelete: 'cascade' })
       .notNull(),
     kanbanColumnId: uuid('kanban_column_id')
-      .references(() => kanbanColumns.id)
+      .references(() => projectKanbanColumns.kanbanColumnId, { onDelete: 'cascade' })
       .notNull(),
-    milestoneId: integer('milestone_id').references(() => milestones.id),
+    milestoneId: integer('milestone_id').references(() => milestones.id, { onDelete: 'restrict' }),
     status: varchar('status').notNull(),
     position: integer('position').notNull(),
     priority: taskPriorityEnum().default('none').notNull(),
     isCompleted: boolean('is_compeleted').notNull(),
     createdById: uuid('created_by_id')
-      .references(() => users.id)
+      .references(() => users.id, { onDelete: 'restrict' })
       .notNull(),
     isNotAssigned: boolean('is_not_assigned').notNull().default(false),
     dueDate: date('due_date'),
@@ -261,10 +261,10 @@ export const projectLabels = pgTable(
   'project_labels',
   {
     labelId: bigint('label_id', { mode: 'number' })
-      .references(() => labels.id)
+      .references(() => labels.id, { onDelete: 'cascade' })
       .notNull(),
     projectId: uuid('project_id')
-      .references(() => projects.id)
+      .references(() => projects.id, { onDelete: 'cascade' })
       .notNull(),
     color: varchar('color', { length: 7 }),
     isCustom: boolean('is_custom').notNull(),
@@ -281,10 +281,10 @@ export const taskLabels = pgTable(
   'task_labels',
   {
     taskId: bigint('task_id', { mode: 'number' })
-      .references(() => tasks.id)
+      .references(() => tasks.id, { onDelete: 'cascade' })
       .notNull(),
     labelId: bigint('label_id', { mode: 'number' })
-      .references(() => labels.id)
+      .references(() => projectLabels.labelId, { onDelete: 'cascade' })
       .notNull(),
   },
   (table) => [
@@ -297,9 +297,7 @@ export const taskHistory = pgTable('task_history', {
   taskId: bigint('task_id', { mode: 'number' })
     .references(() => tasks.id)
     .notNull(),
-  changedBy: uuid('changed_by')
-    .references(() => users.id)
-    .notNull(),
+  changedBy: uuid('changed_by').references(() => users.id, { onDelete: 'set null' }),
   changeDescription: text('change_description').notNull(),
   changedAt: timestamp('changed_at').notNull().defaultNow(),
   deletedAt: timestamp('deleted_at'),
@@ -309,14 +307,12 @@ export const taskAssignees = pgTable(
   'task_assignees',
   {
     taskId: bigint('task_id', { mode: 'number' })
-      .references(() => tasks.id)
+      .references(() => tasks.id, { onDelete: 'cascade' })
       .notNull(),
     assigneeId: uuid('assignee_id')
-      .references(() => users.id)
+      .references(() => users.id, { onDelete: 'cascade' })
       .notNull(),
-    assignedById: uuid('assigned_by_id')
-      .references(() => users.id)
-      .notNull(),
+    assignedById: uuid('assigned_by_id').references(() => users.id, { onDelete: 'set null' }),
     assignedAt: timestamp('assigned_at').defaultNow().notNull(),
     deletedAt: timestamp('deleted_at'),
   },
@@ -330,7 +326,7 @@ export const taskAssignees = pgTable(
 
 export const taskAttachments = pgTable('task_attachments', {
   id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
-  taskId: bigint('task_id', { mode: 'number' }).references(() => tasks.id),
+  taskId: bigint('task_id', { mode: 'number' }).references(() => tasks.id, { onDelete: 'cascade' }),
   filename: varchar('filename', { length: 255 }).notNull(),
   filetype: varchar('filetype', { length: 100 }).notNull(),
   filepath: text('filepath').notNull(),
@@ -348,13 +344,11 @@ export const taskComments = pgTable(
     id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     content: text('content').notNull(),
     taskId: bigint('task_id', { mode: 'number' })
-      .references(() => tasks.id)
+      .references(() => tasks.id, { onDelete: 'cascade' })
       .notNull(),
 
     parentCommentId: bigint('parent_comment_id', { mode: 'number' }),
-    authorId: uuid('author_id')
-      .references(() => users.id)
-      .notNull(),
+    authorId: uuid('author_id').references(() => users.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at'),
     deletedAt: timestamp('deleted_at'),
