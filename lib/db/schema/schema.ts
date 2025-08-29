@@ -154,7 +154,7 @@ export const projectDiscussionComments = pgTable(
       columns: [table.parentCommentId],
       foreignColumns: [table.id],
       name: 'project_discussion_comments_parent_comment_id_fk',
-    }),
+    }).onDelete('set null'),
   ],
 );
 
@@ -228,8 +228,10 @@ export const tasks = pgTable(
     projectId: uuid('project_id')
       .references(() => projects.id, { onDelete: 'cascade' })
       .notNull(),
+
+    // [NOTE] manually handle task deletion when a custom kanban column is removed
     kanbanColumnId: uuid('kanban_column_id')
-      .references(() => projectKanbanColumns.kanbanColumnId, { onDelete: 'cascade' })
+      .references(() => kanbanColumns.id)
       .notNull(),
     milestoneId: integer('milestone_id').references(() => milestones.id, { onDelete: 'restrict' }),
     status: varchar('status').notNull(),
@@ -274,8 +276,10 @@ export const taskLabels = pgTable(
     taskId: bigint('task_id', { mode: 'number' })
       .references(() => tasks.id, { onDelete: 'cascade' })
       .notNull(),
+
+    // [NOTE] manually delete task labels when a project label is deleted
     labelId: bigint('label_id', { mode: 'number' })
-      .references(() => projectLabels.labelId, { onDelete: 'cascade' })
+      .references(() => labels.id)
       .notNull(),
   },
   (table) => [
@@ -308,7 +312,7 @@ export const taskAssignees = pgTable(
   (table) => [
     primaryKey({
       name: 'custom_task_assignee_pk',
-      columns: [table.taskId, table.assigneeId, table.assignedById],
+      columns: [table.taskId, table.assigneeId],
     }),
   ],
 );
@@ -345,6 +349,6 @@ export const taskComments = pgTable(
       columns: [table.parentCommentId],
       foreignColumns: [table.id],
       name: 'task_comments_parent_column_id_fk',
-    }),
+    }).onDelete('set null'),
   ],
 );
