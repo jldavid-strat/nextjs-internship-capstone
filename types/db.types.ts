@@ -8,10 +8,9 @@ import {
   projectKanbanColumns,
   projectMembers,
   projectLabels,
+  labels,
+  kanbanColumns,
 } from '@/lib/db/schema/schema';
-import { kanbanColumns, labels } from '@/migrations/schema';
-import KanbanColumn from '../components/kanban-column';
-import { projectLabels } from '../lib/db/schema/schema';
 
 export type Project = typeof projects.$inferSelect;
 export type CreateProject = typeof projects.$inferInsert;
