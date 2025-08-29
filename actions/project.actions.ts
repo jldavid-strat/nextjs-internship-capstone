@@ -16,6 +16,7 @@ import { eq } from 'drizzle-orm';
 import { EditProjectSchema, InsertProjectSchema } from '@/lib/validations/project.validations';
 import { checkAuthenticationStatus } from '@/lib/utils/is_authenticated';
 import { MemberValue } from '@/components/ui/add-member-multiselect';
+import { createDefaultProjectLabels } from './project_labels.actions';
 
 export async function createProject(
   previousState: unknown,
@@ -32,40 +33,48 @@ export async function createProject(
     // [CONSIDER] const data = Object.fromEntries(projectData.entries())
     // must be formatted as "YYYY-MM-DD"
     // default to null to handle empty string
-    const dueDateString = projectData.get('dueDate') || null;
-    const members = JSON.parse(projectData.get('members') as string) as MemberValue[];
 
-    const validatedData = InsertProjectSchema.parse({
-      title: projectData.get('title') as string,
-      description: projectData.get('description') as string,
-      ownerId: projectData.get('owner-id') as string,
-      dueDate: dueDateString,
+    const transactionResult = await db.transaction(async (tx) => {
+      const dueDateString = projectData.get('dueDate') || null;
+      const members = JSON.parse(projectData.get('members') as string) as MemberValue[];
+
+      const validatedData = InsertProjectSchema.parse({
+        title: projectData.get('title') as string,
+        description: projectData.get('description') as string,
+        ownerId: projectData.get('owner-id') as string,
+        dueDate: dueDateString,
+      });
+
+      console.log('creating new project...');
+
+      const [{ newProjectId }] = await tx
+        .insert(projects)
+        .values(validatedData)
+        .returning({ newProjectId: projects.id });
+
+      console.log('adding project members...');
+      const { success } = await addProjectMembers(newProjectId, members, true, tx);
+      if (!success) throw new Error('Something went wrong adding project members');
+
+      // create default kanban boards
+      console.log('creating default kanban boards...');
+      const kanbanResponse = await createDefaultKanbanColumns(newProjectId, tx);
+      if (!kanbanResponse.success) throw new Error(kanbanResponse.message);
+
+      // create default labels for this project
+      console.log('creating default project labels...');
+      const labelResponse = await createDefaultProjectLabels(newProjectId, tx);
+      if (!labelResponse.success) throw new Error(labelResponse.message);
+
+      revalidatePath('/projects');
+      return {
+        success: true,
+        message: 'Succesfully retrieved project',
+        data: newProjectId,
+      };
     });
-
-    console.log('creating new project...');
-
-    const [{ newProjectId }] = await db
-      .insert(projects)
-      .values(validatedData)
-      .returning({ newProjectId: projects.id });
-
-    // // TODO wrap in a db transaction
-    console.log('adding project members...');
-    const { success } = await addProjectMembers(newProjectId, members, true);
-    if (!success) throw new Error('Something went wrong adding project members');
-
-    // create default kanban boards
-    console.log('creating default kanban boards...');
-    const kanbanResponse = await createDefaultKanbanColumns(newProjectId);
-
-    if (!kanbanResponse.success) throw new Error(kanbanResponse.message);
-
-    revalidatePath('/projects');
-    return {
-      success: true,
-      message: `Project successfully created`,
-      data: newProjectId,
-    };
+    if (!transactionResult.success) throw new Error('Failed to create project');
+    return { ...transactionResult, success: transactionResult.success };
   } catch (error) {
     if (error instanceof ZodError) {
       return {
