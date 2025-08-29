@@ -1,0 +1,43 @@
+import z from 'zod';
+import { errorMessages, MAX_CHAR, MIN_CHAR } from '../utils/validation.utils';
+import { TASK_PRIORITY_VALUES } from '../db/schema/enums';
+
+export const TaskSchema = z.object({
+  title: z
+    .string(errorMessages.invalidType('Task title', 'text'))
+    .min(MIN_CHAR, errorMessages.minChar('Task title'))
+    .max(MAX_CHAR, errorMessages.maxChar('Task title', MAX_CHAR)),
+  description: z
+    .string(errorMessages.invalidType('Task description', 'text'))
+    .max(MAX_CHAR, errorMessages.maxChar('Task description', MAX_CHAR))
+    .nullable(),
+  detail: z.string(errorMessages.invalidType('Task detail', 'text')).nullable(),
+  status: z.string(errorMessages.invalidType('Task status', 'text')),
+  priority: z.enum(TASK_PRIORITY_VALUES),
+  position: z.int(errorMessages.integer('Task position')).refine((n) => n >= 0, {
+    error: 'Task position must be zero or positive',
+  }),
+  projectId: z.uuidv4(errorMessages.uuid('Project ID')),
+  createdById: z.uuidv4(errorMessages.uuid('Created By ID')),
+  kanbanColumnId: z.uuidv4(errorMessages.uuid('Kanban Column ID')),
+  isCompleted: z.boolean(errorMessages.invalidType('is_completed', 'true or false')),
+  milestoneId: z
+    .int(errorMessages.integer('Milestone ID'))
+    .positive(errorMessages.positive('Milestone ID'))
+    .nullable(),
+  startDate: z.iso
+    .date(errorMessages.invalidDate('Due date'))
+    .refine((dateString) => isFuture(dateString), {
+      error: 'Start date must be set today or in the future',
+    })
+    .nullable(),
+  dueDate: z.iso
+    .date(errorMessages.invalidDate('Due date'))
+    .refine((dateString) => isFuture(dateString), {
+      error: 'Due date must be set today or in the future',
+    })
+    .nullable(),
+
+  // will be omitted in insertion
+  updatedAt: z.date(errorMessages.invalidDate('Task updated date')),
+});
