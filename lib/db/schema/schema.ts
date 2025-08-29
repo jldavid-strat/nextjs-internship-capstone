@@ -247,6 +247,7 @@ export const tasks = pgTable(
     createdById: uuid('created_by_id')
       .references(() => users.id)
       .notNull(),
+    isNotAssigned: boolean('is_not_assigned').notNull().default(false),
     dueDate: date('due_date'),
     startDate: date('start_date'),
     createdAt: timestamp('created_at').defaultNow(),
