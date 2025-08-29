@@ -38,14 +38,6 @@ export const rolePermissions = pgTable('role_permissions', {
   permissions: jsonb('permissions').notNull(),
 });
 
-/*
-role_permissions = {
-
-    owner: ["user:create", "user:delete", "user:update"],
-    member: ["task:update status", "tasks:add comment", "task:delete comment"]
-}
-*/
-
 export const projects = pgTable(
   'projects',
   {
@@ -227,7 +219,6 @@ export const labels = pgTable(
   {
     id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     name: varchar('name', { length: 255 }).notNull().unique(),
-    color: varchar('color', { length: 7 }),
     deletedAt: timestamp('deleted_at'),
   },
   (table) => [index('label_id_idx').on(table.id)],
@@ -265,18 +256,39 @@ export const tasks = pgTable(
   (table) => [index('task_id_idx').on(table.id)],
 );
 
+export const projectLabels = pgTable(
+  'project_labels',
+  {
+    labelId: bigint('label_id', { mode: 'number' })
+      .references(() => labels.id)
+      .notNull(),
+    projectId: uuid('project_id')
+      .references(() => projects.id)
+      .notNull(),
+    color: varchar('color', { length: 7 }),
+    isCustom: boolean('is_custom').notNull(),
+    updatedAt: timestamp('updated_at'),
+  },
+  (table) => [
+    primaryKey({ name: 'custom_project_labels_pk', columns: [table.projectId, table.labelId] }),
+  ],
+);
+
+// join table for mulitple labels in task
+// project_labels -> task_labels -> task
 export const taskLabels = pgTable(
   'task_labels',
   {
     taskId: bigint('task_id', { mode: 'number' })
       .references(() => tasks.id)
       .notNull(),
-    labelId: integer('label_id')
+    labelId: bigint('label_id', { mode: 'number' })
       .references(() => labels.id)
       .notNull(),
-    deletedAt: timestamp('deleted_at'),
   },
-  (table) => [primaryKey({ name: 'custom_task_label_pk', columns: [table.taskId, table.labelId] })],
+  (table) => [
+    primaryKey({ name: 'custom_task_labels_pk', columns: [table.taskId, table.labelId] }),
+  ],
 );
 
 export const taskHistory = pgTable('task_history', {
