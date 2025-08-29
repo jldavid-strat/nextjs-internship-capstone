@@ -1,7 +1,7 @@
 'use server';
 import { MemberValue } from '@/components/ui/add-member-multiselect';
 import { ACTIONS, RESOURCES } from '@/constants/permissions';
-import { db } from '@/lib/db/connect_db';
+import { db, DBTransaction } from '@/lib/db/connect_db';
 import { projectMembers } from '@/lib/db/schema/schema';
 import { checkMemberPermission } from '@/lib/queries/permssions.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
@@ -13,8 +13,10 @@ export async function addProjectMembers(
   projectId: Project['id'],
   members: MemberValue[],
   isNewProject: boolean,
+  dbTransaction?: DBTransaction,
 ) {
   try {
+    const dbContext = dbTransaction ?? db;
     const currentUserId = await getCurrentUserId();
 
     const { isAuthorize } = await checkMemberPermission(
@@ -38,7 +40,9 @@ export async function addProjectMembers(
       role: m.role,
     }));
 
-    await db.insert(projectMembers).values(toInsert);
+    console.info(toInsert);
+
+    await dbContext.insert(projectMembers).values(toInsert);
     return {
       success: true,
       message: 'Successfully added project members',
