@@ -1,7 +1,7 @@
 'use client';
 
 import { createTask } from '@/actions/task.actions';
-import { startTransition, useActionState, useLayoutEffect, useRef, useState } from 'react';
+import { startTransition, useActionState, useLayoutEffect, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { TaskSchema } from '@/lib/validations/task.validations';
 import z from 'zod';
@@ -83,8 +83,6 @@ export function CreateTaskModal({ kanbanData }: { kanbanData: CreateTaskProps })
     undefined,
   );
 
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(true);
-
   const {
     register,
     handleSubmit,
@@ -122,12 +120,7 @@ export function CreateTaskModal({ kanbanData }: { kanbanData: CreateTaskProps })
   }, [state, router]);
 
   return (
-    <Modal
-      isOpen={isModalOpen}
-      setIsOpen={setIsModalOpen}
-      className="max-h-[700px] w-[700px]"
-      triggerComponent={<Button>Click Me</Button>}
-    >
+    <Modal className="max-h-[700px] w-[700px]" triggerComponent={<Button>Click Me</Button>}>
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-semibold">Create New Task</h3>
       </div>
