@@ -7,9 +7,11 @@ import {
   users,
   projectKanbanColumns,
   projectMembers,
+  projectLabels,
 } from '@/lib/db/schema/schema';
-import { kanbanColumns } from '@/migrations/schema';
+import { kanbanColumns, labels } from '@/migrations/schema';
 import KanbanColumn from '../components/kanban-column';
+import { projectLabels } from '../lib/db/schema/schema';
 
 export type Project = typeof projects.$inferSelect;
 export type CreateProject = typeof projects.$inferInsert;
@@ -41,3 +43,11 @@ export type UpdateUser = Partial<typeof users.$inferInsert>;
 
 export type KanbanColumn = typeof kanbanColumns.$inferSelect;
 export type ProjectKanbanColumn = typeof projectKanbanColumns.$inferSelect;
+
+export type ProjectLabel = typeof projectLabels.$inferSelect;
+export type Label = typeof labels.$inferSelect;
+
+export interface TaskLabel extends ProjectLabel {
+  labelName: Label['name'];
+  taskId: Task['id'];
+}
