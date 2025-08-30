@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent } from './dialog';
+import { Dialog, DialogContent, DialogDescription } from './dialog';
 import { DialogTitle, DialogTrigger } from '@radix-ui/react-dialog';
 import { cn } from '../../lib/utils/shadcn-utils';
 
@@ -17,6 +17,7 @@ export default function Modal({ children, className, triggerComponent }: ModalPr
         className={cn('border-border max-h-screen overflow-y-scroll lg:max-w-screen-lg', className)}
       >
         <DialogTitle className="sr-only"></DialogTitle>
+        <DialogDescription className="sr-only"></DialogDescription>
 
         {/* 
         
