@@ -15,6 +15,7 @@ import { Button } from '../ui/button';
 import { capitalize } from 'lodash';
 import { AddMemberMultiSelect } from '../ui/add-member-multiselect';
 import { DialogClose } from '../ui/dialog';
+import { ErrorBox } from '../ui/error-box';
 // TODO: Task 4.4 - Build task creation and editing functionality
 // TODO: Task 5.6 - Create task detail modals and editing interfaces
 
@@ -245,13 +246,7 @@ export function CreateTaskModal({ kanbanData }: { kanbanData: CreateTaskProps })
           </div>
         </div>
         {/* Server validation error messages */}
-        {/* TODO display all error messages not just one */}
-        <div>
-          {!errors && `CLIENT: ${JSON.stringify(errors, null, 2)}`}
-          {state?.success === false && (
-            <p className="mt-2 text-sm text-red-400">{`SERVER: ${state?.message}`}</p>
-          )}
-        </div>
+        <div className="my-4">{state?.success === false && <ErrorBox message={state.error} />}</div>
         <div className="z-1 flex justify-end space-x-3 border-red-500 pt-4">
           <DialogClose asChild>
             <Button type="button" disabled={isPending} variant={'cancel'}>
