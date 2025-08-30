@@ -2,8 +2,8 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { getProjectById } from '@/lib/queries/project.queries';
 import { DBKanbanBoard } from '@/components/kanban/kanban-board';
-import ProjectNotFound from '@/components/project/project-not-found';
 import ProjectSettingsButton from '@/components/buttons/project-settings-button';
+import { ProjectNotFound } from '@/components/project/project-not-found';
 
 export default async function ProjectPage({ params }: { params: { id: string } }) {
   const projectId = (await params).id;

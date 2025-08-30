@@ -4,7 +4,7 @@ import { SearchX } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
-export default function ProjectNotFound() {
+export function ProjectNotFound() {
   const router = useRouter();
   return (
     <div className="flex w-full flex-col items-center justify-center gap-4 p-2">
@@ -20,6 +20,15 @@ export default function ProjectNotFound() {
           Try again
         </p>
       </div>
+    </div>
+  );
+}
+
+export function ProjectDataNotFound({ message, icon }: { message: string; icon: React.ReactNode }) {
+  return (
+    <div className="flex h-30 flex-col items-center justify-center p-2">
+      {icon}
+      <h2 className="text-muted-foreground my-2">{message}</h2>
     </div>
   );
 }
