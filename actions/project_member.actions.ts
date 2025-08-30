@@ -5,8 +5,10 @@ import { db, DBTransaction } from '@/lib/db/connect_db';
 import { projectMembers } from '@/lib/db/schema/schema';
 import { checkMemberPermission } from '@/lib/queries/permssions.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
+import { getErrorMessage } from '@/lib/utils/error.utils';
 import { AddProjectMemberSchema } from '@/lib/validations/project.validations';
 import { Project, User } from '@/types/db.types';
+import { ActionResult } from '@/types/types';
 
 // assumes that inputs are already validated
 export async function addProjectMembers(
@@ -14,7 +16,7 @@ export async function addProjectMembers(
   members: MemberValue[],
   isNewProject: boolean,
   dbTransaction?: DBTransaction,
-) {
+): Promise<ActionResult> {
   try {
     const dbContext = dbTransaction ?? db;
     const currentUserId = await getCurrentUserId();
@@ -45,15 +47,12 @@ export async function addProjectMembers(
     await dbContext.insert(projectMembers).values(toInsert);
     return {
       success: true,
-      message: 'Successfully added project members',
-      data: null,
     };
   } catch (error) {
     console.error(error);
     return {
       success: false,
-      message: 'Something went wrong in adding project member. Please try again',
-      error: JSON.stringify(error),
+      error: getErrorMessage(error),
     };
   }
 }

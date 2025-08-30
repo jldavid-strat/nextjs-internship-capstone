@@ -7,14 +7,15 @@ import { serverEvents } from '@/lib/events/event-emitter';
 import { getKanbanColumnsByProjectId } from '@/lib/queries/kanban_column.queries';
 import { checkMemberPermission } from '@/lib/queries/permssions.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
+import { getErrorMessage } from '@/lib/utils/error.utils';
 import { KanbanColumn, Project } from '@/types/db.types';
-import { ReorderColumnDataType } from '@/types/types';
+import { ActionResult, ReorderColumnDataType } from '@/types/types';
 import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
 
 export async function createDefaultKanbanColumns(
   projectId: Project['id'],
   dbTransaction?: DBTransaction,
-) {
+): Promise<ActionResult> {
   try {
     const dbContext = dbTransaction ?? db;
     const defaultColumns = await dbContext
@@ -33,18 +34,19 @@ export async function createDefaultKanbanColumns(
     await dbContext.insert(projectKanbanColumns).values(toInsertDefaultColumns);
     return {
       success: true,
-      message: 'Successfully created default kanban columns',
     };
   } catch (error) {
     console.error(error);
     return {
       success: false,
-      message: 'Failed to initialize default kanban columns',
+      error: 'Failed to initialize default kanban columns',
     };
   }
 }
 
-export async function reorderKanbanColumns(reorderColumnData: ReorderColumnDataType) {
+export async function reorderKanbanColumns(
+  reorderColumnData: ReorderColumnDataType,
+): Promise<ActionResult> {
   try {
     const { projectId, columnId, newPosition } = reorderColumnData;
 
@@ -68,7 +70,7 @@ export async function reorderKanbanColumns(reorderColumnData: ReorderColumnDataT
     const columnToMove = currentProjectColumn.find((k) => k.kanbanColumnId === columnId);
 
     if (!columnToMove) {
-      return { success: false, message: 'Column not found' };
+      return { success: false, error: 'Column not found' };
     }
     // assumes order is always consecutive
     const reorderedKanbanColumnsPosition = currentProjectColumn
@@ -126,13 +128,12 @@ export async function reorderKanbanColumns(reorderColumnData: ReorderColumnDataT
     });
     return {
       success: true,
-      message: 'Kanban Column has been move successfully ',
     };
   } catch (error) {
     console.error('Reordering columns error: ', error);
     return {
       success: false,
-      error: JSON.stringify(error),
+      error: getErrorMessage(error),
     };
   }
 }

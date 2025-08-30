@@ -10,3 +10,6 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export const db = drizzle(pool, { schema: { ...schema, ...relations } });
 
 // [CONSIDER] implement caching: https://orm.drizzle.team/docs/cache
+
+// for passing drizzle transaction to other functions
+export type DBTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
