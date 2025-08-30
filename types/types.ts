@@ -1,26 +1,24 @@
 import { KanbanColumn, Project, ProjectKanbanColumn, Task } from './db.types';
 
-export type QueryResult<TData = undefined, Error = string> =
+// [CONSIDER]
+// change success to status code to differentiate different types of response especially in handling errors
+export type QueryResult<TData = undefined, Error = string | string[]> =
   | {
       success: true;
-      message: string;
       data: TData;
     }
   | {
       success: false;
-      message: string;
       error: Error;
     };
 
-export type ActionResult<TData = undefined, Error = string> =
+export type ActionResult<TData = undefined, Error = string | string[]> =
   | {
       success: true;
-      message: string;
       data?: TData;
     }
   | {
       success: false;
-      message: string;
       error: Error;
     };
 
