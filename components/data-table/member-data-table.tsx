@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  ColumnDef,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
@@ -18,95 +17,19 @@ import {
 } from '@/components/ui/select';
 import { DataTable } from './data-table';
 import { ProjectMemberData } from '@/types/db.types';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Badge } from '../ui/badge';
-import { formatDate } from '@/lib/utils/format_date';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
-import { MoreHorizontal } from 'lucide-react';
-import { Button } from '../ui/button';
 import { DataTablePagination } from './data-table-pagination';
+import { projectMemberColumns } from '@/components/data-table/columns/project-member-columns';
 
-const columns: ColumnDef<ProjectMemberData>[] = [
-  {
-    accessorKey: 'member',
-    header: () => <div className="text-center">Member</div>,
-    cell: ({ row }) => {
-      const member = row.original;
-      return (
-        <div className="flex gap-3 px-3 py-2 text-left">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={member.userImgLink} alt={`${member.firstName} ${member.lastName}`} />
-            <AvatarFallback>
-              {member.firstName.charAt(0)}
-              {member.lastName.charAt(0)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-medium">
-              {member.firstName} {member.lastName}
-            </p>
-            <p className="text-muted-foreground truncate text-sm">{member.primaryEmailAddress}</p>
-          </div>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: 'role',
-    header: () => <div className="text-center">Role</div>,
-    cell: ({ row }) => (
-      <div className="flex flex-row items-center justify-center gap-2">
-        <Badge className="text-sm text-gray-500" variant="outline">
-          {row.original.role}
-        </Badge>
-      </div>
-    ),
-  },
-  {
-    accessorKey: 'joinedAt',
-    header: () => <div className="text-center">Date Joined</div>,
-    cell: ({ row }) => <p className="text-center">{formatDate(row.original.joinedAt!)}</p>,
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      const member = row.original;
-      const handleChangeRole = () => {
-        console.log('Change role for:', member.userId);
-        // 🔥 Call your server action or mutation here
-      };
-
-      const handleRemove = () => {
-        console.log('Remove member:', member.userId);
-        // 🔥 Call your server action or mutation here
-      };
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={handleChangeRole}>Change Role</DropdownMenuItem>
-            <DropdownMenuItem onClick={handleRemove}>Remove</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
-
-export function MemberDataTable({ data }: { data: ProjectMemberData[] }) {
+export function MemberDataTable({
+  data,
+  canMutate,
+}: {
+  data: ProjectMemberData[];
+  canMutate: boolean;
+}) {
   const [globalFilter, setGlobalFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const columns = projectMemberColumns(canMutate);
 
   const table = useReactTable({
     data,

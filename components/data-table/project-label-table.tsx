@@ -14,60 +14,21 @@ import { ProjectLabelData } from '@/types/db.types';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { DataTablePagination } from './data-table-pagination';
+import { projectLabelColumns } from '@/components/data-table/columns/project-labels-columns';
 
-type ProjectLabelTableData = Omit<ProjectLabelData, 'taskId' | 'updatedAt'>;
+export type ProjectLabelTableData = Omit<ProjectLabelData, 'taskId' | 'updatedAt'>;
 
-function useProjectLabelColumns(canModify: boolean): ColumnDef<ProjectLabelTableData>[] {
-  const baseColumns: ColumnDef<ProjectLabelTableData>[] = [
-    {
-      accessorKey: 'labelName',
-      header: () => <div className="text-center">Label</div>,
-      cell: ({ row }) => {
-        const label = row.original;
-        return (
-          <div className="flex flex-row items-center justify-center gap-2">
-            <Badge
-              className="text-sm"
-              style={{ color: label.color ?? '#017de2' }}
-              variant="outline"
-            >
-              {label.labelName}
-            </Badge>
-          </div>
-        );
-      },
-    },
-  ];
-
-  if (canModify) {
-    baseColumns.push({
-      id: 'actions',
-      cell: ({ row }) => {
-        const label = row.original;
-        return (
-          <div className="flex flex-row items-center justify-center gap-2">
-            <Button variant="outline" onClick={() => console.log('Edit:', label.labelId)}>
-              Edit
-            </Button>
-            <Button
-              className="border-destructive/60 dark:text-foreground border-1 bg-red-500/20 text-red-500 hover:bg-red-500/30"
-              onClick={() => console.log('Delete:', label.labelId)}
-            >
-              Delete
-            </Button>
-          </div>
-        );
-      },
-    });
-  }
-
-  return baseColumns;
-}
-
-export function ProjectLabelDataTable({ data }: { data: ProjectLabelTableData[] }) {
+export function ProjectLabelDataTable({
+  data,
+  canMutate,
+}: {
+  data: ProjectLabelTableData[];
+  canMutate: boolean;
+}) {
   const [globalFilter, setGlobalFilter] = useState<string>('');
 
-  const columns = useProjectLabelColumns(false);
+  const columns = projectLabelColumns(canMutate);
+
   const table = useReactTable({
     data,
     columns,
