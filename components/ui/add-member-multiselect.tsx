@@ -7,7 +7,7 @@ import { User } from '@/types/db.types';
 import { Table, TableBody, TableRow, TableCell } from './table';
 import { SELECT_ROLE_VALUES } from '@/lib/db/schema/enums';
 import { capitalize } from 'lodash';
-import { UserMultiSelect } from './multi-select';
+import { UserMultiSelect } from './user-multi-select';
 import { Avatar, AvatarFallback, AvatarImage } from './avatar';
 
 export type MemberValue = Array<{ userId: string; role: string }>;
