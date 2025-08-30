@@ -46,7 +46,7 @@ export type ProjectKanbanColumn = typeof projectKanbanColumns.$inferSelect;
 export type ProjectLabel = typeof projectLabels.$inferSelect;
 export type Label = typeof labels.$inferSelect;
 
-export interface TaskLabel extends ProjectLabel {
+export interface ProjectLabelData extends ProjectLabel {
   labelName: Label['name'];
   taskId: Task['id'];
 }
