@@ -2,12 +2,13 @@ import EditProjectForm from '@/components/forms/edit-project-form';
 import { getProjectDataById } from '@/lib/queries/project.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
 import { Project } from '@/types/db.types';
-import EditProjectHeading from '../../../../../components/project/edit-project-heading';
+import EditProjectHeading from '@/components/project/edit-project-heading';
 import EditDangerZone from '@/components/project/edit-danger-zone';
-import { User, Users } from 'lucide-react';
-import ProjectMemberTable from '@/components/project/project-member-table';
-import ProjectTeamNotFound from '@/components/project/project-team-not-found';
+import { SearchX, User, Users } from 'lucide-react';
+import { ProjectDataNotFound } from '@/components/project/project-not-found';
 import ProjectSubHeader from '@/components/project/project-subheader';
+import { ProjectLabelDataTable } from '@/components/data-table/project-label-table';
+import { MemberDataTable } from '@/components/data-table/member-data-table';
 
 export default async function SettingsProjectPage({
   params,
@@ -23,8 +24,9 @@ export default async function SettingsProjectPage({
     return <div className="space-y-6">This project does not exist</div>;
 
   const projectInfo = projectData.projectData;
-  const projectMembers = projectData.projectMembers!;
+  const projectMembers = projectData.projectMembers ?? [];
   const projectTeams = projectData.projectTeams;
+  const projectLabels = projectData.projectLabels ?? [];
 
   const currentProjectMember = projectMembers.find((m) => m.userId === currentUserId)!;
 
@@ -44,7 +46,26 @@ export default async function SettingsProjectPage({
           color="text-primary"
         />
         {/* TODO: add way to change roles or add new members */}
-        <ProjectMemberTable projectMembers={projectMembers} />
+        <MemberDataTable data={projectMembers} />
+        {/* <ProjectMemberTable projectMembers={projectMembers} /> */}
+
+        <ProjectSubHeader
+          title={'Project Labels'}
+          description={'Selection of labels that can be used to attach on tasks'}
+          icon={<Users size={20} />}
+          color="text-primary"
+        />
+
+        <div className="rounded-sm">
+          {projectLabels?.length === 0 ? (
+            <ProjectDataNotFound
+              message="No labels found for this project"
+              icon={<SearchX size={40} className="text-muted-foreground" />}
+            />
+          ) : (
+            <ProjectLabelDataTable data={projectLabels} />
+          )}
+        </div>
 
         <ProjectSubHeader
           title={'Project Teams'}
@@ -55,7 +76,12 @@ export default async function SettingsProjectPage({
 
         {/* TODO: add way to add and modify teams */}
         <div className="bg-input/30 rounded-sm">
-          {projectTeams?.length == 0 && <ProjectTeamNotFound />}
+          {projectTeams?.length === 0 && (
+            <ProjectDataNotFound
+              message="No project teams found"
+              icon={<SearchX size={40} className="text-muted-foreground" />}
+            />
+          )}
         </div>
       </div>
     </div>
