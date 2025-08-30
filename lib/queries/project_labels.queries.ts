@@ -1,5 +1,5 @@
 import 'server-only';
-import { Project } from '@/types/db.types';
+import { Label, Project, ProjectLabel } from '@/types/db.types';
 import { db } from '../db/connect_db';
 import { labels, projectLabels } from '../db/schema/schema';
 import { eq } from 'drizzle-orm';
@@ -19,6 +19,30 @@ export async function getProjectLabels(projectId: Project['id']) {
       .where(eq(projectLabels.projectId, projectId));
 
     return projectLabelList;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function getProjectLabelById(labelId: ProjectLabel['labelId']) {
+  try {
+    const label = await db.query.labels.findFirst({
+      where: (labels, { eq }) => eq(labels.id, labelId),
+    });
+
+    return label;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function getProjectLabelByName(labelName: Label['name']) {
+  try {
+    const label = await db.query.labels.findFirst({
+      where: (labels, { eq }) => eq(labels.name, labelName),
+    });
+
+    return label;
   } catch (error) {
     console.error(error);
   }
