@@ -1,5 +1,4 @@
 import { User } from '@/types/db.types';
-import Image from 'next/image';
 import { Badge } from './badge';
 import { Button } from './button';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
@@ -12,15 +11,16 @@ import {
   CommandItem,
   CommandList,
 } from './command';
+import { Avatar, AvatarFallback, AvatarImage } from './avatar';
 
-type MultiSelectProps = {
+export type MultiSelectProps<TData, TDataId> = {
   open: boolean;
   setOpen: (input: boolean) => void;
   className?: string;
   placeholder: string;
-  selectedUsers: User[];
-  displayUsers: User[];
-  availableUsers: User[];
+  selectedData: TData[];
+  displayData: TData[];
+  availableData: TData[];
   disabled: boolean;
   searchTerm: string;
   setSearchTerm: (input: string) => void;
@@ -28,21 +28,21 @@ type MultiSelectProps = {
   loading: boolean;
   emptyMessage: string;
   hiddenCount: number;
-  value: Array<User['id']>;
-  handleRemove: (input: User['id'], event?: React.MouseEvent) => void;
+  value: Array<TDataId>;
+  handleRemove: (input: TDataId, event?: React.MouseEvent) => void;
   handleClearAll: (event: React.MouseEvent) => void;
-  handleSelect: (input: User) => void;
+  handleSelect: (input: TData) => void;
 };
 
-export function MultiSelect({ props }: { props: MultiSelectProps }) {
+export function UserMultiSelect({ props }: { props: MultiSelectProps<User, User['id']> }) {
   const {
     open,
     setOpen,
     className,
     placeholder,
-    selectedUsers,
-    displayUsers,
-    availableUsers,
+    selectedData: selectedUsers,
+    displayData: displayUsers,
+    availableData: availableUsers,
     disabled,
     searchTerm,
     setSearchTerm,
@@ -73,13 +73,16 @@ export function MultiSelect({ props }: { props: MultiSelectProps }) {
                 {displayUsers.map((user) => (
                   <Badge key={user.id} variant="secondary" className="flex items-center gap-1 pr-1">
                     {user.imgLink && (
-                      <Image
-                        src={user.imgLink}
-                        width={16}
-                        height={16}
-                        alt={`${user.firstName} ${user.lastName}`}
-                        className="rounded-full"
-                      />
+                      <Avatar className="h-4 w-4">
+                        <AvatarImage
+                          src={user.imgLink}
+                          alt={`${user.firstName} ${user.lastName}`}
+                        />
+                        <AvatarFallback>
+                          {user.firstName.charAt(0)}
+                          {user.lastName.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
                     )}
                     <span className="max-w-[100px] truncate text-xs">
                       {user.primaryEmailAddress}
@@ -145,13 +148,16 @@ export function MultiSelect({ props }: { props: MultiSelectProps }) {
                     className="flex items-center gap-3 px-3 py-2"
                   >
                     {user.imgLink && (
-                      <Image
-                        src={user.imgLink}
-                        width={32}
-                        height={32}
-                        alt={`${user.firstName} ${user.lastName}`}
-                        className="rounded-full"
-                      />
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage
+                          src={user.imgLink}
+                          alt={`${user.firstName} ${user.lastName}`}
+                        />
+                        <AvatarFallback>
+                          {user.firstName.charAt(0)}
+                          {user.lastName.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">
