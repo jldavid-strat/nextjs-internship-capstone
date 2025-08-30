@@ -4,10 +4,21 @@ import { Table, TableBody, TableRow, TableCell, TableHeader } from '@/components
 import { SELECT_ROLE_VALUES } from '@/lib/db/schema/enums';
 import { ProjectMemberData, User } from '@/types/db.types';
 import { capitalize } from 'lodash';
-import { X } from 'lucide-react';
+import { MoreHorizontal, X } from 'lucide-react';
 import Image from 'next/image';
 import { Badge } from '../ui/badge';
 import { formatDate } from '@/lib/utils/format_date';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSubContent,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
+import { Button } from '../ui/button';
 
 type ProjectMemberTableProps = {
   projectMembers: ProjectMemberData[];
@@ -28,6 +39,7 @@ export default function ProjectMemberTable({
             <TableCell className="text-center">Member</TableCell>
             <TableCell className="text-center">Role</TableCell>
             <TableCell className="text-center">Date Joined</TableCell>
+            <TableCell className="text-center"></TableCell>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -36,13 +48,16 @@ export default function ProjectMemberTable({
               <TableCell>
                 <div key={member.userId} className="flex items-center gap-3 px-3 py-2">
                   {member.userImgLink && (
-                    <Image
-                      src={member.userImgLink}
-                      width={32}
-                      height={32}
-                      alt={`${member.firstName} ${member.lastName}`}
-                      className="rounded-full"
-                    />
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={member.userImgLink}
+                        alt={`${member.firstName} ${member.lastName}`}
+                      />
+                      <AvatarFallback>
+                        {member.firstName.charAt(0)}
+                        {member.lastName.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">
@@ -59,37 +74,25 @@ export default function ProjectMemberTable({
                   <Badge className="text-sm text-gray-500" variant={'outline'}>
                     {capitalize(member.role)}
                   </Badge>
-                  {/* <p className="">Role:</p>
-                  {/* <p className="">Role:</p>
-                  <select
-                    name="role"
-                    defaultValue={member.role}
-                    // onChange={() => handleRoleChange ?? {}}
-                    className="border-border bg-card rounded-lg border px-3 py-2 focus:outline-hidden focus-visible:ring"
-                  >
-                    {
-                      // exclude owner as selectable role
-                      SELECT_ROLE_VALUES.filter((v) => v !== 'owner').map((role, index) => (
-                        <option key={index} value={role}>
-                          {capitalize(role)}
-                        </option>
-                      ))
-                    }
-                  </select> */}
                 </div>
               </TableCell>
               <TableCell>
                 <p className="text-center">{formatDate(member.joinedAt!)}</p>
               </TableCell>
-              {/* <TableCell>
-                <button
-                  type="button"
-                  //   onClick={() => handleRemove ?? {}}
-                  className="hover:bg-destructive hover:text-destructive-foreground ml-1 inline-flex cursor-pointer items-center justify-center rounded-sm"
-                >
-                  <X size={16} />
-                </button>
-              </TableCell> */}
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <span className="sr-only">Open menu</span>
+                      <MoreHorizontal />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem>Change Role</DropdownMenuItem>
+                    <DropdownMenuItem>Remove</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
