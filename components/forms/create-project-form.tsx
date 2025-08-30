@@ -15,6 +15,7 @@ import { Info, User as UserIcon } from 'lucide-react';
 import { User } from '@/types/db.types';
 import { getSuggestedUsersByEmail } from '@/actions/user.actions';
 import { AddMemberMultiSelect } from '../ui/add-member-multiselect';
+import { ErrorBox } from '../ui/error-box';
 
 export default function CreateProjectForm({ currentUserId }: { currentUserId: User['id'] }) {
   const [state, createProjectAction, isPending] = useActionState(createProject, undefined);
@@ -137,13 +138,8 @@ export default function CreateProjectForm({ currentUserId }: { currentUserId: Us
           </div>
         </section>
 
-        {/* TODO display all error messages not just one */}
-        {/* Server validation error messages */}
-        <div>
-          {state?.success === false && (
-            <p className="mt-2 text-sm text-red-400">{`SERVER: ${state?.error}`}</p>
-          )}
-        </div>
+        {/* Server side error */}
+        <div className="my-4">{state?.success === false && <ErrorBox message={state.error} />}</div>
 
         <div className="flex justify-end space-x-3 pt-4">
           <Button
