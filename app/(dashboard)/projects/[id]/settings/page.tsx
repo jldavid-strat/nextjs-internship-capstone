@@ -9,7 +9,7 @@ import { ProjectDataNotFound } from '@/components/project/project-not-found';
 import ProjectSubHeader from '@/components/project/project-subheader';
 import { MemberDataTable } from '@/components/data-table/member-data-table';
 import { ProjectLabelDataTable } from '@/components/data-table/project-label-table';
-import { hasRole } from '@/lib/utils/has_permission';
+import { hasRole } from '@/lib/utils/has_role';
 import AddProjectLabelModal from '@/components/modals/add-project-label-modal';
 
 export default async function SettingsProjectPage({
