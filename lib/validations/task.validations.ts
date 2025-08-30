@@ -1,5 +1,5 @@
 import z from 'zod';
-import { errorMessages, MAX_CHAR, MIN_CHAR } from '../utils/validation.utils';
+import { errorMessages, isFuture, MAX_CHAR, MIN_CHAR } from '../utils/validation.utils';
 import { TASK_PRIORITY_VALUES } from '../db/schema/enums';
 
 export const TaskSchema = z.object({
