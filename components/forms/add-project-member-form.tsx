@@ -6,11 +6,11 @@ import { getProjectMembers } from '@/lib/queries/project_member.queries';
 import { addProjectMember } from '@/actions/project_member.actions';
 import { Project, User } from '@/types/db.types';
 import { Loader2 } from 'lucide-react';
-import { UserMultiSelect } from '../ui/user-multiselect';
-import { getSuggestedUsersByEmail } from '@/lib/queries/user.queries';
+import { UserMultiSelect } from '../ui/ex-user-multiselect';
 import { SELECT_ROLE_VALUES } from '@/lib/db/schema/enums';
 import z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { getSuggestedUsersByEmail } from '@/actions/user.actions';
 
 const ProjectMemberFormSchema = z.object({
   members: z.array(z.string().trim()).min(1, 'Please select at least one user'),
@@ -64,7 +64,7 @@ export default function AddProjectMemberForm(addProjectMemberProps: AddProjectMe
   };
 
   const fetchUsersByEmail = async (searchTerm: string): Promise<User[]> => {
-    const { success, data: projectMembers } = await getProjectMembers(projectId);
+    // const { success, data: projectMembers } = await getProjectMembers(projectId);
 
     if (success || !projectMembers) {
       return getSuggestedUsersByEmail(

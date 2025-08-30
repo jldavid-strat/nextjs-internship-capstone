@@ -2,7 +2,7 @@
 
 import { createProject } from '@/actions/project.actions';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { startTransition, useActionState, useCallback, useEffect, useRef } from 'react';
+import { startTransition, useActionState, useCallback, useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
@@ -34,6 +34,8 @@ export default function CreateProjectForm({ currentUserId }: { currentUserId: Us
     },
   });
 
+  const [errorCount, setErrorCount] = useState(0);
+
   const formRef = useRef(null);
   const router = useRouter();
 
@@ -63,15 +65,17 @@ export default function CreateProjectForm({ currentUserId }: { currentUserId: Us
     [currentUserId],
   );
 
-  // NOTE only handle success state
   useEffect(() => {
-    if (state?.success) {
-      // alert('Successfully added project');
-      // redirect to newly project page
-      router.push(`/projects/${state.data}`);
+    if (state?.success === false && state?.error) {
+      //   always increment on unsuccesful attempt
+      setErrorCount((prev) => prev + 1);
     }
-    return;
+    if (state?.success === true) {
+      console.log('succesful added');
+      //   toast
+    }
   }, [state, router]);
+
   return (
     <div className="max-w-[800px] space-y-4">
       <form ref={formRef} onSubmit={handleSubmit(onSubmitHandler)}>
@@ -139,7 +143,11 @@ export default function CreateProjectForm({ currentUserId }: { currentUserId: Us
         </section>
 
         {/* Server side error */}
-        <div className="my-4">{state?.success === false && <ErrorBox message={state.error} />}</div>
+        <div className="my-4">
+          {state?.success === false && (
+            <ErrorBox key={`error-${errorCount}`} message={state.error} />
+          )}
+        </div>
 
         <div className="flex justify-end space-x-3 pt-4">
           <Button

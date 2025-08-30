@@ -44,6 +44,8 @@ export default function EditProjectForm({ projectData }: { projectData: Project 
     },
   });
 
+  const [errorCount, setErrorCount] = useState(0);
+
   const formRef = useRef(null);
   const router = useRouter();
 
@@ -63,9 +65,13 @@ export default function EditProjectForm({ projectData }: { projectData: Project 
 
   // NOTE only handle success state
   useEffect(() => {
-    if (state?.success) {
-      // refresh cache to get update data
-      router.refresh();
+    if (state?.success === false && state?.error) {
+      //   always increment on unsuccesful attempt
+      setErrorCount((prev) => prev + 1);
+    }
+    if (state?.success === true) {
+      console.log('succesful added');
+      //   toast
     }
   }, [state, router]);
   return (
@@ -159,7 +165,9 @@ export default function EditProjectForm({ projectData }: { projectData: Project 
       <p className="mt-2 text-sm text-red-400">{errors.status?.message}</p>
 
       {/* Server side error */}
-      <div className="my-4">{state?.success === false && <ErrorBox message={state.error} />}</div>
+      <div className="my-4">
+        {state?.success === false && <ErrorBox key={`error-${errorCount}`} message={state.error} />}
+      </div>
 
       {isEditing && (
         <div className="flex justify-end space-x-3 pt-4">

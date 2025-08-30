@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { startTransition, useActionState, useEffect, useRef } from 'react';
+import { startTransition, useActionState, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
@@ -15,11 +15,11 @@ import {
 } from '@/lib/validations/project-label.validations';
 import { DialogClose } from '../ui/dialog';
 import { Project } from '@/types/db.types';
-import { addProjectLabels } from '@/actions/project_labels.actions';
+import { addProjectLabel } from '@/actions/project_labels.actions';
 
 export default function AddProjectLabelForm({ projectId }: { projectId: Project['id'] }) {
   const [state, addProjectLabelAction, isPending] = useActionState(
-    addProjectLabels.bind(null, projectId),
+    addProjectLabel.bind(null, projectId),
     undefined,
   );
 
@@ -36,6 +36,8 @@ export default function AddProjectLabelForm({ projectId }: { projectId: Project[
     },
   });
 
+  const [errorCount, setErrorCount] = useState(0);
+
   const labelName = watch('name');
   const labelColor = watch('color');
 
@@ -50,12 +52,15 @@ export default function AddProjectLabelForm({ projectId }: { projectId: Project[
     })(evt);
   };
 
-  // NOTE only handle success state
   useEffect(() => {
-    if (state?.success) {
-      //   toast show toas
+    if (state?.success === false && state?.error) {
+      //   always increment on unsuccesful attempt
+      setErrorCount((prev) => prev + 1);
     }
-    return;
+    if (state?.success === true) {
+      console.log('succesful added');
+      //   toast
+    }
   }, [state, router]);
 
   return (
@@ -85,7 +90,9 @@ export default function AddProjectLabelForm({ projectId }: { projectId: Project[
         <LabelPreview color={labelColor} name={labelName} />
         {/* Server side error */}
         <div className="my-4">
-          {state?.success === false && <ErrorBox message={state.error!} />}
+          {state?.success === false && (
+            <ErrorBox key={`error-${errorCount}`} message={state.error!} />
+          )}
         </div>
         <div className="flex justify-end space-x-3 pt-4">
           <DialogClose asChild>
