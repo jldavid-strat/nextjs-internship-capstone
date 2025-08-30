@@ -14,6 +14,7 @@ import { ColumnQueryResult, KanbanColumnDragData } from '@/types/types';
 import CreateTaskButton from '../buttons/create-task-button';
 import { TaskCard } from './task-card';
 import { cn } from '@/lib/utils/shadcn-utils';
+import { capitalize } from 'lodash';
 
 interface BoardColumnProps {
   column: ColumnQueryResult;
@@ -76,7 +77,7 @@ export function KanbanColumn({ column, isOverlay, tasks }: BoardColumnProps) {
           <GripVertical />
         </Button>
         <div className="flex flex-col gap-1">
-          <span className="mr-auto"> {column.name}</span>
+          <span className="mr-auto"> {capitalize(column.name)}</span>
           <span className="text-muted-foreground mr-auto text-xs"> {column.description}</span>
         </div>
       </CardHeader>
