@@ -2,7 +2,7 @@ import 'server-only';
 import { Label, Project, ProjectLabel } from '@/types/db.types';
 import { db } from '../db/connect_db';
 import { labels, projectLabels } from '../db/schema/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 export async function getProjectLabels(projectId: Project['id']) {
   try {
@@ -24,13 +24,22 @@ export async function getProjectLabels(projectId: Project['id']) {
   }
 }
 
-export async function getProjectLabelById(labelId: ProjectLabel['labelId']) {
+export async function getProjectLabelById(
+  labelId: ProjectLabel['labelId'],
+  projectId: Project['id'],
+) {
   try {
-    const label = await db.query.labels.findFirst({
-      where: (labels, { eq }) => eq(labels.id, labelId),
-    });
+    const label = await db
+      .select({
+        name: labels.name,
+        color: projectLabels.color,
+      })
+      .from(projectLabels)
+      .innerJoin(labels, eq(labels.id, projectLabels.labelId))
+      .where(and(eq(projectLabels.labelId, labelId), eq(projectLabels.projectId, projectId)))
+      .limit(1);
 
-    return label;
+    return label[0];
   } catch (error) {
     console.error(error);
   }
