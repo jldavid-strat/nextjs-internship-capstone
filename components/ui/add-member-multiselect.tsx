@@ -7,7 +7,8 @@ import { User } from '@/types/db.types';
 import { Table, TableBody, TableRow, TableCell } from './table';
 import { SELECT_ROLE_VALUES } from '@/lib/db/schema/enums';
 import { capitalize } from 'lodash';
-import { MultiSelect } from './multi-select';
+import { UserMultiSelect } from './multi-select';
+import { Avatar, AvatarFallback, AvatarImage } from './avatar';
 
 export type MemberValue = Array<{ userId: string; role: string }>;
 
@@ -185,15 +186,15 @@ export function AddMemberMultiSelect({
   return (
     <>
       <div>
-        <MultiSelect
+        <UserMultiSelect
           props={{
             open,
             setOpen,
             className,
             placeholder,
-            selectedUsers,
-            displayUsers,
-            availableUsers,
+            selectedData: selectedUsers,
+            displayData: displayUsers,
+            availableData: availableUsers,
             disabled,
             searchTerm,
             setSearchTerm,
@@ -247,13 +248,13 @@ function SelectedUserTable({
               <TableCell>
                 <div key={user.id} className="flex items-center gap-3 px-3 py-2">
                   {user.imgLink && (
-                    <Image
-                      src={user.imgLink}
-                      width={32}
-                      height={32}
-                      alt={`${user.firstName} ${user.lastName}`}
-                      className="rounded-full"
-                    />
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.imgLink} alt={`${user.firstName} ${user.lastName}`} />
+                      <AvatarFallback>
+                        {user.firstName.charAt(0)}
+                        {user.lastName.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">
