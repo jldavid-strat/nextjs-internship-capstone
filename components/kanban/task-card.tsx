@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '../../lib/utils/shadcn-utils';
 import { Task } from '@/types/db.types';
 import { TaskDragData } from '@/types/types';
-import ViewTaskDetailButton from '../view-task-detail-button';
 
 interface TaskCardProps {
   task: Task;
@@ -70,19 +69,6 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
           </Badge>
           <p className="text-muted-foreground text-xs">{task.position}</p>
         </div>
-
-        {/* {!isOverlay && (
-            <ViewTaskDetailButton
-              id={Number(task.id)}
-              projectId={task.projectId}
-              title={task.title}
-              description={task.description}
-              detail={task.detail}
-              priority={task.priority}
-              startDate={task.startDate}
-              dueDate={task.dueDate}
-            />
-          )} */}
       </CardContent>
     </Card>
   );
