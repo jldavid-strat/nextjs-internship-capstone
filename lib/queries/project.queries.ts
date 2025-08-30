@@ -7,6 +7,8 @@ import { Project } from '@/types/db.types';
 import { projectMembers, users } from '@/migrations/schema';
 import { getProjectMembers } from './project_member.queries';
 import { getProjectTeams } from './project_teams.queries';
+import { getErrorMessage } from '../utils/error.utils';
+import { getProjectLabels } from './project_labels.queries';
 
 // TODO [CONSIDER] check read authorization in fetching projects
 
@@ -17,14 +19,13 @@ export async function getAllProjects(): Promise<QueryResult<Project[]>> {
 
     return {
       success: true,
-      message: `Successfully retrieve all projects`,
       data: projectList,
     };
   } catch (error) {
+    console.error(error);
     return {
       success: false,
-      message: `Failed retrieve all projects. Error ${error}`,
-      error: JSON.stringify(error),
+      error: `Failed retrieve all projects`,
     };
   }
 }
@@ -51,14 +52,13 @@ export async function getAllUserProject(userId: string) {
 
     return {
       success: true,
-      message: `Successfully retrieve all projects`,
       data: projectList,
     };
   } catch (error) {
+    console.error(error);
     return {
       success: false,
-      message: `Failed retrieve all projects. ${error}`,
-      error: JSON.stringify(error),
+      error: getErrorMessage(error),
     };
   }
 }
@@ -86,6 +86,7 @@ export async function getProjectDataById(projectId: Project['id']) {
     const singularProject = await db.select().from(projects).where(eq(projects.id, projectId));
     const projectMembers = await getProjectMembers(projectId);
     const projectTeams = await getProjectTeams(projectId);
+    const projectLabelList = await getProjectLabels(projectId);
 
     return {
       success: true,
@@ -94,6 +95,7 @@ export async function getProjectDataById(projectId: Project['id']) {
         projectData: singularProject[0],
         projectMembers: projectMembers,
         projectTeams: projectTeams,
+        projectLabels: projectLabelList,
       },
     };
   } catch (error) {
