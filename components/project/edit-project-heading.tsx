@@ -6,27 +6,26 @@ import { Badge } from '../ui/badge';
 import { capitalize } from 'lodash';
 import { formatDate } from '../../lib/utils/format_date';
 
-type MemberData = Pick<
-  ProjectMemberData,
-  'firstName' | 'lastName' | 'role' | 'primaryEmailAddress' | 'userImgLink'
->;
+type MemberData = Omit<ProjectMemberData, 'userId'>;
 
 type EditProjectHeadingProps = {
   memberData: MemberData;
   createdAt: Date;
 };
 
-export default function EditProjectHeading({ memberData, createdAt }: EditProjectHeadingProps) {
+export default function EditProjectHeading({ memberData }: EditProjectHeadingProps) {
   return (
     <>
       <section className="border-border bg-input/30 mb-4 flex flex-row justify-between rounded-sm border-1 p-4">
         <MemberData memberData={memberData} />
         <div>
           <div className="flex flex-row items-center justify-end gap-2">
-            <p className="text-primary">Created At</p>
+            <p className="text-primary">Date Joined</p>
             <Calendar className="text-primary" size={20} />
           </div>
-          <p className="text-muted-foreground truncate text-sm">{formatDate(createdAt)}</p>
+          <p className="text-muted-foreground truncate text-sm">
+            {formatDate(memberData.joinedAt!)}
+          </p>
         </div>
       </section>
     </>
