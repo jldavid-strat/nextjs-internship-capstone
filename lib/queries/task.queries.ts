@@ -1,5 +1,5 @@
 import 'server-only';
-import { db } from '../db/connect_db';
+import { db, DBTransaction } from '../db/connect_db';
 import { tasks } from '../db/schema/schema';
 import { and, eq, max } from 'drizzle-orm';
 import { KanbanColumn, Project, Task } from '@/types/db.types';
@@ -7,9 +7,11 @@ import { KanbanColumn, Project, Task } from '@/types/db.types';
 export async function getMaxNumPositionByColumnId(
   kanbanColumnId: Task['kanbanColumnId'],
   projectId: Task['projectId'],
+  dbTransaction?: DBTransaction,
 ) {
   try {
-    const [result] = await db
+    const dbContext = dbTransaction ?? db;
+    const [result] = await dbContext
       .select({
         maxNumPosition: max(tasks.position),
       })
