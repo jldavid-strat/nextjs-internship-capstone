@@ -46,7 +46,7 @@ export const FormProjectSchema = ProjectSchema.extend({
 export const AddProjectMemberSchema = z.object({
   members: z.array(
     z.object({
-      userId: z.uuidv4(errorMessages.uuid('Owner ID')).trim(),
+      userId: z.uuidv4(errorMessages.uuid('User ID')).trim(),
       role: z.enum(SELECT_ROLE_VALUES, 'Only select status from the listed options'),
     }),
   ),
