@@ -5,10 +5,10 @@ import { projects } from '../db/schema/schema';
 import { QueryResult } from '@/types/types';
 import { Project } from '@/types/db.types';
 import { projectMembers, users } from '@/migrations/schema';
-import { getProjectMembers } from './project_member.queries';
+import { getProjectMembers } from '@/actions/project_member.actions';
 import { getProjectTeams } from './project_teams.queries';
 import { getErrorMessage } from '../utils/error.utils';
-import { getProjectLabels } from './project_labels.queries';
+import { getProjectLabels } from '@/actions/project_labels.actions';
 
 // TODO [CONSIDER] check read authorization in fetching projects
 
