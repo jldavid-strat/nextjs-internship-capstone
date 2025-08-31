@@ -6,7 +6,7 @@ import { checkMemberPermission } from '@/lib/queries/permssions.queries';
 import { getMaxNumPositionByColumnId, getTaskById } from '@/lib/queries/task.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
 import getDataDiff from '@/lib/utils/data_diff';
-import { TaskSchema } from '@/lib/validations';
+import { TaskSchema } from '@/lib/validations/task.validations';
 import { QueryResult, MoveTaskDataType } from '@/types/types';
 import { Project, Task } from '@/types/db.types';
 import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
