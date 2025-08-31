@@ -4,7 +4,7 @@ import { DatabaseOperationError, UnauthorizedError } from '@/constants/error';
 import { DEFAULT_LABELS, defaultLabelNames } from '@/constants/labels';
 import { ACTIONS, RESOURCES } from '@/constants/permissions';
 import { db, DBTransaction } from '@/lib/db/connect_db';
-import { labels, projectLabels, projects } from '@/lib/db/schema/schema';
+import { labels, projectLabels } from '@/lib/db/schema/schema';
 import { checkMemberPermission } from '@/lib/queries/permssions.queries';
 import { getProjectLabelById, getProjectLabelByName } from '@/lib/queries/project_labels.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
