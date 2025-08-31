@@ -84,18 +84,27 @@ export async function getProjectById(projectId: Project['id']) {
 export async function getProjectDataById(projectId: Project['id']) {
   try {
     const singularProject = await db.select().from(projects).where(eq(projects.id, projectId));
-    const projectMembers = await getProjectMembers(projectId);
+    const projectMember = await getProjectMembers(projectId);
     const projectTeams = await getProjectTeams(projectId);
     const projectLabelList = await getProjectLabels(projectId);
 
+    const projectMemberList = projectMember?.map((m) => ({
+      userId: m.userData.id,
+      firstName: m.userData.firstName,
+      lastName: m.userData.lastName,
+      primaryEmailAddress: m.userData.primaryEmailAddress,
+      userImgLink: m.userData.imgLink,
+      role: m.role,
+      joinedAt: m.joinedAt,
+    }));
     return {
       success: true,
       message: `Successfully retrieve project`,
       data: {
         projectData: singularProject[0],
-        projectMembers: projectMembers,
-        projectTeams: projectTeams,
-        projectLabels: projectLabelList,
+        projectMembers: projectMemberList ?? [],
+        projectTeams: projectTeams ?? [],
+        projectLabels: projectLabelList ?? [],
       },
     };
   } catch (error) {
