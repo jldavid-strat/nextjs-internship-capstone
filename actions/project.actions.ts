@@ -70,8 +70,6 @@ export async function createProject(
       revalidatePath('/projects');
       return {
         success: true,
-        message: 'Succesfully retrieved project',
-        data: newProjectId,
       };
     });
     if (!transactionResult.success) throw new DatabaseOperationError('Failed to create project');
