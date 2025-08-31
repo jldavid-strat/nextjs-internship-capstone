@@ -102,6 +102,21 @@ export const projectMembers = pgTable(
   ],
 );
 
+export const projectMemberInvitaion = pgTable('project_member_inviation', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  inviteeId: uuid('invitee_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  invitedById: uuid('invitee_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  projectId: uuid('project_id')
+    .references(() => projects.id, { onDelete: 'cascade' })
+    .notNull(),
+  role: memberRoleEnum().notNull().default('member'),
+  invitedAt: timestamp('joined_at').defaultNow(),
+});
+
 export const projectTeams = pgTable('project_teams', {
   id: uuid('id').primaryKey().defaultRandom(),
   projectId: uuid('project_id')
@@ -179,33 +194,25 @@ export const kanbanColumns = pgTable(
   ],
 );
 
-export const projectKanbanColumns = pgTable(
-  'project_kanban_columns',
-  {
-    kanbanColumnId: uuid('kanban_column_id')
-      .references(() => kanbanColumns.id, { onDelete: 'cascade' })
-      .notNull(),
-    projectId: uuid('project_id')
-      .references(() => projects.id, { onDelete: 'cascade' })
-      .notNull(),
-    description: varchar('description', { length: 300 }),
-    color: varchar('color', { length: 300 }),
+export const projectKanbanColumns = pgTable('project_kanban_columns', {
+  id: bigint('id', { mode: 'number' }).generatedAlwaysAsIdentity().primaryKey(),
+  kanbanColumnId: uuid('kanban_column_id')
+    .references(() => kanbanColumns.id, { onDelete: 'cascade' })
+    .notNull(),
+  projectId: uuid('project_id')
+    .references(() => projects.id, { onDelete: 'cascade' })
+    .notNull(),
+  description: varchar('description', { length: 300 }),
+  color: varchar('color', { length: 300 }),
 
-    // position order within in the project
-    position: integer('position').notNull(),
+  // position order within in the project
+  position: integer('position').notNull(),
 
-    // determines if kanban column is user created
-    isCustom: boolean('is_custom').notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at'),
-  },
-  (table) => [
-    primaryKey({
-      name: 'custom_project_kanban_column_pk',
-      columns: [table.kanbanColumnId, table.projectId],
-    }),
-  ],
-);
+  // determines if kanban column is user created
+  isCustom: boolean('is_custom').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at'),
+});
 
 export const labels = pgTable(
   'labels',
@@ -250,23 +257,18 @@ export const tasks = pgTable(
   (table) => [index('task_id_idx').on(table.id)],
 );
 
-export const projectLabels = pgTable(
-  'project_labels',
-  {
-    labelId: bigint('label_id', { mode: 'number' })
-      .references(() => labels.id, { onDelete: 'cascade' })
-      .notNull(),
-    projectId: uuid('project_id')
-      .references(() => projects.id, { onDelete: 'cascade' })
-      .notNull(),
-    color: varchar('color', { length: 7 }),
-    isCustom: boolean('is_custom').notNull(),
-    updatedAt: timestamp('updated_at'),
-  },
-  (table) => [
-    primaryKey({ name: 'custom_project_labels_pk', columns: [table.projectId, table.labelId] }),
-  ],
-);
+export const projectLabels = pgTable('project_labels', {
+  id: bigint('id', { mode: 'number' }).generatedAlwaysAsIdentity().primaryKey(),
+  labelId: bigint('label_id', { mode: 'number' })
+    .references(() => labels.id, { onDelete: 'cascade' })
+    .notNull(),
+  projectId: uuid('project_id')
+    .references(() => projects.id, { onDelete: 'cascade' })
+    .notNull(),
+  color: varchar('color', { length: 7 }),
+  isCustom: boolean('is_custom').notNull(),
+  updatedAt: timestamp('updated_at'),
+});
 
 // join table for mulitple labels in task
 // project_labels -> task_labels -> task
