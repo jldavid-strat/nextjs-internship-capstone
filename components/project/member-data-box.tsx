@@ -8,12 +8,11 @@ import { formatDate } from '../../lib/utils/format_date';
 
 type MemberData = Omit<ProjectMemberData, 'userId'>;
 
-type EditProjectHeadingProps = {
+type MemberDataBoxProps = {
   memberData: MemberData;
-  createdAt: Date;
 };
 
-export default function EditProjectHeading({ memberData }: EditProjectHeadingProps) {
+export default function MemberDataBox({ memberData }: MemberDataBoxProps) {
   return (
     <>
       <section className="border-border bg-input/30 mb-4 flex flex-row justify-between rounded-sm border-1 p-4">

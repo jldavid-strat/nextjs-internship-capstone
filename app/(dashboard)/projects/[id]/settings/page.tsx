@@ -2,7 +2,7 @@ import EditProjectForm from '@/components/forms/edit-project-form';
 import { getProjectDataById } from '@/lib/queries/project.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
 import { Project } from '@/types/db.types';
-import EditProjectHeading from '@/components/project/edit-project-heading';
+import MemberDataBox from '@/components/project/member-data-box';
 import EditDangerZone from '@/components/project/edit-danger-zone';
 import { SearchX, User, Users } from 'lucide-react';
 import { ProjectDataNotFound } from '@/components/project/project-not-found';
@@ -34,14 +34,11 @@ export default async function SettingsProjectPage({
 
   const canMutateMember = hasRole(currentProjectMember.role, ['admin', 'owner']);
   const canMutateLabel = hasRole(currentProjectMember.role, ['admin', 'owner', 'owner']);
-  // const canMutateTeam = canMutateMember;
+
   return (
     <div className="space-y-6">
       <div className="max-w-[800px] space-y-4">
-        <EditProjectHeading
-          memberData={{ ...currentProjectMember }}
-          createdAt={projectInfo.createdAt!}
-        />
+        <MemberDataBox memberData={{ ...currentProjectMember }} />
         <EditProjectForm projectData={projectInfo} />
         <EditDangerZone />
         <ProjectSubHeader
