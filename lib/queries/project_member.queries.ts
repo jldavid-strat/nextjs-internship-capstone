@@ -28,27 +28,3 @@ export async function getMemberRole(userId: User['id'], projectId: Project['id']
     };
   }
 }
-
-export async function getProjectMembers(projectId: string) {
-  try {
-    const projectMemberList = await db
-      .select({
-        userId: projectMembers.userId,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        userImgLink: users.imgLink,
-        primaryEmailAddress: users.primaryEmailAddress,
-        role: projectMembers.role,
-        joinedAt: projectMembers.joinedAt,
-      })
-      .from(projects)
-      .innerJoin(projectMembers, eq(projects.id, projectMembers.projectId))
-      .innerJoin(users, eq(users.id, projectMembers.userId))
-      .where(eq(projects.id, projectId))
-      .orderBy(projectMembers.role);
-
-    return projectMemberList;
-  } catch (error) {
-    console.error(error);
-  }
-}

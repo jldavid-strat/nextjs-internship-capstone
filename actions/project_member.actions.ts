@@ -2,13 +2,14 @@
 import { MemberValue } from '@/components/ui/add-member-multiselect';
 import { ACTIONS, RESOURCES } from '@/constants/permissions';
 import { db, DBTransaction } from '@/lib/db/connect_db';
-import { projectMembers } from '@/lib/db/schema/schema';
+import { projectMembers, projects, users } from '@/lib/db/schema/schema';
 import { checkMemberPermission } from '@/lib/queries/permssions.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
 import { getErrorMessage } from '@/lib/utils/error.utils';
 import { AddProjectMemberSchema } from '@/lib/validations/project.validations';
 import { Project, User } from '@/types/db.types';
 import { ActionResult } from '@/types/types';
+import { and, eq, ilike, or } from 'drizzle-orm';
 
 // assumes that inputs are already validated
 export async function addProjectMembers(
@@ -64,6 +65,41 @@ export async function addOwnerInProjectMembers(userId: User['id'], projectId: Pr
       projectId: projectId,
       role: 'owner',
     });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// moved to server actions to work properly with user multiselect
+export async function getProjectMembers(
+  projectId: Project['id'],
+  withSearchTerm?: string,
+  maxCount?: number,
+) {
+  try {
+    const searchFields = [users.firstName, users.lastName, users.primaryEmailAddress];
+
+    const conditions = [
+      eq(projects.id, projectId),
+      ...(withSearchTerm
+        ? [or(...searchFields.map((field) => ilike(field, `%${withSearchTerm.trim()}%`)))]
+        : []),
+    ];
+
+    const projectMemberList = await db
+      .select({
+        userData: { ...users },
+        role: projectMembers.role,
+        joinedAt: projectMembers.joinedAt,
+      })
+      .from(projects)
+      .innerJoin(projectMembers, eq(projects.id, projectMembers.projectId))
+      .innerJoin(users, eq(users.id, projectMembers.userId))
+      .where(and(...conditions))
+      .orderBy(projectMembers.role)
+      .limit(maxCount ?? 0);
+
+    return projectMemberList;
   } catch (error) {
     console.error(error);
   }
