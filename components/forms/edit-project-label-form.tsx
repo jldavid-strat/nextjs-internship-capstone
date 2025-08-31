@@ -16,10 +16,13 @@ import {
 import { DialogClose } from '../ui/dialog';
 import { Label, Project, ProjectLabel } from '@/types/db.types';
 import { updateProjectLabel } from '@/actions/project_labels.actions';
+import { Badge } from '../ui/badge';
+import { cn } from '../../lib/utils/shadcn-utils';
 
 export type EditProjectLabelFormProps = {
   name: Label['name'];
   color: ProjectLabel['color'];
+  projectLabelId: ProjectLabel['id'];
   labelId: Label['id'];
   projectId: Project['id'];
 };
@@ -33,6 +36,7 @@ export default function EditProjectLabelForm({
     updateProjectLabel.bind(null, {
       projectId: projectLabelData.projectId,
       labelId: projectLabelData.labelId,
+      projectLabelId: projectLabelData.projectLabelId,
     }),
     undefined,
   );
@@ -145,15 +149,12 @@ function LabelPreview({ name, color, className = '' }: LabelPreviewProps) {
   if (!name) return null;
 
   return (
-    <div
-      className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${className}`}
-      style={{
-        backgroundColor: 'transparent',
-        color: color,
-        border: `1px solid ${color}40`,
-      }}
+    <Badge
+      className={(cn('text-sm'), className)}
+      style={{ color: color ?? DEFAULT_COLOR }}
+      variant="outline"
     >
-      <span className="max-w-[400px] truncate">{name}</span>
-    </div>
+      {name}
+    </Badge>
   );
 }
