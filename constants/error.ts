@@ -1,5 +1,3 @@
-import { ZodError } from 'zod';
-
 export class DatabaseOperationError extends Error {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
