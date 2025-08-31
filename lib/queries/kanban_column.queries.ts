@@ -1,9 +1,8 @@
 import 'server-only';
 import { KanbanColumn, Project } from '@/types/db.types';
 import { db } from '../db/connect_db';
-import { kanbanColumns, projectKanbanColumns } from '../db/schema/schema';
+import { kanbanColumns, projectKanbanColumns, projects } from '../db/schema/schema';
 import { eq } from 'drizzle-orm';
-import { projects } from '@/migrations/schema';
 
 export async function getKanbanColumnByName(kanbanName: KanbanColumn['id']) {
   const kanbanColumn = await db.query.kanbanColumns.findFirst({
