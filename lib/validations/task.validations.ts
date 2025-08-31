@@ -41,3 +41,20 @@ export const TaskSchema = z.object({
   // will be omitted in insertion
   updatedAt: z.date(errorMessages.invalidDate('Task updated date')),
 });
+
+export const FormTaskSchema = TaskSchema.extend({
+  labels: z.array(z.int().positive()).nullable(),
+  assignees: z.array(z.uuidv4(errorMessages.uuid('Assignee ID')).trim()).nullable(),
+});
+
+export const InserFormTaskSchema = FormTaskSchema.pick({
+  title: true,
+  description: true,
+  detail: true,
+  priority: true,
+  startDate: true,
+  dueDate: true,
+  labels: true,
+  assignees: true,
+});
+export type InserFormTaskType = z.input<typeof InserFormTaskSchema>;
