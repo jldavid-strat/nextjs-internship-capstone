@@ -9,17 +9,25 @@ const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 type MardownEditorProps = {
   value: string;
+  placeholder?: string;
   onValueChange: (value: string) => void;
 };
 
 const CodePreview = () => {
   const { preview, dispatch } = useContext(EditorContext);
-  const click = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    // prevents form submission
+    e.preventDefault();
+    e.stopPropagation();
     dispatch!({
       preview: preview === 'edit' ? 'preview' : 'edit',
     });
   };
-  return <button onClick={() => click()}>{preview === 'edit' ? 'Preview' : 'Edit'}</button>;
+  return (
+    <button type="button" onClick={(e) => handleClick(e)}>
+      {preview === 'edit' ? 'Preview' : 'Edit'}
+    </button>
+  );
 };
 
 const codePreview: ICommand = {
@@ -32,7 +40,7 @@ const codePreview: ICommand = {
 // [CONSIDER]
 // https://www.shadcn.io/components/forms/minimal-tiptap
 
-export default function MarkdownEditor({ value, onValueChange }: MardownEditorProps) {
+export default function MarkdownEditor({ value, onValueChange, placeholder }: MardownEditorProps) {
   return (
     <div>
       <MDEditor
@@ -50,7 +58,7 @@ export default function MarkdownEditor({ value, onValueChange }: MardownEditorPr
         visibleDragbar={false}
         onChange={(val) => onValueChange(val ?? '')}
         textareaProps={{
-          placeholder: 'Enter task details in markdown',
+          placeholder: placeholder,
         }}
         extraCommands={[codePreview, commands.fullscreen]}
         previewOptions={{
