@@ -47,6 +47,16 @@ export const FormTaskSchema = TaskSchema.extend({
   assignees: z.array(z.uuidv4(errorMessages.uuid('Assignee ID')).trim()).nullable(),
 });
 
+// assumes it has data
+export const AddTaskLabelSchema = z.object({
+  labels: z.array(z.int().positive()),
+});
+
+// assumes it has data
+export const AssignTaskSchema = z.object({
+  assignees: z.array(z.uuidv4(errorMessages.uuid('Assignee ID')).trim()),
+});
+
 export const InserFormTaskSchema = FormTaskSchema.pick({
   title: true,
   description: true,
@@ -55,6 +65,7 @@ export const InserFormTaskSchema = FormTaskSchema.pick({
   startDate: true,
   dueDate: true,
   labels: true,
+  status: true,
   assignees: true,
 });
 export type InserFormTaskType = z.input<typeof InserFormTaskSchema>;
