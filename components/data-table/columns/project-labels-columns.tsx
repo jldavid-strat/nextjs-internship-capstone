@@ -7,6 +7,7 @@ import { ProjectLabelTableData } from '../project-label-table';
 import EditProjectLabelModal from '@/components/modals/edit-project-label-modal';
 import { deleteProjectLabel } from '@/actions/project_labels.actions';
 import { useState } from 'react';
+import { DEFAULT_COLOR } from '@/lib/validations/project-label.validations';
 
 export const projectLabelColumns = (canMutate: boolean): ColumnDef<ProjectLabelTableData>[] => [
   {
@@ -16,7 +17,11 @@ export const projectLabelColumns = (canMutate: boolean): ColumnDef<ProjectLabelT
       const label = row.original;
       return (
         <div className="flex flex-row items-center justify-center gap-2">
-          <Badge className="text-sm" style={{ color: label.color ?? '#017de2' }} variant="outline">
+          <Badge
+            className="text-sm"
+            style={{ color: label.color ?? DEFAULT_COLOR }}
+            variant="outline"
+          >
             {label.labelName}
           </Badge>
         </div>
@@ -55,6 +60,7 @@ function ActionCell({ row }: { row: Row<ProjectLabelTableData> }) {
       {/* open edit project label modal */}
       <EditProjectLabelModal
         projectLabelData={{
+          projectLabelId: label.id,
           labelId: label.labelId,
           name: label.labelName,
           projectId: label.projectId,
