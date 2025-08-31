@@ -1,9 +1,10 @@
 'use server';
+
 import { DatabaseOperationError, UnauthorizedError } from '@/constants/error';
 import { DEFAULT_LABELS, defaultLabelNames } from '@/constants/labels';
 import { ACTIONS, RESOURCES } from '@/constants/permissions';
 import { db, DBTransaction } from '@/lib/db/connect_db';
-import { labels, projectLabels } from '@/lib/db/schema/schema';
+import { labels, projectLabels, projects } from '@/lib/db/schema/schema';
 import { checkMemberPermission } from '@/lib/queries/permssions.queries';
 import { getProjectLabelById, getProjectLabelByName } from '@/lib/queries/project_labels.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
@@ -12,7 +13,7 @@ import { getErrorMessage } from '@/lib/utils/error.utils';
 import { DEFAULT_COLOR, ProjectLabelSchema } from '@/lib/validations/project-label.validations';
 import { Project, ProjectLabel } from '@/types/db.types';
 import { ActionResult } from '@/types/types';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, ilike, inArray, or, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 export async function createDefaultProjectLabels(
@@ -26,7 +27,7 @@ export async function createDefaultProjectLabels(
       .from(labels)
       .where(inArray(labels.name, defaultLabelNames));
 
-    const toInsertProjectLabels: Array<Omit<ProjectLabel, 'updatedAt'>> = defaultLabels.map(
+    const toInsertProjectLabels: Array<Omit<ProjectLabel, 'updatedAt' | 'id'>> = defaultLabels.map(
       (l, index) => ({
         labelId: l.id,
         projectId: projectId,
@@ -109,12 +110,16 @@ export async function addProjectLabel(
 }
 
 export async function updateProjectLabel(
-  additionalInfo: { projectId: Project['id']; labelId: ProjectLabel['labelId'] },
+  additionalInfo: {
+    projectId: Project['id'];
+    labelId: ProjectLabel['labelId'];
+    projectLabelId: ProjectLabel['id'];
+  },
   previousState: unknown,
   projectLabelData: FormData,
 ): Promise<ActionResult> {
   try {
-    const { projectId, labelId } = additionalInfo;
+    const { projectId, labelId, projectLabelId } = additionalInfo;
     const currentUserId = await getCurrentUserId();
 
     const { isAuthorize } = await checkMemberPermission(
@@ -127,7 +132,7 @@ export async function updateProjectLabel(
     if (!isAuthorize)
       throw new UnauthorizedError('User is not authorized to update project labels');
 
-    const originalProjectLabelData = await getProjectLabelById(labelId, projectId);
+    const originalProjectLabelData = await getProjectLabelById(projectLabelId, projectId);
 
     if (!originalProjectLabelData)
       throw new DatabaseOperationError('Something went wrong. Please try again');
@@ -139,7 +144,7 @@ export async function updateProjectLabel(
 
     const validatedData = ProjectLabelSchema.parse({
       name: projectLabelData.get('name') as string,
-      color: projectLabelData.get('color') as string,
+      color: (projectLabelData.get('color') as string).toUpperCase(),
     });
 
     const changes = getDataDiff(originalData, validatedData);
@@ -147,24 +152,37 @@ export async function updateProjectLabel(
     console.log(changes);
 
     if (changes === null) throw new Error('No changes made');
+    let newLabelId = labelId;
 
     if (changes.name) {
-      // update the name in label tabel
-      await db
-        .update(labels)
-        .set({
+      const [labelResult] = await db
+        .insert(labels)
+        .values({
           name: validatedData.name,
         })
-        .where(eq(labels.id, labelId));
+        .onConflictDoUpdate({
+          target: labels.name,
+          // don't actually update anything, just return the ID
+          set: {
+            // keeps the same name
+            name: sql`excluded.name`,
+          },
+        })
+        .returning({ id: labels.id });
+
+      // always gets ID (new or existing)
+      newLabelId = labelResult.id;
     }
 
     // if not update the color in project label table
     await db
       .update(projectLabels)
       .set({
+        // also update labelId in case it changed to another name
+        labelId: newLabelId,
         color: validatedData.color,
       })
-      .where(eq(projectLabels.labelId, labelId));
+      .where(eq(projectLabels.id, projectLabelId));
 
     revalidatePath(`/projects/${projectId}/settings`);
 
@@ -198,5 +216,38 @@ export async function deleteProjectLabel(
       success: false,
       error: getErrorMessage(error),
     };
+  }
+}
+
+// moved to server action work in label multiselect
+export async function getProjectLabels(projectId: Project['id'], withSearchTerm?: string) {
+  try {
+    const searchFields = [labels.name];
+
+    const conditions = [
+      eq(projectLabels.projectId, projectId),
+      ...(withSearchTerm
+        ? [or(...searchFields.map((field) => ilike(field, `%${withSearchTerm.trim()}%`)))]
+        : []),
+    ];
+
+    const projectLabelList = await db
+      .select({
+        labelName: labels.name,
+        id: projectLabels.id,
+        labelId: labels.id,
+        color: projectLabels.color,
+        isCustom: projectLabels.isCustom,
+        projectId: projectLabels.projectId,
+      })
+      .from(projectLabels)
+      .innerJoin(labels, eq(projectLabels.labelId, labels.id))
+      .where(and(...conditions));
+
+    console.log('projectLabelList', projectLabelList);
+
+    return projectLabelList;
+  } catch (error) {
+    console.error(error);
   }
 }
