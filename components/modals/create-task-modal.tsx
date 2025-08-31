@@ -1,9 +1,9 @@
 'use client';
 
 import { createTask } from '@/actions/task.actions';
-import { startTransition, useActionState, useLayoutEffect, useRef } from 'react';
+import { startTransition, useActionState, useCallback, useLayoutEffect, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { TaskSchema } from '@/lib/validations/task.validations';
+import { InserFormTaskSchema, InserFormTaskType } from '@/lib/validations/task.validations';
 import z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
@@ -13,9 +13,14 @@ import MarkdownEditor from '../markdown/markdown-editor';
 import Modal from '../ui/modal';
 import { Button } from '../ui/button';
 import { capitalize } from 'lodash';
-import { AddMemberMultiSelect } from '../ui/add-member-multiselect';
 import { DialogClose } from '../ui/dialog';
 import { ErrorBox } from '../ui/error-box';
+import { AddLabelMultiSelect } from '../ui/add-label-multi-select';
+import { getProjectLabels } from '@/actions/project_labels.actions';
+import { ProjectLabelTableData } from '../data-table/project-label-table';
+import { getProjectMembers } from '@/actions/project_member.actions';
+import { ProjectMemberData, User } from '@/types/db.types';
+import { AddUserMultiSelect } from '../ui/add-user-multi-select';
 // TODO: Task 4.4 - Build task creation and editing functionality
 // TODO: Task 5.6 - Create task detail modals and editing interfaces
 
@@ -50,27 +55,8 @@ Integration:
 - Handle file uploads
 - Real-time updates for comments
 */
-// TODO: Task 4.1 - Implement project CRUD operations
-// TODO: Task 4.4 - Build task creation and editing functionality
 
 // TODO add toast promise to UNDO mutation via drizzle transaction
-// do tx.rollback when the users undo the mutation
-// commit the statement to apply the mutation
-
-// TODO add ability to add labels
-// TODO add way to assign a member
-const FormTaskSchema = TaskSchema.pick({
-  title: true,
-  description: true,
-  detail: true,
-  priority: true,
-  startDate: true,
-  dueDate: true,
-
-  // add milestoneId
-  // milestoneId: true
-});
-type FormTaskType = z.input<typeof FormTaskSchema>;
 
 type CreateTaskProps = {
   kanbanColumnId: string;
@@ -89,25 +75,51 @@ export function CreateTaskModal({ kanbanData }: { kanbanData: CreateTaskProps })
     handleSubmit,
     control,
     formState: { errors },
-  } = useForm<FormTaskType>({
-    resolver: zodResolver(FormTaskSchema),
+  } = useForm<InserFormTaskType>({
+    resolver: zodResolver(InserFormTaskSchema),
     defaultValues: {
       priority: 'none',
-      // TODO change to actual value when milestone creation is added
-      // milestoneId: null,
+      labels: [],
+      assignees: [],
     },
   });
 
   const formRef = useRef(null);
   const router = useRouter();
 
-  const onSubmitHandler = (evt: React.FormEvent<HTMLFormElement>) => {
-    evt.preventDefault();
-    handleSubmit(() => {
-      // console.log(new FormData(formRef.current!));
-      startTransition(() => createTaskAction(new FormData(formRef.current!)));
-    })(evt);
+  const onSubmitHandler = (data: InserFormTaskType) => {
+    const formData = new FormData();
+
+    formData.append('title', data.title);
+    formData.append('description', data.description ?? '');
+    formData.append('detail', data.detail ?? '');
+    formData.append('start-date', data.startDate ?? '');
+    formData.append('priority', data.priority);
+    formData.append('due-date', data.dueDate ?? '');
+    formData.append('labels', JSON.stringify([...(data.labels ?? [])]));
+    formData.append('assignees', JSON.stringify([...(data.assignees ?? [])]));
+
+    console.log(formData);
+
+    // startTransition(() => createProjectAction(formData));
   };
+  const fetchProjectLabels = useCallback(
+    async (searchTerm: string): Promise<ProjectLabelTableData[]> => {
+      return (await getProjectLabels(kanbanData.projectId, searchTerm)) ?? [];
+    },
+    [kanbanData.projectId],
+  );
+  const fetchProjectMembers = useCallback(
+    async (searchTerm: string): Promise<User[]> => {
+      const maxCount = 4;
+      const projectMembers =
+        (await getProjectMembers(kanbanData.projectId, searchTerm, maxCount)) ?? [];
+
+      const userData = projectMembers.map((u) => u.userData);
+      return userData;
+    },
+    [kanbanData.projectId],
+  );
 
   // NOTE only handle success state
   useLayoutEffect(() => {
@@ -121,11 +133,11 @@ export function CreateTaskModal({ kanbanData }: { kanbanData: CreateTaskProps })
   }, [state, router]);
 
   return (
-    <Modal className="max-h-[700px] w-[700px]" triggerComponent={<Button>Click Me</Button>}>
+    <Modal className="max-h-[700px] w-[600px]" triggerComponent={<Button>Click Me</Button>}>
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-semibold">Create New Task</h3>
       </div>
-      <form ref={formRef} onSubmit={onSubmitHandler} className="space-y-4">
+      <form ref={formRef} onSubmit={handleSubmit(onSubmitHandler)} className="space-y-4">
         <div>
           <label className="mb-2 block text-sm font-medium">Task Title *</label>
           {/* TODO: add way to auto-focus title input */}
@@ -151,29 +163,25 @@ export function CreateTaskModal({ kanbanData }: { kanbanData: CreateTaskProps })
               Start Date
             </label>
             <Input
-              {...register('dueDate', { setValueAs: (val) => (val === '' ? null : val) })}
+              {...register('startDate', { setValueAs: (val) => (val === '' ? null : val) })}
               type="date"
               name="startDate"
             />
-            <p className="mt-2 text-sm text-red-400">{errors.dueDate?.message}</p>
           </div>
           <div className="w-full">
-            <label className="text-outer_space-500 dark:text-platinum-500 mb-2 block text-sm font-medium">
-              Due Date
-            </label>
+            <label className="mb-2 block text-sm font-medium">Due Date</label>
             <Input
               {...register('dueDate', { setValueAs: (val) => (val === '' ? null : val) })}
               type="date"
               name="dueDate"
             />
-            <p className="mt-2 text-sm text-red-400">{errors.dueDate?.message}</p>
           </div>
-          <div className="mt-2 flex w-full flex-row items-center gap-2">
-            <label className="text-sm font-medium">Priority</label>
+          <div className="w-full items-center gap-2">
+            <label className="mb-2 block text-sm font-medium">Priority</label>
             <select
               {...register('priority')}
               name="priority"
-              className="bg-card rounded-lg border px-2 focus:outline-hidden"
+              className="bg-card border-border h-8 w-[180px] rounded-lg border px-2 focus:outline-hidden focus-visible:ring"
             >
               {TASK_PRIORITY_VALUES.map((priority, index) => (
                 <option key={index} value={priority}>
@@ -183,6 +191,9 @@ export function CreateTaskModal({ kanbanData }: { kanbanData: CreateTaskProps })
             </select>
           </div>
         </section>
+        <p className="mt-2 text-sm text-red-400">{errors.dueDate?.message}</p>
+        <p className="mt-2 text-sm text-red-400">{errors.startDate?.message}</p>
+        <p className="mt-2 text-sm text-red-400">{errors.priority?.message}</p>
 
         <div>
           <label className="text-outer_space-500 dark:text-platinum-500 mb-2 block text-sm font-medium">
@@ -195,6 +206,7 @@ export function CreateTaskModal({ kanbanData }: { kanbanData: CreateTaskProps })
               <MarkdownEditor value={value ?? ''} onValueChange={onChange} />
             )}
           />
+          <p className="mt-2 text-sm text-red-400">{errors.root?.message}</p>
           <p className="mt-2 text-sm text-red-400">{errors.description?.message}</p>
         </div>
 
@@ -202,51 +214,38 @@ export function CreateTaskModal({ kanbanData }: { kanbanData: CreateTaskProps })
         <div>
           <label className="mb-2 block text-sm font-medium">Task Labels</label>
           <div className="flex flex-col gap-2">
-            {/* <Controller
-                  name="assigness"
-                  control={control}
-                  render={({ field }) => (
-                    <AddMemberMultiSelect
-                      value={field.value || []}
-                      onChange={field.onChange}
-                      fetchFunction={fetchUsersByEmail}
-                    />
-                  )}
-                /> */}
-            {/* <AddMemberMultiSelect
-              value={[]}
-              onChange={() => {}}
-              fetchFunction={async (input: string) => {
-                console.log(input);
-              }}
-            /> */}
+            <Controller
+              name="labels"
+              control={control}
+              render={({ field }) => (
+                <AddLabelMultiSelect
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  fetchFunction={fetchProjectLabels}
+                />
+              )}
+            />
           </div>
         </div>
         <div>
           <label className="mb-2 block text-sm font-medium">Task Assignees</label>
           <div className="flex flex-col gap-2">
-            {/* <Controller
-                  name="assigness"
-                  control={control}
-                  render={({ field }) => (
-                    <AddMemberMultiSelect
-                      value={field.value || []}
-                      onChange={field.onChange}
-                      fetchFunction={fetchUsersByEmail}
-                    />
-                  )}
-                /> */}
-            {/* <AddMemberMultiSelect
-              value={[]}
-              onChange={() => {}}
-              fetchFunction={async (input: string) => {
-                console.log(input);
-              }}
-            /> */}
+            <Controller
+              name="assignees"
+              control={control}
+              render={({ field }) => (
+                <AddUserMultiSelect
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  fetchFunction={fetchProjectMembers}
+                />
+              )}
+            />
           </div>
         </div>
         {/* Server validation error messages */}
         <div className="my-4">{state?.success === false && <ErrorBox message={state.error} />}</div>
+
         <div className="z-1 flex justify-end space-x-3 border-red-500 pt-4">
           <DialogClose asChild>
             <Button type="button" disabled={isPending} variant={'cancel'}>
