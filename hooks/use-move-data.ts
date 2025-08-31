@@ -140,7 +140,7 @@ export function useReorderColumns(projectId: string) {
 
       if (!response.success) {
         console.error(response.error);
-        throw new Error(response.message || 'Failed to reorder columns');
+        throw new Error('Failed to reorder columns');
       }
 
       return response;
