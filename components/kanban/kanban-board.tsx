@@ -28,7 +28,7 @@ import useKanbanEvents from '@/hooks/use-kanban-events';
 
 export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
   // connect to Kanban SSE
-  useKanbanEvents(projectId);
+  // useKanbanEvents(projectId);
 
   const {
     columns: kanbanColumns,
@@ -44,6 +44,8 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
 
   const columnsId = useMemo(() => kanbanColumns.map((col) => col.kanbanColumnId), [kanbanColumns]);
 
+  const statusList = useMemo(() => kanbanColumns.map((col) => col.name), [kanbanColumns]);
+
   const [activeColumn, setActiveColumn] = useState<ColumnQueryResult | null>(null);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
 
@@ -57,6 +59,7 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
 
   useEffect(() => {
     if (isKanbanColumnSuccess && kanbanColumns) {
+      console.log('kanbanColumns', kanbanColumns);
       setColumns(kanbanColumns);
     }
   }, [isKanbanColumnSuccess, kanbanColumns]);
@@ -144,9 +147,6 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
       console.log('newPosition:', activeTask.position);
       console.log('oldPosition:', originalTaskData.position);
 
-      // console.log('Task ID', activeTask.id);
-      // console.log('Moving to column:', targetColumn.name);
-      // console.log('SOURCE column:', originalTaskData?.kanbanColumnId);
       const hasPositionChange = originalTaskData.position !== activeTask.position;
       const hasColumnChange = originalTaskData.kanbanColumnId !== targetColumnId;
 
@@ -343,9 +343,6 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
 
   return (
     <DndContext
-      // accessibility={{
-      //   announcements,
-      // }}
       sensors={sensors}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
@@ -365,6 +362,8 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
               tasks={tasks
                 .filter((task) => task.kanbanColumnId === col.kanbanColumnId)
                 .sort((a, b) => a.position - b.position)}
+              projectId={projectId}
+              statusList={statusList}
             />
           ))}
         </SortableContext>
@@ -381,6 +380,8 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
                 tasks={tasks
                   .filter((task) => task.kanbanColumnId === activeColumn.kanbanColumnId)
                   .sort((a, b) => a.position - b.position)}
+                projectId={projectId}
+                statusList={statusList}
               />
             )}
             {activeTask && <TaskCard key={activeTask.id} task={activeTask} isOverlay />}

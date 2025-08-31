@@ -11,18 +11,26 @@ import { GripVertical } from 'lucide-react';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Project, Task } from '@/types/db.types';
 import { ColumnQueryResult, KanbanColumnDragData } from '@/types/types';
-import CreateTaskButton from '../buttons/create-task-button';
 import { TaskCard } from './task-card';
 import { cn } from '@/lib/utils/shadcn-utils';
 import { capitalize } from 'lodash';
+import AddTaskModal from '../modals/add-task-modal';
 
 interface BoardColumnProps {
   column: ColumnQueryResult;
+  projectId: Project['id'];
+  statusList: string[];
   isOverlay?: boolean;
   tasks: Task[];
 }
 
-export function KanbanColumn({ column, isOverlay, tasks }: BoardColumnProps) {
+export function KanbanColumn({
+  column,
+  isOverlay,
+  tasks,
+  projectId,
+  statusList,
+}: BoardColumnProps) {
   const tasksIds = useMemo(() => {
     return tasks.map((task) => task.id);
   }, [tasks]);
@@ -85,7 +93,14 @@ export function KanbanColumn({ column, isOverlay, tasks }: BoardColumnProps) {
             </span>
           </div>
         </div>
-        <div className="text-sm">Plus Button</div>
+        <AddTaskModal
+          kanbanData={{
+            projectId: projectId,
+            kanbanColumnId: column.kanbanColumnId,
+            kanbanName: column.name,
+            statusList: statusList,
+          }}
+        />
       </CardHeader>
       <ScrollArea>
         <CardContent className="flex flex-grow flex-col gap-2 p-2">
