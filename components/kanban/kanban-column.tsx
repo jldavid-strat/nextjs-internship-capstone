@@ -66,20 +66,26 @@ export function KanbanColumn({ column, isOverlay, tasks }: BoardColumnProps) {
         dragging: isOverlay ? 'overlay' : isDragging ? 'over' : undefined,
       })}
     >
-      <CardHeader className="border-border flex flex-row items-center gap-2 border-b-2 p-4 text-left font-semibold">
-        <Button
-          variant={'ghost'}
-          {...attributes}
-          {...listeners}
-          className="text-primary/50 relative -ml-2 h-auto cursor-grab"
-        >
-          <span className="sr-only">{`Move column: ${column.name}`}</span>
-          <GripVertical />
-        </Button>
-        <div className="flex flex-col gap-1">
-          <span className="mr-auto"> {capitalize(column.name)}</span>
-          <span className="text-muted-foreground mr-auto text-xs"> {column.description}</span>
+      <CardHeader className="border-border flex h-20 flex-row items-center justify-between gap-2 border-b-2 p-4 text-left font-semibold">
+        <div className="flex flex-row items-center gap-2">
+          <Button
+            variant={'ghost'}
+            {...attributes}
+            {...listeners}
+            className="text-primary/50 relative -ml-2 h-auto cursor-grab"
+          >
+            <span className="sr-only">{`Move column: ${column.name}`}</span>
+            <GripVertical />
+          </Button>
+          <div className="flex flex-col">
+            <span className="mr-auto"> {capitalize(column.name)}</span>
+            <span className="text-muted-foreground mr-auto truncate text-xs">
+              {' '}
+              {column.description}
+            </span>
+          </div>
         </div>
+        <div className="text-sm">Plus Button</div>
       </CardHeader>
       <ScrollArea>
         <CardContent className="flex flex-grow flex-col gap-2 p-2">
