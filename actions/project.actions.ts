@@ -75,7 +75,7 @@ export async function createProject(
       };
     });
     if (!transactionResult.success) throw new DatabaseOperationError('Failed to create project');
-    return { ...transactionResult, success: transactionResult.success };
+    return { success: true };
   } catch (error) {
     console.error(error);
     return {
