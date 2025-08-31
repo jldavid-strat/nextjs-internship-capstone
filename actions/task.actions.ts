@@ -7,30 +7,27 @@ import { getMaxNumPositionByColumnId, getTaskById } from '@/lib/queries/task.que
 import { getCurrentUserId } from '@/lib/queries/user.queries';
 import getDataDiff from '@/lib/utils/data_diff';
 import { TaskSchema } from '@/lib/validations/task.validations';
-import { QueryResult, MoveTaskDataType } from '@/types/types';
-import { Project, Task } from '@/types/db.types';
+import { QueryResult, MoveTaskDataType, ActionResult } from '@/types/types';
+import { Label, Project, Task, User } from '@/types/db.types';
 import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
-import { ZodError } from 'zod';
 import { getCompletedColumnId } from '@/lib/queries/kanban_column.queries';
 import { serverEvents } from '@/lib/events/event-emitter';
+import { CreateTaskProps } from '@/components/forms/add-task-form';
+import { DatabaseOperationError, UnauthorizedError } from '@/constants/error';
+import { getErrorMessage } from '@/lib/utils/error.utils';
+import { addTaskLabels } from './task_labels.actions';
+import { assignTask } from './task_assignee.actions';
 
 const InsertTaskSchema = TaskSchema.omit({
   updatedAt: true,
 });
 
-// TODO rename to something more descriptive
-type CreateTaskProps = {
-  kanbanColumnId: string;
-  projectId: string;
-  kanbanName: string;
-};
-
 export async function createTask(
   kanbanData: CreateTaskProps,
   previousState: unknown,
   taskData: FormData,
-): Promise<QueryResult> {
+): Promise<ActionResult> {
   try {
     const currentUserId = await getCurrentUserId();
 
@@ -41,68 +38,86 @@ export async function createTask(
       ACTIONS.CREATE,
     );
 
-    if (!isAuthorize) throw new Error('User is unauthorized to create task');
-    console.log(currentUserId);
+    const { projectId, kanbanColumnId, kanbanName } = kanbanData;
 
-    // default to null if empty
-    const currentMaxPosition =
-      (await getMaxNumPositionByColumnId(kanbanData.kanbanColumnId, kanbanData.projectId)) ?? null;
+    if (!isAuthorize) throw new UnauthorizedError('User is unauthorized to create task');
 
-    // default position to zero if empty
-    let position = 0;
+    const transactionResult = await db.transaction(async (tx) => {
+      // default to null if empty
+      const currentMaxPosition =
+        (await getMaxNumPositionByColumnId(kanbanData.kanbanColumnId, kanbanData.projectId, tx)) ??
+        null;
 
-    // increment position if not empty
-    if (currentMaxPosition !== null) position = currentMaxPosition + 1;
+      // default position to zero if empty
+      let position = 0;
 
-    const startDateString = taskData.get('startDate') || null;
-    const dueDateString = taskData.get('dueDate') || null;
-    console.log(startDateString);
-    console.log(dueDateString);
-    console.log(kanbanData.kanbanName);
-    console.log(kanbanData.kanbanColumnId);
-    console.log(kanbanData.projectId);
-    console.log('postion', position);
+      // increment position if not empty
+      if (currentMaxPosition !== null) position = currentMaxPosition + 1;
 
-    const validatedData = InsertTaskSchema.parse({
-      title: taskData.get('title') as string,
-      description: taskData.get('description') as string,
-      detail: taskData.get('detail') as string,
-      priority: taskData.get('priority') as string,
-      position: position,
-      // only set true if task is in 'completed' column
-      isCompleted: kanbanData.kanbanName.toLowerCase() === 'completed' ? true : false,
+      const startDateString = taskData.get('startDate') || null;
+      const dueDateString = taskData.get('dueDate') || null;
 
-      // enforce to be null for now
-      milestoneId: null,
-      status: kanbanData.kanbanName as string,
-      kanbanColumnId: kanbanData.kanbanColumnId as string,
-      projectId: kanbanData.projectId as string,
-      createdById: currentUserId as string,
-      startDate: startDateString,
-      dueDate: dueDateString,
+      const taskLabelIds = JSON.parse(taskData.get('labels') as string) as Label['id'][];
+
+      const taskAssigneeIds = JSON.parse(taskData.get('assignees') as string) as User['id'][];
+
+      const isNotAssigned = taskAssigneeIds.length === 0 ? true : false;
+
+      const hasLabels = taskLabelIds.length === 0 ? false : true;
+
+      const validatedData = InsertTaskSchema.parse({
+        title: taskData.get('title') as string,
+        description: taskData.get('description') as string,
+        detail: taskData.get('detail') as string,
+        priority: taskData.get('priority') as string,
+        position: position,
+
+        // only set true if task is in 'completed' column
+        isCompleted: kanbanData.kanbanName.toLowerCase() === 'completed' ? true : false,
+
+        // enforce to be null for now
+        milestoneId: null,
+        status: kanbanName as string,
+        kanbanColumnId: kanbanColumnId as string,
+        projectId: projectId as string,
+        createdById: currentUserId as string,
+        startDate: startDateString,
+        dueDate: dueDateString,
+      });
+
+      console.log('taskLabelIds', taskLabelIds);
+      console.log('taskAssigneeIds', taskAssigneeIds);
+      console.log('validatedData', validatedData);
+
+      const [newTask] = await db
+        .insert(tasks)
+        .values({ ...validatedData, isNotAssigned: isNotAssigned })
+        .returning({ taskId: tasks.id });
+
+      if (hasLabels) {
+        // add labels
+        console.log('add labels');
+        await addTaskLabels(newTask.taskId, projectId, taskLabelIds, tx);
+      }
+
+      if (!isNotAssigned) {
+        console.log('add assginees');
+        // assign task to members
+        await assignTask(newTask.taskId, projectId, taskAssigneeIds, tx);
+      }
+
+      revalidatePath(`/projects/${projectId}`);
+      // revalidatePath('/(dashboard)');
+      return { success: true };
     });
 
-    const [newTask] = await db.insert(tasks).values(validatedData).returning({ taskId: tasks.id });
-
-    // assign task to self
-    // TODO validate using zod
-    console.log('assigning task to self');
-    await db.insert(taskAssignees).values({
-      taskId: newTask.taskId,
-      assigneeId: currentUserId,
-      assignedById: currentUserId,
-      assignedAt: new Date(),
-    });
-    console.log('assingned task successfully');
-
-    revalidatePath('/(dashboard)');
-    return { success: true, message: `Task successfully created`, data: undefined };
+    if (!transactionResult.success) throw new DatabaseOperationError('Failed to add task');
+    return { success: true };
   } catch (error) {
     console.error(error);
     return {
       success: false,
-      message: `Failed to create task. Error ${error}`,
-      error: JSON.stringify(error),
+      error: getErrorMessage(error),
     };
   }
 }
@@ -121,7 +136,7 @@ export async function updateTask(
   queryIds: { taskId: Task['id']; projectId: Project['id'] },
   previousState: unknown,
   taskData: FormData,
-): Promise<QueryResult> {
+): Promise<ActionResult> {
   try {
     const currentUserId = await getCurrentUserId();
 
@@ -177,19 +192,11 @@ export async function updateTask(
 
     revalidatePath(`/(dashboard)`);
 
-    return { success: true, message: `Task successfully updated`, data: undefined };
+    return { success: true };
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        success: false,
-        message: `Failed to update task`,
-        error: error.message,
-      };
-    }
     return {
       success: false,
-      message: `Failed to update task. Error ${error}`,
-      error: JSON.stringify(error),
+      error: getErrorMessage(error),
     };
   }
 }
