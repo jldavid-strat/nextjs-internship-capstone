@@ -50,3 +50,5 @@ export interface ProjectLabelData extends ProjectLabel {
   labelName: Label['name'];
   taskId: Task['id'];
 }
+
+export type ProjectLabels = ProjectLabelData;
