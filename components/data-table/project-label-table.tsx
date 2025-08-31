@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  ColumnDef,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
@@ -11,8 +10,6 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { DataTable } from './data-table';
 import { ProjectLabelData } from '@/types/db.types';
-import { Badge } from '../ui/badge';
-import { Button } from '../ui/button';
 import { DataTablePagination } from './data-table-pagination';
 import { projectLabelColumns } from '@/components/data-table/columns/project-labels-columns';
 
