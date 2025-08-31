@@ -9,6 +9,7 @@ export const RESOURCES = {
   KANBAN_COLUMN: 'kanban_columns',
   TASK_ATTACHMENTS: 'task_attachment',
   TASK_COMMENTS: 'task_comment',
+  TASK_LABELS: 'task_label',
 } as const;
 
 export const ACTIONS = {
