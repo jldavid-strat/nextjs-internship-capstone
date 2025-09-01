@@ -238,7 +238,7 @@ export const tasks = pgTable(
 
     // [NOTE] manually handle task deletion when a custom kanban column is removed
     kanbanColumnId: uuid('kanban_column_id')
-      .references(() => kanbanColumns.id)
+      .references(() => kanbanColumns.id, { onDelete: 'cascade' })
       .notNull(),
     milestoneId: integer('milestone_id').references(() => milestones.id, { onDelete: 'restrict' }),
     status: varchar('status').notNull(),
