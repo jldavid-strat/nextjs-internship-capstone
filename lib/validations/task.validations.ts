@@ -21,7 +21,9 @@ export const TaskSchema = z.object({
   }),
   projectId: z.uuidv4(errorMessages.uuid('Project ID')).trim(),
   createdById: z.uuidv4(errorMessages.uuid('Created By ID')).trim(),
-  kanbanColumnId: z.uuidv4(errorMessages.uuid('Kanban Column ID')).trim(),
+  projectKanbanColumnId: z
+    .int(errorMessages.invalidType('Kanban Column ID', 'number'))
+    .nonnegative(),
   isCompleted: z.boolean(errorMessages.invalidType('is_completed', 'true or false')),
   milestoneId: z
     .int(errorMessages.integer('Milestone ID'))
