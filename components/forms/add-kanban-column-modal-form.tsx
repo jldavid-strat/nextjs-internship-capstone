@@ -31,7 +31,7 @@ export default function AddKanbaColumnForm({ projectId }: { projectId: Project['
     resolver: zodResolver(FormKanbanColumnSchema),
   });
 
-  const [issModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [errorCount, setErrorCount] = useState<number>(0);
 
   const _queryClient = useQueryClient();
@@ -64,8 +64,14 @@ export default function AddKanbaColumnForm({ projectId }: { projectId: Project['
   return (
     <Modal
       className="w-[500px]"
-      isOpen={issModalOpen}
-      setIsOpen={setIsModalOpen}
+      isOpen={isModalOpen}
+      setIsOpen={(isModalOpen) => {
+        setIsModalOpen(isModalOpen);
+        if (!isModalOpen) {
+          // clears the form when dialog closes
+          reset();
+        }
+      }}
       triggerComponent={
         <Button type="button">
           <Plus size={12} />

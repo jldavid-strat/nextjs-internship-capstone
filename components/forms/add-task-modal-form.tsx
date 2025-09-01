@@ -64,7 +64,7 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
 
   const _queryClient = useQueryClient();
 
-  const [issModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [errorCount, setErrorCount] = useState<number>(0);
 
   const formRef = useRef(null);
@@ -115,8 +115,14 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
   return (
     <>
       <Modal
-        isOpen={issModalOpen}
-        setIsOpen={setIsModalOpen}
+        isOpen={isModalOpen}
+        setIsOpen={(isModalOpen) => {
+          setIsModalOpen(isModalOpen);
+          if (!isModalOpen) {
+            // clears the form when dialog closes
+            reset();
+          }
+        }}
         className="max-h-[700px] overflow-x-hidden overflow-y-scroll sm:max-w-[600px] lg:max-w-[600px]"
         triggerComponent={
           <Button variant={'outline'} className="border-0 bg-transparent dark:bg-transparent">

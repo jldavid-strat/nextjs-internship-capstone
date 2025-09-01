@@ -67,7 +67,13 @@ export default function AddProjectLabelForm({ projectId }: { projectId: Project[
   return (
     <Modal
       isOpen={isModalOpen}
-      setIsOpen={setIsModalOpen}
+      setIsOpen={(isModalOpen) => {
+        setIsModalOpen(isModalOpen);
+        if (!isModalOpen) {
+          // clears the form when dialog closes
+          reset();
+        }
+      }}
       className="w-[500px]"
       triggerComponent={
         <Button type="button">
