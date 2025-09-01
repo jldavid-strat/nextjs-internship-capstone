@@ -2,7 +2,7 @@ import 'server-only';
 import { KanbanColumn, Project } from '@/types/db.types';
 import { db } from '../db/connect_db';
 import { kanbanColumns, projectKanbanColumns, projects } from '../db/schema/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, max } from 'drizzle-orm';
 
 export async function getKanbanColumnByName(kanbanName: KanbanColumn['id']) {
   const kanbanColumn = await db.query.kanbanColumns.findFirst({
@@ -28,6 +28,7 @@ export async function getKanbanColumnsByProjectId(projectId: Project['id']) {
       .select({
         kanbanColumnId: kanbanColumns.id,
         name: kanbanColumns.name,
+        isCustom: projectKanbanColumns.isCustom,
         description: projectKanbanColumns.description,
         position: projectKanbanColumns.position,
         color: projectKanbanColumns.color,
@@ -49,5 +50,20 @@ export async function getKanbanColumnsByProjectId(projectId: Project['id']) {
       success: false,
       message: 'Failed to fetch kanban columns',
     };
+  }
+}
+
+export async function getMaxNumColumnPositions(projectId: Project['id']) {
+  try {
+    const [result] = await db
+      .select({
+        maxNumPosition: max(projectKanbanColumns.position),
+      })
+      .from(projectKanbanColumns)
+      .where(and(eq(projectKanbanColumns.projectId, projectId)));
+
+    return result.maxNumPosition;
+  } catch (error) {
+    console.error(error);
   }
 }
