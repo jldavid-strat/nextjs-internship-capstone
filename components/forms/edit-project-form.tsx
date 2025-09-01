@@ -18,7 +18,7 @@ import { ErrorBox } from '../ui/error-box';
 
 const projectStatusBadgeStyle = {
   active: 'bg-primary/10 border-primary',
-  completed: 'bg-green-400/50 border-green-400',
+  completed: 'bg-green-400/10 border-green-400',
   archived: 'border-yellow-200 bg-yellow-500/20',
 };
 
