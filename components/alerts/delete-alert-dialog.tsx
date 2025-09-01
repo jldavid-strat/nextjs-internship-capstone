@@ -8,6 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Button } from '../ui/button';
 
 interface DeleteAlertDialogProps<T extends string | number> {
   id: T;
@@ -35,7 +36,11 @@ export function DeleteAlertDialog<T extends string | number>({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={() => setIsOpen(false)}>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={() => handleDelete(id)}>Continue</AlertDialogAction>
+          <AlertDialogAction asChild>
+            <Button type="button" onClick={() => handleDelete(id)}>
+              Delete
+            </Button>
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
