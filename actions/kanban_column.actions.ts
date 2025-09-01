@@ -1,13 +1,19 @@
 'use server';
 import { DEFAULT_COLUMN_NAMES, DEFAULT_COLUMNS_DATA } from '@/constants/columns';
+import { UnauthorizedError } from '@/constants/error';
 import { ACTIONS, RESOURCES } from '@/constants/permissions';
 import { db, DBTransaction } from '@/lib/db/connect_db';
 import { kanbanColumns, projectKanbanColumns } from '@/lib/db/schema/schema';
 import { serverEvents } from '@/lib/events/event-emitter';
-import { getKanbanColumnsByProjectId } from '@/lib/queries/kanban_column.queries';
+import {
+  getKanbanColumnByName,
+  getKanbanColumnsByProjectId,
+  getMaxNumColumnPositions,
+} from '@/lib/queries/kanban_column.queries';
 import { checkMemberPermission } from '@/lib/queries/permssions.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
 import { getErrorMessage } from '@/lib/utils/error.utils';
+import { InsertKanbanColumnSchema } from '@/lib/validations/kanban-column.validations';
 import { KanbanColumn, Project } from '@/types/db.types';
 import { ActionResult, ReorderColumnDataType } from '@/types/types';
 import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
@@ -44,6 +50,112 @@ export async function createDefaultKanbanColumns(
   }
 }
 
+export async function addKanbanColumn(
+  projectId: Project['id'],
+  previousState: unknown,
+  columnData: FormData,
+): Promise<ActionResult> {
+  try {
+    const currentUserId = await getCurrentUserId();
+
+    const { isAuthorize } = await checkMemberPermission(
+      currentUserId,
+      projectId,
+      RESOURCES.KANBAN_COLUMN,
+      ACTIONS.CREATE,
+    );
+
+    if (!isAuthorize) throw new UnauthorizedError('User is unauthorized to add kanban columns');
+
+    const currentMaxPosition = (await getMaxNumColumnPositions(projectId)) ?? null;
+
+    let position = 0;
+
+    if (currentMaxPosition !== null) position = currentMaxPosition + 1;
+
+    const validatedData = InsertKanbanColumnSchema.parse({
+      name: columnData.get('name') as string,
+      description: columnData.get('description') as string,
+      projectId: projectId,
+      position: position,
+    });
+    console.log('validatedData', validatedData);
+
+    // check if column name already exist
+    const existingColumn = await getKanbanColumnByName(validatedData.name);
+    let columnId = existingColumn === undefined ? null : existingColumn.id;
+    console.log('columnId', columnId);
+
+    // insert new label name if it does not exist
+    if (!columnId) {
+      const [columnResult] = await db
+        .insert(kanbanColumns)
+        .values({
+          name: validatedData.name.toLowerCase().trim(),
+        })
+        .returning({ id: kanbanColumns.id });
+
+      columnId = columnResult.id;
+      console.log('insert new kanban name');
+    }
+
+    // insert into column in current project
+    console.log('insert kanban in current project');
+    await db.insert(projectKanbanColumns).values({
+      ...validatedData,
+      kanbanColumnId: columnId,
+      isCustom: true,
+    });
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      error: getErrorMessage(error),
+    };
+  }
+}
+
+export async function deleteKanbanColumn(
+  kanbanColumnId: KanbanColumn['id'],
+  projectId: Project['id'],
+): Promise<ActionResult> {
+  try {
+    const currentUserId = await getCurrentUserId();
+
+    const { isAuthorize } = await checkMemberPermission(
+      currentUserId,
+      projectId,
+      RESOURCES.KANBAN_COLUMN,
+      ACTIONS.CREATE,
+    );
+
+    if (!isAuthorize) throw new UnauthorizedError('User is unauthorized to delete kanban columns');
+
+    await db
+      .delete(projectKanbanColumns)
+      .where(
+        and(
+          eq(projectKanbanColumns.projectId, projectId),
+          eq(projectKanbanColumns.kanbanColumnId, kanbanColumnId),
+          eq(projectKanbanColumns.isCustom, true),
+        ),
+      );
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: getErrorMessage(error),
+    };
+  }
+}
+
 export async function reorderKanbanColumns(
   reorderColumnData: ReorderColumnDataType,
 ): Promise<ActionResult> {
@@ -60,7 +172,7 @@ export async function reorderKanbanColumns(
       ACTIONS.UPDATE,
     );
 
-    if (!isAuthorize) throw new Error('User is unauthorized to reorder kanban columns');
+    if (!isAuthorize) throw new UnauthorizedError('User is unauthorized to reorder kanban columns');
 
     const { success, data: currentProjectColumn } = await getKanbanColumnsByProjectId(projectId);
 
