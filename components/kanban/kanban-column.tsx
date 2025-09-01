@@ -13,8 +13,9 @@ import { Project, Task } from '@/types/db.types';
 import { ColumnQueryResult, KanbanColumnDragData } from '@/types/types';
 import { TaskCard } from './task-card';
 import { cn } from '@/lib/utils/shadcn-utils';
-import { capitalize } from 'lodash';
-import AddTaskModal from '../modals/add-task-modal';
+import EditKanbaColumnForm from '../forms/edit-kanban-column-modal-form';
+import { AddTaskForm } from '../forms/add-task-modal-form';
+import KanbanColumnDropdown from '../dropdowns/kanban-column-dropdown';
 
 interface BoardColumnProps {
   column: ColumnQueryResult;
@@ -35,10 +36,13 @@ export function KanbanColumn({
     return tasks.map((task) => task.id);
   }, [tasks]);
   const { over } = useDndContext();
-  const isOverColumn = over?.id === column.kanbanColumnId;
+  const isOverColumn = over?.id === column.projectColumnId;
+
+  // you cannot edit or remove default columns
+  const canEditColumn = column.isCustom;
 
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
-    id: column.kanbanColumnId,
+    id: column.projectColumnId,
     data: {
       type: 'Column',
       column,
@@ -67,62 +71,80 @@ export function KanbanColumn({
   );
 
   return (
-    <Card
-      ref={setNodeRef}
-      style={style}
-      className={variants({
-        dragging: isOverlay ? 'overlay' : isDragging ? 'over' : undefined,
-      })}
-    >
-      <CardHeader className="border-border flex h-20 flex-row items-center justify-between gap-2 border-b-2 p-4 text-left font-semibold">
-        <div className="flex flex-row items-center gap-2">
-          <Button
-            variant={'ghost'}
-            {...attributes}
-            {...listeners}
-            className="text-primary/50 relative -ml-2 h-auto cursor-grab"
-          >
-            <span className="sr-only">{`Move column: ${column.name}`}</span>
-            <GripVertical />
-          </Button>
-          <div className="flex flex-col">
-            <span className="mr-auto"> {capitalize(column.name)}</span>
-            <span className="text-muted-foreground mr-auto truncate text-xs">
-              {' '}
-              {column.description}
-            </span>
+    <>
+      <Card
+        ref={setNodeRef}
+        style={style}
+        className={variants({
+          dragging: isOverlay ? 'overlay' : isDragging ? 'over' : undefined,
+        })}
+      >
+        <CardHeader className="border-border flex h-20 flex-row items-center justify-between gap-2 border-b-2 p-4 text-left font-semibold">
+          <div className="flex flex-row items-center gap-2">
+            <Button
+              variant={'ghost'}
+              {...attributes}
+              {...listeners}
+              className="text-primary/50 relative -ml-2 h-auto cursor-grab"
+            >
+              <span className="sr-only">{`Move column: ${column.name}`}</span>
+              <GripVertical />
+            </Button>
+            <div className="flex flex-col">
+              <span className="mr-auto capitalize"> {column.name}</span>
+              <span className="text-muted-foreground mr-auto truncate text-xs">
+                {' '}
+                {column.description}
+              </span>
+            </div>
           </div>
-        </div>
-        <AddTaskModal
-          kanbanData={{
-            projectId: projectId,
-            kanbanColumnId: column.kanbanColumnId,
-            kanbanName: column.name,
-            statusList: statusList,
-          }}
-        />
-      </CardHeader>
-      <ScrollArea>
-        <CardContent className="flex flex-grow flex-col gap-2 p-2">
-          <SortableContext items={tasksIds}>
-            {tasks.length > 0 ? (
-              tasks.map((task) => <TaskCard key={task.id} task={task} />)
-            ) : (
-              <div
-                className={cn(
-                  'flex flex-1 items-center justify-center rounded-lg border-2 border-dashed p-6 text-sm transition-colors',
-                  isOverColumn
-                    ? 'border-primary text-primary'
-                    : 'border-muted-foreground/30 text-muted-foreground',
-                )}
-              >
-                Drop tasks here
-              </div>
+          <div className="flex flex-row">
+            {/* related modal overlay */}
+            <AddTaskForm
+              kanbanData={{
+                projectId: projectId,
+                projectColumnId: column.projectColumnId,
+                kanbanName: column.name,
+                statusList: statusList,
+              }}
+            />
+            {canEditColumn && (
+              <KanbanColumnDropdown
+                kanbanData={{
+                  kanbanColumnId: column.kanbanColumnId,
+                  projectId: projectId,
+                  projectColumnId: column.projectColumnId,
+                  name: column.name,
+                  description: column.description,
+                  position: column.position,
+                  isCustom: column.isCustom,
+                }}
+              />
             )}
-          </SortableContext>
-        </CardContent>
-      </ScrollArea>
-    </Card>
+          </div>
+        </CardHeader>
+        <ScrollArea>
+          <CardContent className="flex flex-grow flex-col gap-2 p-2">
+            <SortableContext items={tasksIds}>
+              {tasks.length > 0 ? (
+                tasks.map((task) => <TaskCard key={task.id} task={task} />)
+              ) : (
+                <div
+                  className={cn(
+                    'flex flex-1 items-center justify-center rounded-lg bg-transparent p-6 text-sm transition-colors',
+                    isOverColumn
+                      ? 'border-primary text-primary'
+                      : 'border-muted-foreground/30 text-muted-foreground',
+                  )}
+                >
+                  No task here
+                </div>
+              )}
+            </SortableContext>
+          </CardContent>
+        </ScrollArea>
+      </Card>
+    </>
   );
 }
 

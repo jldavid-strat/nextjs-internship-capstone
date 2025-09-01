@@ -1,14 +1,14 @@
 'use server';
 import { ACTIONS, RESOURCES } from '@/constants/permissions';
 import { db } from '@/lib/db/connect_db';
-import { taskAssignees, tasks } from '@/lib/db/schema/schema';
+import { tasks } from '@/lib/db/schema/schema';
 import { checkMemberPermission } from '@/lib/queries/permssions.queries';
 import { getMaxNumPositionByColumnId, getTaskById } from '@/lib/queries/task.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
 import getDataDiff from '@/lib/utils/data_diff';
 import { TaskSchema } from '@/lib/validations/task.validations';
-import { QueryResult, MoveTaskDataType, ActionResult } from '@/types/types';
-import { Label, Project, Task, User } from '@/types/db.types';
+import { MoveTaskDataType, ActionResult } from '@/types/types';
+import { Project, ProjectLabel, Task, User } from '@/types/db.types';
 import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { getCompletedColumnId } from '@/lib/queries/kanban_column.queries';
@@ -38,14 +38,14 @@ export async function createTask(
       ACTIONS.CREATE,
     );
 
-    const { projectId, kanbanColumnId, kanbanName } = kanbanData;
+    const { projectId, kanbanName, projectColumnId } = kanbanData;
 
     if (!isAuthorize) throw new UnauthorizedError('User is unauthorized to create task');
 
     const transactionResult = await db.transaction(async (tx) => {
       // default to null if empty
       const currentMaxPosition =
-        (await getMaxNumPositionByColumnId(kanbanData.kanbanColumnId, kanbanData.projectId, tx)) ??
+        (await getMaxNumPositionByColumnId(kanbanData.projectColumnId, kanbanData.projectId, tx)) ??
         null;
 
       // default position to zero if empty
@@ -57,12 +57,10 @@ export async function createTask(
       const startDateString = taskData.get('startDate') || null;
       const dueDateString = taskData.get('dueDate') || null;
 
-      const taskLabelIds = JSON.parse(taskData.get('labels') as string) as Label['id'][];
-
+      const taskLabelIds = JSON.parse(taskData.get('labels') as string) as ProjectLabel['id'][];
       const taskAssigneeIds = JSON.parse(taskData.get('assignees') as string) as User['id'][];
 
       const isNotAssigned = taskAssigneeIds.length === 0 ? true : false;
-
       const hasLabels = taskLabelIds.length === 0 ? false : true;
 
       const validatedData = InsertTaskSchema.parse({
@@ -78,7 +76,7 @@ export async function createTask(
         // enforce to be null for now
         milestoneId: null,
         status: kanbanName as string,
-        kanbanColumnId: kanbanColumnId as string,
+        projectKanbanColumnId: projectColumnId,
         projectId: projectId as string,
         createdById: currentUserId as string,
         startDate: startDateString,
@@ -91,7 +89,11 @@ export async function createTask(
 
       const [newTask] = await db
         .insert(tasks)
-        .values({ ...validatedData, isNotAssigned: isNotAssigned })
+        .values({
+          ...validatedData,
+          isNotAssigned: isNotAssigned,
+          projectkanbanColumnId: projectColumnId,
+        })
         .returning({ taskId: tasks.id });
 
       if (hasLabels) {
@@ -107,7 +109,6 @@ export async function createTask(
       }
 
       revalidatePath(`/projects/${projectId}`);
-      // revalidatePath('/(dashboard)');
       return { success: true };
     });
 
@@ -201,21 +202,21 @@ export async function updateTask(
   }
 }
 
-export async function deleteTask(taskId: Task['id']): Promise<QueryResult> {
-  try {
-    await db.delete(tasks).where(eq(tasks.id, taskId));
+// export async function deleteTask(taskId: Task['id']): Promise<QueryResult> {
+//   try {
+//     await db.delete(tasks).where(eq(tasks.id, taskId));
 
-    // TODO: also delete the records of team in teamMember
+//     // TODO: also delete the records of team in teamMember
 
-    return { success: true, message: `Task successfully deleted`, data: undefined };
-  } catch (error) {
-    return {
-      success: false,
-      message: `Failed to delete task. Error ${error}`,
-      error: JSON.stringify(error),
-    };
-  }
-}
+//     return { success: true, message: `Task successfully deleted`, data: undefined };
+//   } catch (error) {
+//     return {
+//       success: false,
+//       message: `Failed to delete task. Error ${error}`,
+//       error: JSON.stringify(error),
+//     };
+//   }
+// }
 
 // moves task to another column
 // TODO add validations
@@ -231,7 +232,7 @@ export async function moveTask(moveTaskData: MoveTaskDataType) {
       .where(
         and(
           eq(tasks.projectId, projectId),
-          inArray(tasks.kanbanColumnId, [sourceColumnId, targetColumnId]),
+          inArray(tasks.projectkanbanColumnId, [sourceColumnId, targetColumnId]),
         ),
       );
 
@@ -257,10 +258,10 @@ export async function moveTask(moveTaskData: MoveTaskDataType) {
 
     // if task is moved to another column
     if (sourceColumnId !== targetColumnId) {
-      const completedColumnId = await getCompletedColumnId();
+      const completedColumnId = await getCompletedColumnId(projectId);
       const updateKanbanColumnCase = sql`case 
       when ${tasks.id} = ${taskId} then ${targetColumnId} 
-      else ${tasks.kanbanColumnId} 
+      else ${tasks.projectkanbanColumnId} 
     end`;
       // update task position and kanban column id
       await db
@@ -268,7 +269,7 @@ export async function moveTask(moveTaskData: MoveTaskDataType) {
         .set({
           position: TaskPositionCaseSql,
           // only update the kanban column of moved task
-          kanbanColumnId: updateKanbanColumnCase,
+          projectkanbanColumnId: updateKanbanColumnCase,
           isCompleted: targetColumnId === completedColumnId,
           updatedAt: new Date(),
         })
@@ -314,7 +315,7 @@ function getNewTaskPositions(allTasks: Task[], moveData: MoveTaskDataType) {
 
     // reorder task in the same column
     if (sourceColumnId === targetColumnId) {
-      const columnTasks = allTasks.filter((t) => t.kanbanColumnId === sourceColumnId);
+      const columnTasks = allTasks.filter((t) => t.projectkanbanColumnId === sourceColumnId);
       const taskToMove = columnTasks.find((t) => t.id === taskId)!;
 
       // remove the task from original position and then insert it at new position
@@ -340,7 +341,7 @@ function getNewTaskPositions(allTasks: Task[], moveData: MoveTaskDataType) {
     // moved task to another column
     else {
       const sourceColumnTasks = allTasks
-        .filter((t) => t.kanbanColumnId === sourceColumnId && t.id !== taskId)
+        .filter((t) => t.projectkanbanColumnId === sourceColumnId && t.id !== taskId)
         .sort((a, b) => a.position - b.position)
         .map((t, index) => ({
           taskId: t.id,
@@ -350,13 +351,16 @@ function getNewTaskPositions(allTasks: Task[], moveData: MoveTaskDataType) {
         }));
 
       const allTargetColumnTasks = allTasks
-        .filter((t) => t.kanbanColumnId === targetColumnId)
+        .filter((t) => t.projectkanbanColumnId === targetColumnId)
         .sort((a, b) => a.position - b.position);
 
       const position = Math.min(Math.max(newPosition, 0), allTargetColumnTasks.length);
 
       const targetColumnTasks = [...allTargetColumnTasks];
-      targetColumnTasks.splice(position, 0, { ...taskToMove, kanbanColumnId: targetColumnId });
+      targetColumnTasks.splice(position, 0, {
+        ...taskToMove,
+        projectkanbanColumnId: targetColumnId,
+      });
 
       const targetUpdates = targetColumnTasks.map((t, index) => ({
         taskId: t.id,

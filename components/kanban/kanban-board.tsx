@@ -23,12 +23,12 @@ import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import { createPortal } from 'react-dom';
 import { hasDraggableData } from '@/lib/utils/dnd/dnd_utils';
 import { TaskCard } from './task-card';
-import { ColumnQueryResult } from '@/types/types';
+import { ColumnQueryResult, TaskDragData } from '@/types/types';
 import useKanbanEvents from '@/hooks/use-kanban-events';
 
 export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
   // connect to Kanban SSE
-  // useKanbanEvents(projectId);
+  useKanbanEvents(projectId);
 
   const {
     columns: kanbanColumns,
@@ -42,7 +42,7 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
   const [columns, setColumns] = useState<ColumnQueryResult[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
 
-  const columnsId = useMemo(() => kanbanColumns.map((col) => col.kanbanColumnId), [kanbanColumns]);
+  const columnsId = useMemo(() => kanbanColumns.map((col) => col.projectColumnId), [kanbanColumns]);
 
   const statusList = useMemo(() => kanbanColumns.map((col) => col.name), [kanbanColumns]);
 
@@ -71,23 +71,7 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
   }, [isTaskListSuccess, taskList]);
 
   useEffect(() => {
-    const BacklogTaskOrder = tasks
-      .filter((t) => t.kanbanColumnId === '8f19d707-4a90-43ff-804e-93dd72d7a6e5')
-      .map((t) => ({
-        taskTitle: t.title,
-        postion: t.position,
-      }))
-      .sort((a, b) => a.postion - b.postion);
-    const CompletedTaskOrder = tasks
-      .filter((t) => t.kanbanColumnId === '4c4822c5-536d-41b4-b20d-2ea27282be96')
-      .map((t) => ({
-        taskTitle: t.title,
-        postion: t.position,
-      }))
-      .sort((a, b) => a.postion - b.postion);
     console.log('Active Column', activeColumn);
-    console.log('Backlog task Order', BacklogTaskOrder);
-    console.log('Completed task Order', CompletedTaskOrder);
   }, [tasks, activeColumn]);
 
   function onDragStart(event: DragStartEvent) {
@@ -131,10 +115,10 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
       const activeTask = activeData.task as Task;
 
       const targetColumn = kanbanColumns.find(
-        (col) => col.kanbanColumnId === activeTask.kanbanColumnId,
+        (col) => col.projectColumnId === activeTask.projectkanbanColumnId,
       ) as ColumnQueryResult;
 
-      const targetColumnId = targetColumn.kanbanColumnId;
+      const targetColumnId = targetColumn.projectColumnId;
       const originalTaskData = taskList.find((t) => t.id === activeTask.id);
 
       if (!originalTaskData) return;
@@ -142,13 +126,13 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
       console.log('DATA TO BE SENT TO SERVER ACTION');
       console.log('taskId:', activeTask.id);
       console.log('projectId:', projectId);
-      console.log('sourceColumnId:', originalTaskData.kanbanColumnId);
+      console.log('sourceColumnId:', originalTaskData.projectkanbanColumnId);
       console.log('targetColumnId:', targetColumnId);
       console.log('newPosition:', activeTask.position);
       console.log('oldPosition:', originalTaskData.position);
 
       const hasPositionChange = originalTaskData.position !== activeTask.position;
-      const hasColumnChange = originalTaskData.kanbanColumnId !== targetColumnId;
+      const hasColumnChange = originalTaskData.projectkanbanColumnId !== targetColumnId;
 
       if (hasPositionChange || hasColumnChange)
         moveTaskMutation.mutateAsync({
@@ -156,7 +140,7 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
           projectId: projectId,
           newPosition: activeTask.position,
           targetColumnId: targetColumnId,
-          sourceColumnId: originalTaskData.kanbanColumnId,
+          sourceColumnId: originalTaskData.projectkanbanColumnId,
         });
 
       return;
@@ -166,14 +150,14 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
       const activeColumn = activeData.column as ColumnQueryResult;
 
       const newColumnPosition = columns.findIndex(
-        (col) => col.kanbanColumnId === activeColumn.kanbanColumnId,
+        (col) => col.projectColumnId === activeColumn.projectColumnId,
       );
       const originalColumnPosition = kanbanColumns.findIndex(
-        (col) => col.kanbanColumnId === activeColumn.kanbanColumnId,
+        (col) => col.projectColumnId === activeColumn.projectColumnId,
       );
       if (newColumnPosition !== originalColumnPosition) {
         reorderColumnsMutation.mutateAsync({
-          columnId: activeColumn.kanbanColumnId,
+          projectColumnId: activeColumn.projectColumnId,
           newPosition: newColumnPosition,
           projectId,
         });
@@ -210,8 +194,8 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
     // handle column reordering
     if (isActiveAColumn && isOverAColumn) {
       setColumns((columns) => {
-        const activeColumnIndex = columns.findIndex((col) => col.kanbanColumnId === activeId);
-        const overColumnIndex = columns.findIndex((col) => col.kanbanColumnId === overId);
+        const activeColumnIndex = columns.findIndex((col) => col.projectColumnId === activeId);
+        const overColumnIndex = columns.findIndex((col) => col.projectColumnId === overId);
         const reorderedColumns = arrayMove(columns, activeColumnIndex, overColumnIndex);
         console.log('Reordered columns', reorderedColumns);
         return reorderedColumns;
@@ -221,13 +205,13 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
     else if (isActiveATask && isOverATask) {
       console.log('Im dropping a Task over another Task');
       setTasks((tasks) => {
-        const activeTask = activeData.task as Task;
+        const activeTask = activeData.task as TaskDragData['task'];
         const overTask = overData.task as Task;
 
         // handles reordering in same column
-        if (activeTask.kanbanColumnId === overTask.kanbanColumnId) {
+        if (activeTask.projectkanbanColumnId === overTask.projectkanbanColumnId) {
           const columnTasks = tasks
-            .filter((t) => t.kanbanColumnId === activeTask.kanbanColumnId)
+            .filter((t) => t.projectkanbanColumnId === activeTask.projectkanbanColumnId)
             .sort((a, b) => a.position - b.position);
 
           const activeIndex = columnTasks.findIndex((t) => t.id === activeTask.id);
@@ -254,17 +238,21 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
         else {
           // get task from original column without the selected task
           const sourceTasks = tasks
-            .filter((t) => t.kanbanColumnId === activeTask.kanbanColumnId && t.id !== activeTask.id)
+            .filter(
+              (t) =>
+                t.projectkanbanColumnId === activeTask.projectkanbanColumnId &&
+                t.id !== activeTask.id,
+            )
             .sort((a, b) => a.position - b.position)
             .map((task, index) => ({ ...task, position: index }));
 
           const targetTasks = tasks
-            .filter((t) => t.kanbanColumnId === overTask.kanbanColumnId)
+            .filter((t) => t.projectkanbanColumnId === overTask.projectkanbanColumnId)
             .sort((a, b) => a.position - b.position);
 
           const movedTask = {
             ...activeTask,
-            kanbanColumnId: overTask.kanbanColumnId,
+            projectkanbanColumnId: overTask.projectkanbanColumnId,
             position: overTask.position,
           };
 
@@ -280,8 +268,8 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
           // get excluded task from the reordering process
           const otherTasks = tasks.filter(
             (t) =>
-              t.kanbanColumnId !== activeTask.kanbanColumnId &&
-              t.kanbanColumnId !== overTask.kanbanColumnId,
+              t.projectkanbanColumnId !== activeTask.projectkanbanColumnId &&
+              t.projectkanbanColumnId !== overTask.projectkanbanColumnId,
           );
 
           // merge all
@@ -294,26 +282,30 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
     if (isActiveATask && isOverAColumn) {
       setTasks((tasks) => {
         const activeTask = activeData.task as Task;
-        const targetColumnId = overId as string;
+        const targetColumnId = overId;
 
         // in the same column
-        if (activeTask.kanbanColumnId === targetColumnId) {
+        if (activeTask.projectkanbanColumnId === targetColumnId) {
           return tasks;
         }
 
         const sourceTasks = tasks
-          .filter((t) => t.kanbanColumnId === activeTask.kanbanColumnId && t.id !== activeTask.id)
+          .filter(
+            (t) =>
+              t.projectkanbanColumnId === activeTask.projectkanbanColumnId &&
+              t.id !== activeTask.id,
+          )
           .sort((a, b) => a.position - b.position)
           .map((task, index) => ({ ...task, position: index }));
 
         const targetTasks = tasks
-          .filter((t) => t.kanbanColumnId === targetColumnId)
+          .filter((t) => t.projectkanbanColumnId === targetColumnId)
           .sort((a, b) => a.position - b.position);
 
         // add task to end
         const movedTask = {
           ...activeTask,
-          kanbanColumnId: targetColumnId,
+          projectkanbanColumnId: targetColumnId,
           position: targetTasks.length,
         };
 
@@ -324,7 +316,8 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
 
         const otherTasks = tasks.filter(
           (t) =>
-            t.kanbanColumnId !== activeTask.kanbanColumnId && t.kanbanColumnId !== targetColumnId,
+            t.projectkanbanColumnId !== activeTask.projectkanbanColumnId &&
+            t.projectkanbanColumnId !== targetColumnId,
         );
 
         // merge all arrays
@@ -357,10 +350,10 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
         <SortableContext items={columnsId}>
           {columns.map((col) => (
             <KanbanColumn
-              key={col.kanbanColumnId}
+              key={col.projectColumnId}
               column={col}
               tasks={tasks
-                .filter((task) => task.kanbanColumnId === col.kanbanColumnId)
+                .filter((task) => task.projectkanbanColumnId === col.projectColumnId)
                 .sort((a, b) => a.position - b.position)}
               projectId={projectId}
               statusList={statusList}
@@ -376,9 +369,9 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
               <KanbanColumn
                 isOverlay
                 column={activeColumn}
-                key={activeColumn.kanbanColumnId}
+                key={activeColumn.projectColumnId}
                 tasks={tasks
-                  .filter((task) => task.kanbanColumnId === activeColumn.kanbanColumnId)
+                  .filter((task) => task.projectkanbanColumnId === activeColumn.projectColumnId)
                   .sort((a, b) => a.position - b.position)}
                 projectId={projectId}
                 statusList={statusList}
