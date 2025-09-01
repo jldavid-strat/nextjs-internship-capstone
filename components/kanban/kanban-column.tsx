@@ -10,10 +10,9 @@ import { Button } from '@/components/ui/button';
 import { GripVertical } from 'lucide-react';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Project, Task } from '@/types/db.types';
-import { ColumnQueryResult, KanbanColumnDragData } from '@/types/types';
+import { ColumnQueryResult, KanbanColumnDragData, TaskCardData } from '@/types/types';
 import { TaskCard } from './task-card';
 import { cn } from '@/lib/utils/shadcn-utils';
-import EditKanbaColumnForm from '../forms/edit-kanban-column-modal-form';
 import { AddTaskForm } from '../forms/add-task-modal-form';
 import KanbanColumnDropdown from '../dropdowns/kanban-column-dropdown';
 
@@ -22,7 +21,7 @@ interface BoardColumnProps {
   projectId: Project['id'];
   statusList: string[];
   isOverlay?: boolean;
-  tasks: Task[];
+  tasks: TaskCardData[];
 }
 
 export function KanbanColumn({
