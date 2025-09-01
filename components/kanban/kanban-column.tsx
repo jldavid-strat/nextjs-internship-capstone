@@ -3,13 +3,12 @@
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { useDndContext } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { cva } from 'class-variance-authority';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GripVertical } from 'lucide-react';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Project, Task } from '@/types/db.types';
+import { Project } from '@/types/db.types';
 import { ColumnQueryResult, KanbanColumnDragData, TaskCardData } from '@/types/types';
 import { TaskCard } from './task-card';
 import { cn } from '@/lib/utils/shadcn-utils';
@@ -24,7 +23,7 @@ interface BoardColumnProps {
   tasks: TaskCardData[];
 }
 
-export function KanbanColumn({
+export function KanbanColumnBase({
   column,
   isOverlay,
   tasks,
@@ -39,6 +38,11 @@ export function KanbanColumn({
 
   // you cannot edit or remove default columns
   const canEditColumn = column.isCustom;
+  const columnTasks = useMemo(() => {
+    return tasks
+      .filter((task) => task.projectkanbanColumnId === column.projectColumnId)
+      .sort((a, b) => a.position - b.position);
+  }, [tasks, column.projectColumnId]);
 
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: column.projectColumnId,
@@ -57,7 +61,7 @@ export function KanbanColumn({
   };
 
   const variants = cva(
-    'h-[500px] max-h-[800px] w-[350px] max-w-full bg-primary-foreground flex flex-col flex-shrink-0 snap-center',
+    'h-[700px] max-h-[800px] w-[350px] max-w-full bg-primary-foreground flex flex-col flex-shrink-0 snap-center',
     {
       variants: {
         dragging: {
@@ -122,11 +126,11 @@ export function KanbanColumn({
             )}
           </div>
         </CardHeader>
-        <ScrollArea>
+        <div className="flex-1 overflow-y-auto">
           <CardContent className="flex flex-grow flex-col gap-2 p-2">
             <SortableContext items={tasksIds}>
-              {tasks.length > 0 ? (
-                tasks.map((task) => <TaskCard key={task.id} task={task} />)
+              {columnTasks.length > 0 ? (
+                columnTasks.map((task) => <TaskCard key={task.id} task={task} />)
               ) : (
                 <div
                   className={cn(
@@ -141,32 +145,9 @@ export function KanbanColumn({
               )}
             </SortableContext>
           </CardContent>
-        </ScrollArea>
+        </div>
       </Card>
     </>
   );
 }
-
-export function ColumnContainer({ children }: { children: React.ReactNode }) {
-  const dndContext = useDndContext();
-
-  const variations = cva('px-2 md:px-0 flex lg:justify-center pb-4', {
-    variants: {
-      dragging: {
-        default: 'snap-x snap-mandatory',
-        active: 'snap-none',
-      },
-    },
-  });
-
-  return (
-    <ScrollArea
-      className={variations({
-        dragging: dndContext.active ? 'active' : 'default',
-      })}
-    >
-      <div className="flex flex-row gap-4">{children}</div>
-      <ScrollBar orientation="horizontal" />
-    </ScrollArea>
-  );
-}
+export const KanbanColumn = React.memo(KanbanColumnBase);

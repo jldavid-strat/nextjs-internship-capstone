@@ -18,12 +18,12 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { useEffect, useMemo, useState } from 'react';
-import { KanbanColumn, ColumnContainer } from './kanban-column';
+import { KanbanColumn } from './kanban-column';
 import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import { createPortal } from 'react-dom';
 import { hasDraggableData } from '@/lib/utils/dnd/dnd_utils';
 import { TaskCard } from './task-card';
-import { ColumnQueryResult, TaskDragData } from '@/types/types';
+import { ColumnQueryResult, TaskCardData, TaskDragData } from '@/types/types';
 import useKanbanEvents from '@/hooks/use-kanban-events';
 
 export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
@@ -35,31 +35,30 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
     isLoading: isKanbanColumnLoading,
     isSuccess: isKanbanColumnSuccess,
   } = useKanbanColumns(projectId);
+
   const { tasks: taskList, isSuccess: isTaskListSuccess } = useTaskList(projectId);
   const moveTaskMutation = useMoveTask(projectId);
   const reorderColumnsMutation = useReorderColumns(projectId);
 
   const [columns, setColumns] = useState<ColumnQueryResult[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<TaskCardData[]>([]);
 
-  const columnsId = useMemo(() => kanbanColumns.map((col) => col.projectColumnId), [kanbanColumns]);
+  const columnsId = useMemo(() => columns.map((col) => col.projectColumnId), [columns]);
 
-  const statusList = useMemo(() => kanbanColumns.map((col) => col.name), [kanbanColumns]);
+  const statusList = useMemo(() => columns.map((col) => col.name), [columns]);
 
   const [activeColumn, setActiveColumn] = useState<ColumnQueryResult | null>(null);
-  const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [activeTask, setActiveTask] = useState<TaskCardData | null>(null);
 
   const sensors = useSensors(
-    useSensor(MouseSensor),
-    useSensor(TouchSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: coordinateGetter,
-    }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 0.5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: coordinateGetter }),
   );
 
+  // sync server-kanban columns into our local columns state once loaded
   useEffect(() => {
     if (isKanbanColumnSuccess && kanbanColumns) {
-      console.log('kanbanColumns', kanbanColumns);
       setColumns(kanbanColumns);
     }
   }, [isKanbanColumnSuccess, kanbanColumns]);
@@ -70,9 +69,11 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
     }
   }, [isTaskListSuccess, taskList]);
 
+  // debug log - optional
   useEffect(() => {
-    console.log('Active Column', activeColumn);
-  }, [tasks, activeColumn]);
+    // reduce noise: log when activeColumn changes only
+    console.log('Active Column ->', activeColumn?.projectColumnId ?? null);
+  }, [activeColumn]);
 
   function onDragStart(event: DragStartEvent) {
     if (!hasDraggableData(event.active)) return;
@@ -81,7 +82,6 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
       setActiveColumn(data.column);
       return;
     }
-
     if (data?.type === 'Task') {
       setActiveTask(data.task);
       return;
@@ -93,76 +93,59 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
     setActiveTask(null);
 
     const { active } = event;
-
-    const activeId = active.id;
+    const activeId = active?.id;
     if (!activeId) return;
-    console.log('ACTIVE ID', activeId);
-
-    console.log('Data has been dropped');
 
     if (!hasDraggableData(active)) return;
     const activeData = active.data.current;
-
-    console.log('Active Data', activeData);
-
     if (!activeData) return;
 
     const isTaskMutation = activeData?.type === 'Task';
     const isColumnMutation = activeData?.type === 'Column';
 
-    // handled task mutation (reorder in same column or moved to another column)
     if (isTaskMutation) {
-      const activeTask = activeData.task as Task;
-
+      const activeTaskData = activeData.task as Task;
       const targetColumn = kanbanColumns.find(
-        (col) => col.projectColumnId === activeTask.projectkanbanColumnId,
+        (col) => col.projectColumnId === activeTaskData.projectkanbanColumnId,
       ) as ColumnQueryResult;
+      if (!targetColumn) return;
 
-      const targetColumnId = targetColumn.projectColumnId;
-      const originalTaskData = taskList.find((t) => t.id === activeTask.id);
-
+      const originalTaskData = taskList.find((t) => t.id === activeTaskData.id);
       if (!originalTaskData) return;
 
-      console.log('DATA TO BE SENT TO SERVER ACTION');
-      console.log('taskId:', activeTask.id);
-      console.log('projectId:', projectId);
-      console.log('sourceColumnId:', originalTaskData.projectkanbanColumnId);
-      console.log('targetColumnId:', targetColumnId);
-      console.log('newPosition:', activeTask.position);
-      console.log('oldPosition:', originalTaskData.position);
+      const hasPositionChange = originalTaskData.position !== activeTaskData.position;
+      const hasColumnChange =
+        originalTaskData.projectkanbanColumnId !== targetColumn.projectColumnId;
 
-      const hasPositionChange = originalTaskData.position !== activeTask.position;
-      const hasColumnChange = originalTaskData.projectkanbanColumnId !== targetColumnId;
-
-      if (hasPositionChange || hasColumnChange)
+      if (hasPositionChange || hasColumnChange) {
         moveTaskMutation.mutateAsync({
-          taskId: activeTask.id,
-          projectId: projectId,
-          newPosition: activeTask.position,
-          targetColumnId: targetColumnId,
+          taskId: activeTaskData.id,
+          projectId,
+          newPosition: activeTaskData.position,
+          targetColumnId: targetColumn.projectColumnId,
           sourceColumnId: originalTaskData.projectkanbanColumnId,
         });
-
+      }
       return;
-    }
-    // handle column reordering mutation
-    else if (isColumnMutation) {
-      const activeColumn = activeData.column as ColumnQueryResult;
+    } else if (isColumnMutation) {
+      const activeColumnData = activeData.column as ColumnQueryResult;
 
+      // compute positions against our **original server kanbanColumns** for stability,
+      // or use columns state
       const newColumnPosition = columns.findIndex(
-        (col) => col.projectColumnId === activeColumn.projectColumnId,
+        (col) => col.projectColumnId === activeColumnData.projectColumnId,
       );
       const originalColumnPosition = kanbanColumns.findIndex(
-        (col) => col.projectColumnId === activeColumn.projectColumnId,
+        (col) => col.projectColumnId === activeColumnData.projectColumnId,
       );
+
       if (newColumnPosition !== originalColumnPosition) {
         reorderColumnsMutation.mutateAsync({
-          projectColumnId: activeColumn.projectColumnId,
+          projectColumnId: activeColumnData.projectColumnId,
           newPosition: newColumnPosition,
           projectId,
         });
       }
-
       return;
     }
   }
@@ -173,71 +156,60 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
 
     const activeId = active.id;
     const overId = over.id;
-
     if (activeId === overId) return;
-
     if (!hasDraggableData(active) || !hasDraggableData(over)) return;
 
     const activeData = active.data.current;
     const overData = over.data.current;
 
-    console.log('Active Data', activeData);
-    console.log('Over data', overData);
-
     const isActiveATask = activeData?.type === 'Task';
     const isOverATask = overData?.type === 'Task';
-
     const isActiveAColumn = activeData?.type === 'Column';
     const isOverAColumn = overData?.type === 'Column';
 
     if (!isActiveATask && !isActiveAColumn) return;
-    // handle column reordering
+
+    // Column reordering: update *local* columns state (which will render)
     if (isActiveAColumn && isOverAColumn) {
-      setColumns((columns) => {
-        const activeColumnIndex = columns.findIndex((col) => col.projectColumnId === activeId);
-        const overColumnIndex = columns.findIndex((col) => col.projectColumnId === overId);
-        const reorderedColumns = arrayMove(columns, activeColumnIndex, overColumnIndex);
-        console.log('Reordered columns', reorderedColumns);
-        return reorderedColumns;
+      setColumns((cols) => {
+        const activeIdx = cols.findIndex((c) => c.projectColumnId === activeId);
+        const overIdx = cols.findIndex((c) => c.projectColumnId === overId);
+        if (activeIdx === -1 || overIdx === -1 || activeIdx === overIdx) return cols;
+        return arrayMove(cols, activeIdx, overIdx);
       });
+      return;
     }
-    // handle dropping Task onto task
-    else if (isActiveATask && isOverATask) {
-      console.log('Im dropping a Task over another Task');
-      setTasks((tasks) => {
+
+    // Task -> Task reordering (within same column or moving between columns)
+    if (isActiveATask && isOverATask) {
+      setTasks((prev) => {
         const activeTask = activeData.task as TaskDragData['task'];
         const overTask = overData.task as Task;
 
-        // handles reordering in same column
+        // same column reorder
         if (activeTask.projectkanbanColumnId === overTask.projectkanbanColumnId) {
-          const columnTasks = tasks
+          const columnTasks = prev
             .filter((t) => t.projectkanbanColumnId === activeTask.projectkanbanColumnId)
             .sort((a, b) => a.position - b.position);
 
-          const activeIndex = columnTasks.findIndex((t) => t.id === activeTask.id);
-          const overIndex = columnTasks.findIndex((t) => t.id === overTask.id);
+          const aIdx = columnTasks.findIndex((t) => t.id === activeTask.id);
+          const oIdx = columnTasks.findIndex((t) => t.id === overTask.id);
+          if (aIdx === -1 || oIdx === -1) return prev;
 
-          if (activeIndex === -1 || overIndex === -1) return tasks;
+          const reordered = arrayMove(columnTasks, aIdx, oIdx).map((task, index) => ({
+            ...task,
+            position: index,
+          }));
 
-          // reorder within the same column and update positions
-          const reorderedColumnTasks = arrayMove(columnTasks, activeIndex, overIndex).map(
-            (task, index) => ({
-              ...task,
-              position: index,
-            }),
-          );
-
-          // replace updated column tasks in the original tasks
-          return tasks.map((task) => {
-            const updatedTask = reorderedColumnTasks.find((ut) => ut.id === task.id);
-            return updatedTask || task;
+          return prev.map((task) => {
+            const updated = reordered.find((r) => r.id === task.id);
+            return updated ?? task;
           });
         }
 
-        // move task to another column
-        else {
-          // get task from original column without the selected task
-          const sourceTasks = tasks
+        // moving to another column
+        {
+          const sourceTasks = prev
             .filter(
               (t) =>
                 t.projectkanbanColumnId === activeTask.projectkanbanColumnId &&
@@ -246,7 +218,7 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
             .sort((a, b) => a.position - b.position)
             .map((task, index) => ({ ...task, position: index }));
 
-          const targetTasks = tasks
+          const targetTasks = prev
             .filter((t) => t.projectkanbanColumnId === overTask.projectkanbanColumnId)
             .sort((a, b) => a.position - b.position);
 
@@ -255,74 +227,63 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
             projectkanbanColumnId: overTask.projectkanbanColumnId,
             position: overTask.position,
           };
+          const insertAt = targetTasks.findIndex((t) => t.id === overTask.id);
+          targetTasks.splice(insertAt, 0, movedTask);
 
-          // insert selected task on target tasks
-          const insertTaskIndex = targetTasks.findIndex((t) => t.id === overTask.id);
-          targetTasks.splice(insertTaskIndex, 0, movedTask);
+          const reindexedTarget = targetTasks.map((task, index) => ({ ...task, position: index }));
 
-          const reindexedTargetTasks = targetTasks.map((task, index) => ({
-            ...task,
-            position: index,
-          }));
-
-          // get excluded task from the reordering process
-          const otherTasks = tasks.filter(
+          const otherTasks = prev.filter(
             (t) =>
               t.projectkanbanColumnId !== activeTask.projectkanbanColumnId &&
               t.projectkanbanColumnId !== overTask.projectkanbanColumnId,
           );
 
-          // merge all
-          return [...sourceTasks, ...reindexedTargetTasks, ...otherTasks];
+          return [...sourceTasks, ...reindexedTarget, ...otherTasks];
         }
       });
+      return;
     }
 
-    // moving task to type 'Column'
+    // Task -> Column (drop into empty area of column)
     if (isActiveATask && isOverAColumn) {
-      setTasks((tasks) => {
+      setTasks((prev) => {
         const activeTask = activeData.task as Task;
         const targetColumnId = overId;
 
-        // in the same column
-        if (activeTask.projectkanbanColumnId === targetColumnId) {
-          return tasks;
-        }
+        if (activeTask.projectkanbanColumnId === targetColumnId) return prev;
 
-        const sourceTasks = tasks
+        const sourceTasks = prev
           .filter(
             (t) =>
               t.projectkanbanColumnId === activeTask.projectkanbanColumnId &&
               t.id !== activeTask.id,
           )
           .sort((a, b) => a.position - b.position)
-          .map((task, index) => ({ ...task, position: index }));
+          .map((task, idx) => ({ ...task, position: idx }));
 
-        const targetTasks = tasks
+        const targetTasks = prev
           .filter((t) => t.projectkanbanColumnId === targetColumnId)
           .sort((a, b) => a.position - b.position);
 
-        // add task to end
         const movedTask = {
           ...activeTask,
           projectkanbanColumnId: targetColumnId,
           position: targetTasks.length,
         };
 
-        const newTargetTasks = [...targetTasks, movedTask].map((task, index) => ({
+        const newTarget = [...targetTasks, movedTask].map((task, idx) => ({
           ...task,
-          position: index,
+          position: idx,
         }));
-
-        const otherTasks = tasks.filter(
+        const otherTasks = prev.filter(
           (t) =>
             t.projectkanbanColumnId !== activeTask.projectkanbanColumnId &&
             t.projectkanbanColumnId !== targetColumnId,
         );
 
-        // merge all arrays
-        return [...sourceTasks, ...newTargetTasks, ...otherTasks];
+        return [...sourceTasks, ...newTarget, ...otherTasks];
       });
+      return;
     }
   }
 
@@ -346,33 +307,29 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
       }}
       collisionDetection={rectIntersection}
     >
-      <ColumnContainer>
+      <div className="flex flex-1 flex-row gap-2 overflow-y-auto px-2">
         <SortableContext items={columnsId}>
           {columns.map((col) => (
             <KanbanColumn
               key={col.projectColumnId}
               column={col}
-              tasks={tasks
-                .filter((task) => task.projectkanbanColumnId === col.projectColumnId)
-                .sort((a, b) => a.position - b.position)}
+              tasks={tasks}
               projectId={projectId}
               statusList={statusList}
             />
           ))}
         </SortableContext>
-      </ColumnContainer>
+      </div>
 
       {typeof window !== 'undefined' &&
         createPortal(
           <DragOverlay>
             {activeColumn && (
               <KanbanColumn
+                key={activeColumn.projectColumnId}
                 isOverlay
                 column={activeColumn}
-                key={activeColumn.projectColumnId}
-                tasks={tasks
-                  .filter((task) => task.projectkanbanColumnId === activeColumn.projectColumnId)
-                  .sort((a, b) => a.position - b.position)}
+                tasks={tasks}
                 projectId={projectId}
                 statusList={statusList}
               />
