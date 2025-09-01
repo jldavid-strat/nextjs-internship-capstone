@@ -1,11 +1,13 @@
 import 'server-only';
 import { db, DBTransaction } from '../db/connect_db';
-import { tasks } from '../db/schema/schema';
-import { and, eq, max } from 'drizzle-orm';
-import { KanbanColumn, Project, Task } from '@/types/db.types';
+import { labels, projectLabels, taskLabels, tasks, users } from '../db/schema/schema';
+import { and, eq, inArray, max } from 'drizzle-orm';
+import { Project, ProjectKanbanColumn, Task } from '@/types/db.types';
+import { taskAssignees } from '@/migrations/schema';
+import { TaskAssgineeMap, TaskLabelMap } from '@/types/types';
 
 export async function getMaxNumPositionByColumnId(
-  kanbanColumnId: Task['kanbanColumnId'],
+  projectColumnId: Task['projectkanbanColumnId'],
   projectId: Task['projectId'],
   dbTransaction?: DBTransaction,
 ) {
@@ -16,7 +18,7 @@ export async function getMaxNumPositionByColumnId(
         maxNumPosition: max(tasks.position),
       })
       .from(tasks)
-      .where(and(eq(tasks.projectId, projectId), eq(tasks.kanbanColumnId, kanbanColumnId)));
+      .where(and(eq(tasks.projectId, projectId), eq(tasks.projectkanbanColumnId, projectColumnId)));
 
     return result.maxNumPosition;
   } catch (error) {
@@ -25,7 +27,10 @@ export async function getMaxNumPositionByColumnId(
 }
 
 // return type : Promise<QueryResult<Partial<Task[]>>>
-export async function getTaskList(projectId: Project['id'], withColumnId?: KanbanColumn['id']) {
+export async function getTaskList(
+  projectId: Project['id'],
+  withColumnId?: ProjectKanbanColumn['id'],
+) {
   try {
     const taskList = await db
       .select()
@@ -33,12 +38,71 @@ export async function getTaskList(projectId: Project['id'], withColumnId?: Kanba
       .where(
         and(
           eq(tasks.projectId, projectId),
-          withColumnId ? eq(tasks.kanbanColumnId, withColumnId) : undefined,
+          withColumnId ? eq(tasks.projectkanbanColumnId, withColumnId) : undefined,
         ),
       )
       .orderBy(tasks.position);
 
-    return { success: true, message: `Successfully fetched task list`, data: taskList };
+    const taskIds = taskList.map((task) => task.id);
+
+    // get labels for each task
+    const taskLabelsData = await db
+      .select({
+        taskId: taskLabels.taskId,
+        projectLabelId: projectLabels.id,
+        name: labels.name,
+        color: projectLabels.color,
+      })
+      .from(taskLabels)
+      .innerJoin(projectLabels, eq(projectLabels.id, taskLabels.projectLabelId))
+      .innerJoin(labels, eq(projectLabels.labelId, labels.id))
+      .where(inArray(taskLabels.taskId, taskIds));
+
+    // get assignness for each task
+    const taskAssigneesData = await db
+      .select({
+        taskId: taskAssignees.taskId,
+        userId: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        primaryEmailAddress: users.primaryEmailAddress,
+        userImgLink: users.imgLink,
+      })
+      .from(taskAssignees)
+      .innerJoin(users, eq(taskAssignees.assignedById, users.id))
+      .where(inArray(taskAssignees.taskId, taskIds));
+
+    // group labels and assignees by task id
+    const labelsMap: TaskLabelMap = taskLabelsData.reduce((acc, item) => {
+      if (!acc[item.taskId]) acc[item.taskId] = [];
+      acc[item.taskId].push({
+        projectLabelId: item.projectLabelId,
+        name: item.name,
+        color: item.color,
+      });
+      return acc;
+    }, {} as TaskLabelMap);
+
+    const assigneesMap: TaskAssgineeMap = taskAssigneesData.reduce((acc, item) => {
+      if (!acc[item.taskId]) acc[item.taskId] = [];
+      acc[item.taskId].push({
+        userId: item.userId,
+        firstName: item.firstName,
+        lastName: item.lastName,
+        primaryEmailAddress: item.primaryEmailAddress,
+        userImgLink: item.userImgLink,
+      });
+      return acc;
+    }, {} as TaskAssgineeMap);
+
+    // all
+    const taskListData = taskList.map((task) => ({
+      ...task,
+      labels: labelsMap[task.id] || [],
+      assignees: assigneesMap[task.id] || [],
+    }));
+
+    return { success: true, message: `Successfully fetched task list`, data: taskListData };
   } catch (error) {
     console.error(error);
     return {
