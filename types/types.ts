@@ -1,4 +1,12 @@
-import { KanbanColumn, Project, ProjectKanbanColumn, Task } from './db.types';
+import {
+  KanbanColumn,
+  Label,
+  Project,
+  ProjectKanbanColumn,
+  ProjectLabel,
+  Task,
+  User,
+} from './db.types';
 
 // [CONSIDER]
 // change success to status code to differentiate different types of response especially in handling errors
@@ -24,23 +32,25 @@ export type ActionResult<TData = undefined, Error = string | string[]> =
 
 export type MoveTaskDataType = {
   taskId: Task['id'];
-  sourceColumnId: KanbanColumn['id'];
-  targetColumnId: KanbanColumn['id'];
+  sourceColumnId: ProjectKanbanColumn['id'];
+  targetColumnId: ProjectKanbanColumn['id'];
   newPosition: Task['position'];
   projectId: Project['id'];
 };
 
 export type ReorderColumnDataType = {
-  columnId: KanbanColumn['id'];
+  projectColumnId: ProjectKanbanColumn['id'];
   newPosition: ProjectKanbanColumn['position'];
   projectId: Project['id'];
 };
 
 export type ColumnQueryResult = {
+  projectColumnId: ProjectKanbanColumn['id'];
   kanbanColumnId: KanbanColumn['id'];
   name: KanbanColumn['name'];
   description: ProjectKanbanColumn['description'];
   position: ProjectKanbanColumn['position'];
+  isCustom: ProjectKanbanColumn['isCustom'];
   color: ProjectKanbanColumn['color'];
 };
 
@@ -54,6 +64,10 @@ export type KanbanColumnDragData = {
   column: ColumnQueryResult;
 };
 
+export interface EditKanbaColumnFormData extends Omit<ColumnQueryResult, 'color'> {
+  projectId: Project['id'];
+}
+
 export type TaskQueryResult = {
   id: Task['id'];
   title: Task['title'];
@@ -65,3 +79,29 @@ export type TaskQueryResult = {
 };
 
 export type TaskListType = TaskQueryResult[];
+
+type TaskLabel = {
+  projectLabelId: ProjectLabel['id'];
+  name: Label['name'];
+  color: ProjectLabel['color'];
+};
+
+type TaskAssignee = {
+  userId: User['id'];
+  firstName: User['firstName'];
+  lastName: User['lastName'];
+  primaryEmailAddress: User['primaryEmailAddress'];
+  userImgLink: User['imgLink'];
+};
+export interface TaskCardData extends Task {
+  assignees: TaskAssignee[];
+  labels: TaskLabel[];
+}
+
+export type TaskLabelMap = {
+  [taskId: Task['id']]: TaskLabel[];
+};
+
+export type TaskAssgineeMap = {
+  [taskId: Task['id']]: TaskAssignee[];
+};
