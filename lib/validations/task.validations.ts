@@ -6,20 +6,22 @@ export const TaskSchema = z.object({
   title: z
     .string(errorMessages.invalidType('Task title', 'text'))
     .min(MIN_CHAR, errorMessages.minChar('Task title'))
-    .max(MAX_CHAR, errorMessages.maxChar('Task title', MAX_CHAR)),
+    .max(MAX_CHAR, errorMessages.maxChar('Task title', MAX_CHAR))
+    .trim(),
   description: z
     .string(errorMessages.invalidType('Task description', 'text'))
     .max(MAX_CHAR, errorMessages.maxChar('Task description', MAX_CHAR))
+    .trim()
     .nullable(),
-  detail: z.string(errorMessages.invalidType('Task detail', 'text')).nullable(),
+  detail: z.string(errorMessages.invalidType('Task detail', 'text')).trim().nullable(),
   status: z.string(errorMessages.invalidType('Task status', 'text')),
   priority: z.enum(TASK_PRIORITY_VALUES),
   position: z.int(errorMessages.integer('Task position')).refine((n) => n >= 0, {
     error: 'Task position must be zero or positive',
   }),
-  projectId: z.uuidv4(errorMessages.uuid('Project ID')),
-  createdById: z.uuidv4(errorMessages.uuid('Created By ID')),
-  kanbanColumnId: z.uuidv4(errorMessages.uuid('Kanban Column ID')),
+  projectId: z.uuidv4(errorMessages.uuid('Project ID')).trim(),
+  createdById: z.uuidv4(errorMessages.uuid('Created By ID')).trim(),
+  kanbanColumnId: z.uuidv4(errorMessages.uuid('Kanban Column ID')).trim(),
   isCompleted: z.boolean(errorMessages.invalidType('is_completed', 'true or false')),
   milestoneId: z
     .int(errorMessages.integer('Milestone ID'))
