@@ -26,7 +26,7 @@ export function ProjectNotFound() {
 
 export function ProjectDataNotFound({ message, icon }: { message: string; icon: React.ReactNode }) {
   return (
-    <div className="flex h-30 flex-col items-center justify-center p-2">
+    <div className="bg-input/30 flex h-30 flex-col items-center justify-center rounded-sm p-2">
       {icon}
       <h2 className="text-muted-foreground my-2">{message}</h2>
     </div>
