@@ -3,7 +3,7 @@
 import { createTask } from '@/actions/task.actions';
 import { startTransition, useActionState, useCallback, useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { InserFormTaskSchema, InserFormTaskType } from '@/lib/validations/task.validations';
+import { InsertFormTaskSchema, InsertFormTaskType } from '@/lib/validations/task.validations';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TASK_PRIORITY_VALUES } from '@/lib/db/schema/enums';
 import { Input } from '../ui/input';
@@ -50,8 +50,8 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
     control,
     reset,
     formState: { errors },
-  } = useForm<InserFormTaskType>({
-    resolver: zodResolver(InserFormTaskSchema),
+  } = useForm<InsertFormTaskType>({
+    resolver: zodResolver(InsertFormTaskSchema),
     defaultValues: {
       priority: 'none',
       status: kanbanData.kanbanName,
@@ -68,7 +68,7 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
 
   const formRef = useRef(null);
 
-  const onSubmitHandler = (data: InserFormTaskType) => {
+  const onSubmitHandler = (data: InsertFormTaskType) => {
     const formData = new FormData();
 
     formData.append('title', data.title);
