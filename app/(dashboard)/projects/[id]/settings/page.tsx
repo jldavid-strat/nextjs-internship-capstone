@@ -6,7 +6,7 @@ import MemberDataBox from '@/components/project/member-data-box';
 import EditDangerZone from '@/components/project/edit-danger-zone';
 import { SearchX, User, Users } from 'lucide-react';
 import { ProjectDataNotFound } from '@/components/project/project-not-found';
-import ProjectSubHeader from '@/components/project/project-subheader';
+import SubHeader from '@/components/ui/subheader';
 import { MemberDataTable } from '@/components/data-table/member-data-table';
 import { hasRole } from '@/lib/utils/has_role';
 import ProjectLabelSection from '@/components/project/project-label-section';
@@ -41,7 +41,7 @@ export default async function ProjectSettingsPage({
         <MemberDataBox memberData={{ ...currentProjectMember }} />
         <EditProjectForm projectData={projectInfo} />
         <EditDangerZone />
-        <ProjectSubHeader
+        <SubHeader
           title={'Project Members'}
           description={'View, add, remove and change roles of project member'}
           icon={<User size={20} />}
@@ -54,7 +54,7 @@ export default async function ProjectSettingsPage({
           canMutate={canMutateLabel}
           projectLabels={projectLabels}
         />
-        <ProjectSubHeader
+        <SubHeader
           title={'Project Teams'}
           description={'View, add, remove and change roles of project member'}
           icon={<Users size={20} />}

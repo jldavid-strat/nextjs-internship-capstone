@@ -1,17 +1,12 @@
 import React from 'react';
 
-type ProjectSubHeaderProps = {
+type SubHeaderProps = {
   title: string;
   description: string;
   color: string;
   icon: React.ReactNode;
 };
-export default function ProjectSubHeader({
-  title,
-  description,
-  icon,
-  color,
-}: ProjectSubHeaderProps) {
+export default function SubHeader({ title, description, icon, color }: SubHeaderProps) {
   return (
     <header className={`my-4 flex flex-col gap-2 ${color}`}>
       <div className="flex flex-row items-center gap-2">

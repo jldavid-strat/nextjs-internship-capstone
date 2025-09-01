@@ -1,5 +1,5 @@
 import { Project } from '@/types/db.types';
-import ProjectSubHeader from './project-subheader';
+import SubHeader from '../ui/subheader';
 import { ProjectLabelDataTable, ProjectLabelTableData } from '../data-table/project-label-table';
 import { SearchX, TagsIcon } from 'lucide-react';
 import { ProjectDataNotFound } from './project-not-found';
@@ -19,7 +19,7 @@ export default function ProjectLabelSection({
   return (
     <>
       <div className="flex w-full flex-row items-center justify-between">
-        <ProjectSubHeader
+        <SubHeader
           title={'Project Labels'}
           description={'Selection of labels that can be used to attach on tasks'}
           icon={<TagsIcon size={20} />}

@@ -13,8 +13,8 @@ import { Project } from '@/types/db.types';
 import { BookOpenText, Edit } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { capitalize } from 'lodash';
-import ProjectSubHeader from '../project/project-subheader';
 import { ErrorBox } from '../ui/error-box';
+import SubHeader from '../ui/subheader';
 
 const projectStatusBadgeStyle = {
   active: 'bg-primary/10 border-primary',
@@ -77,7 +77,7 @@ export default function EditProjectForm({ projectData }: { projectData: Project 
   return (
     <form ref={formRef} onSubmit={onSubmitHandler}>
       <section className="mb-4 flex flex-row justify-between">
-        <ProjectSubHeader
+        <SubHeader
           title={'Project Details'}
           description={'General information about the project'}
           icon={<BookOpenText size={20} />}
