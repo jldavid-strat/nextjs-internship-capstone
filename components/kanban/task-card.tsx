@@ -12,6 +12,7 @@ import { formatDueDate } from '@/lib/utils/format_date';
 import { LabelPreview } from '../forms/add-project-label-modal-form';
 import { DEFAULT_COLOR } from '@/lib/validations/project-label.validations';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import TaskCardDropdown from '../dropdowns/task-dropdown';
 
 interface TaskCardProps {
   task: TaskCardData;
@@ -65,7 +66,10 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
       <CardContent className="px-3 pt-3 pb-6 text-left">
         {/* Title and Description */}
         <div className="mb-3">
-          <p className="text-md mb-1 font-medium">{task.title}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-md font-medium">{task.title}</p>
+            <TaskCardDropdown />
+          </div>
           {task.description && (
             <p className="text-muted-foreground text-xs whitespace-pre-wrap">{task.description}</p>
           )}
