@@ -1,9 +1,7 @@
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
 import { getProjectById } from '@/lib/queries/project.queries';
 import { DBKanbanBoard } from '@/components/kanban/kanban-board';
-import ProjectSettingsButton from '@/components/buttons/project-settings-button';
 import { ProjectNotFound } from '@/components/project/project-not-found';
+import ProjectHeader from '@/components/project/project-header';
 
 export default async function ProjectPage({ params }: { params: { id: string } }) {
   const projectId = (await params).id;
@@ -18,39 +16,26 @@ export default async function ProjectPage({ params }: { params: { id: string } }
   return (
     <div className="text-foreground space-y-6">
       {/* Project Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Link href="/projects" className="hover:bg-accent rounded-lg p-2 transition-colors">
-            <ArrowLeft size={20} />
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold">{project.title}</h1>
-            <p className="mt-1">{project.description}</p>
-            <p className="mt-1">{project.status}</p>
-            <p className="mt-1">{project.dueDate}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <ProjectSettingsButton projectId={projectId} />
-        </div>
-      </div>
-
-      {/* Implementation Tasks Banner */}
-      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-        <h3 className="mb-2 text-sm font-medium text-blue-900 dark:text-blue-100">
-          🎯 Kanban Board Implementation Tasks
-        </h3>
-        <ul className="space-y-1 text-sm text-blue-800 dark:text-blue-200">
-          <li>• Task 5.1: Design responsive Kanban board layout</li>
-          <li>• Task 5.2: Implement drag-and-drop functionality with dnd-kit</li>
-          <li>• Task 5.4: Implement optimistic UI updates for smooth interactions</li>
-          <li>• Task 5.6: Create task detail modals and editing interfaces</li>
-        </ul>
-      </div>
-
+      <ProjectHeader
+        project={{
+          title: project.title,
+          description: project.description ?? '',
+          dueDate: project.dueDate ?? '',
+          status: project.status,
+          createdAt: project.createdAt!,
+          totalTasks: 144,
+          memberCount: 13,
+          completedTasks: 12,
+          owner: {
+            firstName: 'Jed Laurence',
+            lastName: 'David',
+            userImgLink:
+              'https://img.clerk.com/eyJ0eXBlIjoiZGVmYXVsdCIsImlpZCI6Imluc18zMERlbjc1cDlkWDRvdFd4YzZsQjEzOGozeE4iLCJyaWQiOiJ1c2VyXzMwRzJKSzFjMjNxRUNyZ2J3ZEtVeVJGM0xaaSIsImluaXRpYWxzIjoiVVUifQ',
+          },
+        }}
+        projectId={projectId}
+      />
       <DBKanbanBoard projectId={project.id} />
-
       {/* Component Implementation Guide */}
       <div className="mt-8 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6 dark:border-gray-600 dark:bg-gray-800/50">
         <h3 className="mb-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
