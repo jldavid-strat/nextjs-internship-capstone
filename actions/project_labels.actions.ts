@@ -158,7 +158,7 @@ export async function updateProjectLabel(
       const [labelResult] = await db
         .insert(labels)
         .values({
-          name: validatedData.name,
+          name: validatedData.name.toLowerCase().trim(),
         })
         .onConflictDoUpdate({
           target: labels.name,
