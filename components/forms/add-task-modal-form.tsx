@@ -15,7 +15,7 @@ import { AddLabelMultiSelect } from '../ui/add-label-multi-select';
 import { getProjectLabels } from '@/actions/project_labels.actions';
 import { ProjectLabelTableData } from '../data-table/project-label-table';
 import { getProjectMembers } from '@/actions/project_member.actions';
-import { User } from '@/types/db.types';
+import { ProjectKanbanColumn, User } from '@/types/db.types';
 import { AddUserMultiSelect } from '../ui/add-user-multi-select';
 import { FilePlus2, Plus } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -32,7 +32,7 @@ import Modal from '../ui/modal';
 // TODO add toast promise to UNDO mutation via drizzle transaction
 
 export type CreateTaskProps = {
-  kanbanColumnId: string;
+  projectColumnId: ProjectKanbanColumn['id'];
   projectId: string;
   kanbanName: string;
   statusList: string[];
@@ -74,9 +74,9 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
     formData.append('title', data.title);
     formData.append('description', data.description ?? '');
     formData.append('detail', data.detail ?? '');
-    formData.append('start-date', data.startDate ?? '');
+    formData.append('startDate', data.startDate ?? '');
     formData.append('priority', data.priority);
-    formData.append('due-date', data.dueDate ?? '');
+    formData.append('dueDate', data.dueDate ?? '');
     formData.append('status', data.status);
     formData.append('labels', JSON.stringify([...(data.labels ?? [])]));
     formData.append('assignees', JSON.stringify([...(data.assignees ?? [])]));
