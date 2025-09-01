@@ -13,13 +13,13 @@ import {
 import { useForm } from 'react-hook-form';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
-import { Ellipsis, Pencil } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { ErrorBox } from '../ui/error-box';
 import {
   FormKanbanColumnSchemaType,
   FormKanbanColumnSchema,
 } from '@/lib/validations/kanban-column.validations';
-import { addKanbanColumn } from '@/actions/kanban_column.actions';
+import { updateKanbanColumn } from '@/actions/kanban_column.actions';
 import { useQueryClient } from '@tanstack/react-query';
 import { EditKanbaColumnFormData } from '@/types/types';
 import Modal from '../ui/modal';
@@ -35,16 +35,15 @@ export default function EditKanbaColumnForm({
   setIsEditOpen,
   kanbanData,
 }: EditKanbaColumnFormProps) {
-  const { projectId, name, description } = kanbanData;
-  const [state, aaddKanbanColumnAction, isPending] = useActionState(
-    addKanbanColumn.bind(null, projectId),
+  const { projectId, name, description, projectColumnId, kanbanColumnId } = kanbanData;
+  const [state, updateKanbanColumnAction, isPending] = useActionState(
+    updateKanbanColumn.bind(null, projectId, projectColumnId, kanbanColumnId),
     undefined,
   );
 
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm<FormKanbanColumnSchemaType>({
     mode: 'onBlur',
@@ -65,14 +64,9 @@ export default function EditKanbaColumnForm({
     evt.preventDefault();
     handleSubmit(() => {
       //   console.log(new FormData(formRef.current!));
-      startTransition(() => aaddKanbanColumnAction(new FormData(formRef.current!)));
+      startTransition(() => updateKanbanColumnAction(new FormData(formRef.current!)));
     })(evt);
   };
-
-  useEffect(() => {
-    // reset values on mount
-    reset();
-  }, [reset]);
 
   useEffect(() => {
     if (state?.success === false && state?.error) {
