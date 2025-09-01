@@ -20,6 +20,7 @@ import { AddUserMultiSelect } from '../ui/add-user-multi-select';
 import { FilePlus2, Plus } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import Modal from '../ui/modal';
+import { Badge } from '../ui/badge';
 
 // Integration:
 // - Use task validation schema
@@ -69,19 +70,11 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
   const formRef = useRef(null);
 
   const onSubmitHandler = (data: InsertFormTaskType) => {
-    const formData = new FormData();
+    const formData = new FormData(formRef.current!);
 
-    formData.append('title', data.title);
-    formData.append('description', data.description ?? '');
     formData.append('detail', data.detail ?? '');
-    formData.append('startDate', data.startDate ?? '');
-    formData.append('priority', data.priority);
-    formData.append('dueDate', data.dueDate ?? '');
-    formData.append('status', data.status);
     formData.append('labels', JSON.stringify([...(data.labels ?? [])]));
     formData.append('assignees', JSON.stringify([...(data.assignees ?? [])]));
-
-    // console.log(formData);
 
     startTransition(() => createTaskAction(formData));
   };
@@ -124,16 +117,19 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
       <Modal
         isOpen={issModalOpen}
         setIsOpen={setIsModalOpen}
-        className="max-h-[700px] w-[600px]"
+        className="max-h-[700px] overflow-x-hidden overflow-y-scroll sm:max-w-[600px] lg:max-w-[600px]"
         triggerComponent={
           <Button variant={'outline'} className="border-0 bg-transparent dark:bg-transparent">
             <Plus size={12} />
           </Button>
         }
       >
-        <div className="mb-4 flex items-center gap-2">
+        <div className="mb-4 flex items-center gap-4">
           <FilePlus2 size={20} className="text-primary" />
           <h3 className="text-primary text-lg font-medium">Create New Task</h3>
+          <Badge variant={'outline'} className="text-primary/50 capitalize">
+            {kanbanData.kanbanName}
+          </Badge>
         </div>
         <form ref={formRef} onSubmit={handleSubmit(onSubmitHandler)} className="space-y-4">
           <div>
@@ -155,7 +151,7 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
             />
             <p className="mt-2 text-sm text-red-400">{errors.description?.message}</p>
           </div>
-          <section className="grid grid-cols-2 gap-2">
+          <section className="my-2 flex w-full flex-row gap-4">
             <div>
               <label className="text-outer_space-500 dark:text-platinum-500 mb-2 block text-sm font-medium">
                 Start Date
@@ -164,32 +160,16 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
                 {...register('startDate', { setValueAs: (val) => (val === '' ? null : val) })}
                 type="date"
                 name="startDate"
-                className="w-[180px]"
+                className="w-[170px]"
               />
             </div>
-            <div className="items-center gap-2">
-              <label className="mb-2 block text-sm font-medium">Status</label>
-              <select
-                {...register('status')}
-                name="priority"
-                className="bg-card border-border h-8 w-[180px] rounded-lg border px-2 focus:outline-hidden focus-visible:ring"
-              >
-                {kanbanData.statusList.map((status, index) => (
-                  <option key={index} value={status}>
-                    {capitalize(status)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </section>
-          <section className="grid grid-cols-2 gap-2">
             <div>
               <label className="mb-2 block text-sm font-medium">Due Date</label>
               <Input
                 {...register('dueDate', { setValueAs: (val) => (val === '' ? null : val) })}
                 type="date"
                 name="dueDate"
-                className="w-[180px]"
+                className="w-[170px]"
               />
             </div>
             <div className="items-center gap-2">
@@ -197,7 +177,7 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
               <select
                 {...register('priority')}
                 name="priority"
-                className="bg-card border-border h-8 w-[180px] rounded-lg border px-2 focus:outline-hidden focus-visible:ring"
+                className="bg-card border-border h-8.5 w-[180px] rounded-lg border px-2 focus:outline-hidden focus-visible:ring"
               >
                 {TASK_PRIORITY_VALUES.map((priority, index) => (
                   <option key={index} value={priority}>
@@ -226,7 +206,6 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
                 />
               )}
             />
-            <p className="mt-2 text-sm text-red-400">{errors.root?.message}</p>
             <p className="mt-2 text-sm text-red-400">{errors.description?.message}</p>
           </div>
           {/* TODO add task assignees */}

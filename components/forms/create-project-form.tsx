@@ -44,15 +44,12 @@ export default function CreateProjectForm({ currentUserId }: { currentUserId: Us
   };
 
   const onSubmitHandler = (data: InsertProjectFormType) => {
-    const formData = new FormData();
+    const formData = new FormData(formRef.current!);
     const ownerData = {
       userId: currentUserId,
       role: 'owner',
     };
-    formData.append('title', data.title);
     formData.append('owner-id', data.ownerId);
-    formData.append('due-date', data.dueDate ?? '');
-    formData.append('description', data.description ?? '');
     formData.append('members', JSON.stringify([...(data.members ?? []), ownerData]));
 
     startTransition(() => createProjectAction(formData));
