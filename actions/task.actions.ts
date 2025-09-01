@@ -13,7 +13,7 @@ import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { getCompletedColumnId } from '@/lib/queries/kanban_column.queries';
 import { serverEvents } from '@/lib/events/event-emitter';
-import { CreateTaskProps } from '@/components/forms/add-task-form';
+import { CreateTaskProps } from '@/components/forms/add-task-modal-form';
 import { DatabaseOperationError, UnauthorizedError } from '@/constants/error';
 import { getErrorMessage } from '@/lib/utils/error.utils';
 import { addTaskLabels } from './task_labels.actions';
