@@ -28,13 +28,6 @@ export async function checkPermission(
 
     if (!result.isAllowed) {
       return {
-        isAuthorize: true,
-        result: PermissionResult.DENIED,
-      };
-    }
-
-    if (!result.isAllowed) {
-      return {
         isAuthorize: false,
         result: PermissionResult.DENIED,
       };
