@@ -193,49 +193,6 @@ export const projectTeams = pgTable("project_teams", {
 		}).onDelete("set null"),
 ]);
 
-export const tasks = pgTable("tasks", {
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity({ name: "tasks_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 9223372036854775807, cache: 1 }),
-	title: varchar({ length: 300 }).notNull(),
-	description: varchar({ length: 300 }),
-	detail: text(),
-	projectId: uuid("project_id").notNull(),
-	kanbanColumnId: uuid("kanban_column_id").notNull(),
-	milestoneId: integer("milestone_id"),
-	status: varchar().notNull(),
-	priority: taskPriority().default('none').notNull(),
-	dueDate: date("due_date"),
-	startDate: date("start_date"),
-	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }),
-	createdById: uuid("created_by_id").notNull(),
-	isCompeleted: boolean("is_compeleted").notNull(),
-	position: integer().notNull(),
-	isNotAssigned: boolean("is_not_assigned").default(false).notNull(),
-}, (table) => [
-	index("task_id_idx").using("btree", table.id.asc().nullsLast().op("int8_ops")),
-	foreignKey({
-			columns: [table.projectId],
-			foreignColumns: [projects.id],
-			name: "tasks_project_id_projects_id_fk"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.kanbanColumnId],
-			foreignColumns: [kanbanColumns.id],
-			name: "tasks_kanban_column_id_kanban_columns_id_fk"
-		}),
-	foreignKey({
-			columns: [table.milestoneId],
-			foreignColumns: [milestones.id],
-			name: "tasks_milestone_id_milestones_id_fk"
-		}).onDelete("restrict"),
-	foreignKey({
-			columns: [table.createdById],
-			foreignColumns: [users.id],
-			name: "tasks_created_by_id_users_id_fk"
-		}).onDelete("restrict"),
-]);
-
 export const taskAttachments = pgTable("task_attachments", {
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity({ name: "task_attachments_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 9223372036854775807, cache: 1 }),
@@ -257,6 +214,50 @@ export const taskAttachments = pgTable("task_attachments", {
 			foreignColumns: [users.id],
 			name: "task_attachments_uploaded_by_id_users_id_fk"
 		}),
+]);
+
+export const tasks = pgTable("tasks", {
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity({ name: "tasks_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 9223372036854775807, cache: 1 }),
+	title: varchar({ length: 300 }).notNull(),
+	description: varchar({ length: 300 }),
+	detail: text(),
+	projectId: uuid("project_id").notNull(),
+	milestoneId: integer("milestone_id"),
+	status: varchar().notNull(),
+	priority: taskPriority().default('none').notNull(),
+	dueDate: date("due_date"),
+	startDate: date("start_date"),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }),
+	createdById: uuid("created_by_id").notNull(),
+	isCompeleted: boolean("is_compeleted").notNull(),
+	position: integer().notNull(),
+	isNotAssigned: boolean("is_not_assigned").default(false).notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	projectKanbanColumnId: bigint("project_kanban_column_id", { mode: "number" }).notNull(),
+}, (table) => [
+	index("task_id_idx").using("btree", table.id.asc().nullsLast().op("int8_ops")),
+	foreignKey({
+			columns: [table.projectId],
+			foreignColumns: [projects.id],
+			name: "tasks_project_id_projects_id_fk"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.milestoneId],
+			foreignColumns: [milestones.id],
+			name: "tasks_milestone_id_milestones_id_fk"
+		}).onDelete("restrict"),
+	foreignKey({
+			columns: [table.createdById],
+			foreignColumns: [users.id],
+			name: "tasks_created_by_id_users_id_fk"
+		}).onDelete("restrict"),
+	foreignKey({
+			columns: [table.projectKanbanColumnId],
+			foreignColumns: [projectKanbanColumns.id],
+			name: "tasks_project_kanban_column_id_project_kanban_columns_id_fk"
+		}).onDelete("cascade"),
 ]);
 
 export const milestones = pgTable("milestones", {
@@ -286,13 +287,6 @@ export const users = pgTable("users", {
 	index("user_id_idx").using("btree", table.id.asc().nullsLast().op("uuid_ops")),
 	unique("users_clerk_id_unique").on(table.clerkId),
 ]);
-
-export const rolePermissions = pgTable("role_permissions", {
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity({ name: "role_permissions_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 9223372036854775807, cache: 1 }),
-	role: memberRoleName().notNull(),
-	permissions: jsonb().notNull(),
-});
 
 export const taskComments = pgTable("task_comments", {
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
@@ -344,11 +338,18 @@ export const taskHistory = pgTable("task_history", {
 		}),
 ]);
 
+export const rolePermissions = pgTable("role_permissions", {
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity({ name: "role_permissions_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 9223372036854775807, cache: 1 }),
+	role: memberRoleName().notNull(),
+	permissions: jsonb().notNull(),
+});
+
 export const taskLabels = pgTable("task_labels", {
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	taskId: bigint("task_id", { mode: "number" }).notNull(),
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	labelId: bigint("label_id", { mode: "number" }).notNull(),
+	projectLabelId: bigint("project_label_id", { mode: "number" }).notNull(),
 }, (table) => [
 	foreignKey({
 			columns: [table.taskId],
@@ -356,11 +357,11 @@ export const taskLabels = pgTable("task_labels", {
 			name: "task_labels_task_id_tasks_id_fk"
 		}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.labelId],
-			foreignColumns: [labels.id],
-			name: "task_labels_label_id_labels_id_fk"
+			columns: [table.projectLabelId],
+			foreignColumns: [projectLabels.id],
+			name: "task_labels_project_label_id_project_labels_id_fk"
 		}),
-	primaryKey({ columns: [table.taskId, table.labelId], name: "custom_task_labels_pk"}),
+	primaryKey({ columns: [table.taskId, table.projectLabelId], name: "custom_task_labels_pk"}),
 ]);
 
 export const taskAssignees = pgTable("task_assignees", {

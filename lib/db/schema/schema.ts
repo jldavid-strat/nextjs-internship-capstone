@@ -237,8 +237,8 @@ export const tasks = pgTable(
       .notNull(),
 
     // [NOTE] manually handle task deletion when a custom kanban column is removed
-    kanbanColumnId: uuid('kanban_column_id')
-      .references(() => kanbanColumns.id, { onDelete: 'cascade' })
+    projectkanbanColumnId: bigint('project_kanban_column_id', { mode: 'number' })
+      .references(() => projectKanbanColumns.id, { onDelete: 'cascade' })
       .notNull(),
     milestoneId: integer('milestone_id').references(() => milestones.id, { onDelete: 'restrict' }),
     status: varchar('status').notNull(),
@@ -279,13 +279,12 @@ export const taskLabels = pgTable(
       .references(() => tasks.id, { onDelete: 'cascade' })
       .notNull(),
 
-    // [NOTE] manually delete task labels when a project label is deleted
-    labelId: bigint('label_id', { mode: 'number' })
-      .references(() => labels.id)
+    projectLabelId: bigint('project_label_id', { mode: 'number' })
+      .references(() => projectLabels.id, { onDelete: 'cascade' })
       .notNull(),
   },
   (table) => [
-    primaryKey({ name: 'custom_task_labels_pk', columns: [table.taskId, table.labelId] }),
+    primaryKey({ name: 'custom_task_labels_pk', columns: [table.taskId, table.projectLabelId] }),
   ],
 );
 
