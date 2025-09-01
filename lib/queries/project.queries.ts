@@ -102,9 +102,9 @@ export async function getProjectDataById(projectId: Project['id']) {
       message: `Successfully retrieve project`,
       data: {
         projectData: singularProject[0],
-        projectMembers: projectMemberList ?? [],
-        projectTeams: projectTeams ?? [],
-        projectLabels: projectLabelList ?? [],
+        projectMembers: projectMemberList,
+        projectTeams: projectTeams,
+        projectLabels: projectLabelList,
       },
     };
   } catch (error) {
