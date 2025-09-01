@@ -15,6 +15,7 @@ import {
 import { Project } from '@/types/db.types';
 import { addProjectLabel } from '@/actions/project_labels.actions';
 import Modal from '../ui/modal';
+import { cn } from '@/lib/utils/shadcn-utils';
 
 export default function AddProjectLabelForm({ projectId }: { projectId: Project['id'] }) {
   const [state, addProjectLabelAction, isPending] = useActionState(
@@ -138,7 +139,10 @@ export function LabelPreview({ name, color, className = '' }: LabelPreviewProps)
 
   return (
     <div
-      className={`mt-4 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${className}`}
+      className={cn(
+        `mt-4 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium`,
+        className,
+      )}
       style={{
         backgroundColor: 'transparent',
         color: color,
