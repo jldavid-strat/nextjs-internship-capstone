@@ -86,20 +86,23 @@ export async function getProjectMembers(
         : []),
     ];
 
-    const projectMemberList = await db
-      .select({
-        userData: { ...users },
-        role: projectMembers.role,
-        joinedAt: projectMembers.joinedAt,
-      })
-      .from(projects)
-      .innerJoin(projectMembers, eq(projects.id, projectMembers.projectId))
-      .innerJoin(users, eq(users.id, projectMembers.userId))
-      .where(and(...conditions))
-      .orderBy(projectMembers.role)
-      .limit(maxCount ?? 0);
+    const projectMemberQuery = (maxCount?: number) => {
+      const baseQuery = db
+        .select({
+          userData: { ...users },
+          role: projectMembers.role,
+          joinedAt: projectMembers.joinedAt,
+        })
+        .from(projects)
+        .innerJoin(projectMembers, eq(projects.id, projectMembers.projectId))
+        .innerJoin(users, eq(users.id, projectMembers.userId))
+        .where(and(...conditions))
+        .orderBy(projectMembers.role);
 
-    return projectMemberList;
+      return maxCount ? baseQuery.limit(maxCount) : baseQuery;
+    };
+
+    return await projectMemberQuery(maxCount);
   } catch (error) {
     console.error(error);
   }
