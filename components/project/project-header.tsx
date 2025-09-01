@@ -17,7 +17,8 @@ interface ProjectHeaderProps {
     completedTasks?: number;
     totalTasks?: number;
     owner?: {
-      name: string;
+      firstName: string;
+      lastName: string;
       userImgLink?: string;
     };
     recentMembers?: Array<{
@@ -125,12 +126,18 @@ export default function ProjectHeader({ project, projectId }: ProjectHeaderProps
                     <span className="text-muted-foreground text-sm">Owner:</span>
                     <div className="flex items-center space-x-2">
                       <Avatar className="border-background h-8 w-8 border-2">
-                        <AvatarImage src={project.owner.userImgLink} alt={project.owner.name} />
+                        <AvatarImage
+                          src={project.owner.userImgLink}
+                          alt={`${project.owner.firstName} ${project.owner.lastName}`}
+                        />
                         <AvatarFallback className="text-xs font-medium">
-                          {getInitials(project.owner.name)}
+                          {project.owner.firstName.charAt(0)}
+                          {project.owner.lastName.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm font-medium">{project.owner.name}</span>
+                      <span className="text-sm font-medium">
+                        {`${project.owner.firstName} ${project.owner.lastName}`}
+                      </span>
                     </div>
 
                     {project.recentMembers && project.recentMembers.length > 0 && (
