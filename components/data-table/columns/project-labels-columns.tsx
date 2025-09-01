@@ -4,10 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ColumnDef, Row } from '@tanstack/react-table';
 import { ProjectLabelTableData } from '../project-label-table';
-import EditProjectLabelModal from '@/components/modals/edit-project-label-modal';
 import { deleteProjectLabel } from '@/actions/project_labels.actions';
 import { useState } from 'react';
 import { DEFAULT_COLOR } from '@/lib/validations/project-label.validations';
+import { useModalActions } from '@/stores/modal-store';
+import EditProjectLabelForm from '@/components/forms/edit-project-label-modal-form';
 
 export const projectLabelColumns = (canMutate: boolean): ColumnDef<ProjectLabelTableData>[] => [
   {
@@ -58,7 +59,7 @@ function ActionCell({ row }: { row: Row<ProjectLabelTableData> }) {
   return (
     <div className="flex flex-row items-center justify-center gap-2">
       {/* open edit project label modal */}
-      <EditProjectLabelModal
+      <EditProjectLabelForm
         projectLabelData={{
           projectLabelId: label.id,
           labelId: label.labelId,
@@ -66,9 +67,7 @@ function ActionCell({ row }: { row: Row<ProjectLabelTableData> }) {
           projectId: label.projectId,
           color: label.color,
         }}
-        disabled={isPending}
       />
-
       <Button
         className="border-destructive/60 dark:text-foreground border-1 bg-red-500/20 text-red-500 hover:bg-red-500/30"
         onClick={() => {
