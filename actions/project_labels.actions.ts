@@ -155,11 +155,13 @@ export async function updateProjectLabel(
     let newLabelId = labelId;
 
     if (changes.name) {
+      // insert current data has a new label name
       const [labelResult] = await db
         .insert(labels)
         .values({
           name: validatedData.name.toLowerCase().trim(),
         })
+        // if it already exist do nothing an retain the original name
         .onConflictDoUpdate({
           target: labels.name,
           // don't actually update anything, just return the ID
@@ -174,13 +176,14 @@ export async function updateProjectLabel(
       newLabelId = labelResult.id;
     }
 
-    // if not update the color in project label table
+    // update the color in project label table
     await db
       .update(projectLabels)
       .set({
         // also update labelId in case it changed to another name
         labelId: newLabelId,
         color: validatedData.color,
+        updatedAt: new Date(),
       })
       .where(eq(projectLabels.id, projectLabelId));
 
