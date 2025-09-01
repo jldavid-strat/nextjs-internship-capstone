@@ -8,11 +8,10 @@ import { SearchX, User, Users } from 'lucide-react';
 import { ProjectDataNotFound } from '@/components/project/project-not-found';
 import ProjectSubHeader from '@/components/project/project-subheader';
 import { MemberDataTable } from '@/components/data-table/member-data-table';
-import { ProjectLabelDataTable } from '@/components/data-table/project-label-table';
 import { hasRole } from '@/lib/utils/has_role';
-import AddProjectLabelModal from '@/components/modals/add-project-label-modal';
+import ProjectLabelSection from '@/components/project/project-label-section';
 
-export default async function SettingsProjectPage({
+export default async function ProjectSettingsPage({
   params,
 }: {
   params: Promise<{ id: Project['id'] }>;
@@ -30,6 +29,7 @@ export default async function SettingsProjectPage({
   const projectTeams = projectData.projectTeams;
   const projectLabels = projectData.projectLabels ?? [];
 
+  console.log('projectMembers', projectMembers);
   const currentProjectMember = projectMembers.find((m) => m.userId === currentUserId)!;
 
   const canMutateMember = hasRole(currentProjectMember.role, ['admin', 'owner']);
@@ -49,26 +49,11 @@ export default async function SettingsProjectPage({
         />
         {/* TODO: add way to change roles or add new members */}
         <MemberDataTable data={projectMembers} canMutate={canMutateMember} />
-
-        <div className="flex w-full flex-row items-center justify-between">
-          <ProjectSubHeader
-            title={'Project Labels'}
-            description={'Selection of labels that can be used to attach on tasks'}
-            icon={<Users size={20} />}
-            color="text-primary"
-          />
-          <AddProjectLabelModal projectId={projectId} />
-        </div>
-        <div className="rounded-sm">
-          {projectLabels?.length === 0 ? (
-            <ProjectDataNotFound
-              message="No labels found for this project"
-              icon={<SearchX size={40} className="text-muted-foreground" />}
-            />
-          ) : (
-            <ProjectLabelDataTable data={projectLabels} canMutate={canMutateLabel} />
-          )}
-        </div>
+        <ProjectLabelSection
+          projectId={projectId}
+          canMutate={canMutateLabel}
+          projectLabels={projectLabels}
+        />
         <ProjectSubHeader
           title={'Project Teams'}
           description={'View, add, remove and change roles of project member'}
