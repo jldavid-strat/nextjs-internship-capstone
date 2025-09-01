@@ -17,7 +17,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import Modal from '../ui/modal';
 
 export default function AddKanbaColumnForm({ projectId }: { projectId: Project['id'] }) {
-  const [state, aaddKanbanColumnAction, isPending] = useActionState(
+  const [state, addKanbanColumnAction, isPending] = useActionState(
     addKanbanColumn.bind(null, projectId),
     undefined,
   );
@@ -25,6 +25,7 @@ export default function AddKanbaColumnForm({ projectId }: { projectId: Project['
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<FormKanbanColumnSchemaType>({
     resolver: zodResolver(FormKanbanColumnSchema),
@@ -41,7 +42,7 @@ export default function AddKanbaColumnForm({ projectId }: { projectId: Project['
     evt.preventDefault();
     handleSubmit(() => {
       //   console.log(new FormData(formRef.current!));
-      startTransition(() => aaddKanbanColumnAction(new FormData(formRef.current!)));
+      startTransition(() => addKanbanColumnAction(new FormData(formRef.current!)));
     })(evt);
   };
 
@@ -54,10 +55,11 @@ export default function AddKanbaColumnForm({ projectId }: { projectId: Project['
       _queryClient.invalidateQueries({
         queryKey: ['kanban-columns', projectId],
       });
+      reset();
       setIsModalOpen(false);
       //   toast
     }
-  }, [state, _queryClient, projectId]);
+  }, [state, reset, _queryClient, projectId]);
 
   return (
     <Modal
