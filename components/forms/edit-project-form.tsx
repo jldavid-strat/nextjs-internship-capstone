@@ -1,6 +1,6 @@
 'use client';
 
-import { createProject } from '@/actions/project.actions';
+import { updateProject } from '@/actions/project.actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { startTransition, useActionState, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -23,7 +23,10 @@ const projectStatusBadgeStyle = {
 };
 
 export default function EditProjectForm({ projectData }: { projectData: Project }) {
-  const [state, createProjectAction, isPending] = useActionState(createProject, undefined);
+  const [state, updateProjectAction, isPending] = useActionState(
+    updateProject.bind(null, projectData.id),
+    undefined,
+  );
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const {
@@ -53,7 +56,7 @@ export default function EditProjectForm({ projectData }: { projectData: Project 
     evt.preventDefault();
     handleSubmit(() => {
       // console.log(new FormData(formRef.current!));
-      startTransition(() => createProjectAction(new FormData(formRef.current!)));
+      startTransition(() => updateProjectAction(new FormData(formRef.current!)));
     })(evt);
   };
 
