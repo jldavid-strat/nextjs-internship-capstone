@@ -1,5 +1,5 @@
 import 'server-only';
-import { KanbanColumn, Project } from '@/types/db.types';
+import { KanbanColumn, Project, ProjectKanbanColumn } from '@/types/db.types';
 import { db } from '../db/connect_db';
 import { kanbanColumns, projectKanbanColumns, projects } from '../db/schema/schema';
 import { and, eq, max } from 'drizzle-orm';
@@ -12,13 +12,19 @@ export async function getKanbanColumnByName(kanbanName: KanbanColumn['id']) {
   return kanbanColumn;
 }
 
-export async function getCompletedColumnId(): Promise<KanbanColumn['id'] | undefined> {
-  const completedColumnId = await db.query.kanbanColumns.findFirst({
-    columns: {
-      id: true,
-    },
-    where: (kanbanColumns, { eq }) => eq(kanbanColumns.name, 'Completed'),
-  });
+export async function getCompletedColumnId(
+  projectId: Project['id'],
+): Promise<ProjectKanbanColumn['id'] | undefined> {
+  const [completedColumnId] = await db
+    .select({
+      id: projectKanbanColumns.id,
+    })
+    .from(projectKanbanColumns)
+    .innerJoin(projects, eq(projects.id, projectId))
+    .innerJoin(kanbanColumns, eq(kanbanColumns.id, projectKanbanColumns.kanbanColumnId))
+    .where(eq(kanbanColumns.name, 'completed'))
+    .limit(1);
+
   return completedColumnId?.id;
 }
 
@@ -26,6 +32,7 @@ export async function getKanbanColumnsByProjectId(projectId: Project['id']) {
   try {
     const PKanbanColumns = await db
       .select({
+        projectColumnId: projectKanbanColumns.id,
         kanbanColumnId: kanbanColumns.id,
         name: kanbanColumns.name,
         isCustom: projectKanbanColumns.isCustom,
@@ -63,6 +70,28 @@ export async function getMaxNumColumnPositions(projectId: Project['id']) {
       .where(and(eq(projectKanbanColumns.projectId, projectId)));
 
     return result.maxNumPosition;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function getColumnById(projectColumnId: ProjectKanbanColumn['id']) {
+  try {
+    const [columnData] = await db
+      .select({
+        kanbanColumnId: kanbanColumns.id,
+        projectColumnId: projectKanbanColumns.id,
+        name: kanbanColumns.name,
+        description: projectKanbanColumns.description,
+      })
+      .from(projectKanbanColumns)
+      .innerJoin(kanbanColumns, eq(kanbanColumns.id, projectKanbanColumns.kanbanColumnId))
+      .where(and(eq(projectKanbanColumns.id, projectColumnId)));
+
+    console.log('projectColumnId', projectColumnId);
+    console.log('columnData', columnData);
+
+    return columnData;
   } catch (error) {
     console.error(error);
   }
