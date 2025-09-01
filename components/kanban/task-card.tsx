@@ -7,29 +7,29 @@ import { cva } from 'class-variance-authority';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '../../lib/utils/shadcn-utils';
 import { TaskCardData, TaskDragData } from '@/types/types';
-import { Calendar, User } from 'lucide-react';
+import { Calendar, GripVertical, User } from 'lucide-react';
 import { formatDueDate } from '@/lib/utils/format_date';
 import { LabelPreview } from '../forms/add-project-label-modal-form';
 import { DEFAULT_COLOR } from '@/lib/validations/project-label.validations';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import TaskCardDropdown from '../dropdowns/task-dropdown';
+import { ViewTaskModalProps } from '../modals/view-task-modal';
 
-interface TaskCardProps {
-  task: TaskCardData;
+interface TaskCardProps extends Omit<ViewTaskModalProps, 'isTaskOpen' | 'setIsTaskOpen'> {
   isOverlay?: boolean;
 }
 
 // for debugging purposes
 const SHOW_POSTION = true;
 
-export function TaskCard({ task, isOverlay }: TaskCardProps) {
-  const dueDateInfo = formatDueDate(task.dueDate);
-  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
+export function TaskCard({ taskData, isOverlay, kanbanData }: TaskCardProps) {
+  const dueDateInfo = formatDueDate(taskData.dueDate ?? null);
+  const isOverdue = taskData.dueDate && new Date(taskData.dueDate) < new Date();
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
-    id: task.id,
+    id: taskData.id,
     data: {
       type: 'Task',
-      task,
+      task: taskData,
     } satisfies TaskDragData,
     attributes: {
       roleDescription: 'Task',
@@ -53,11 +53,8 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
   return (
     <Card
       ref={setNodeRef}
-      {...attributes}
-      {...listeners}
       style={style}
       className={cn(
-        'cursor-grab',
         variants({
           dragging: isOverlay ? 'overlay' : isDragging ? 'over' : undefined,
         }),
@@ -67,18 +64,37 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
         {/* Title and Description */}
         <div className="mb-3">
           <div className="flex items-center justify-between">
-            <p className="text-md font-medium">{task.title}</p>
-            <TaskCardDropdown />
+            {/* Drag Handle */}
+            <div className="flex items-center gap-2">
+              <button
+                {...attributes}
+                {...listeners}
+                className="text-muted-foreground hover:text-foreground cursor-grab rounded p-1"
+              >
+                <GripVertical className="h-4 w-4" />
+              </button>
+              <p className="text-md max-w-[200px] truncate font-medium">{taskData.title}</p>
+            </div>
+            <TaskCardDropdown
+              taskData={taskData}
+              kanbanData={{
+                projectId: kanbanData.projectId,
+                taskId: kanbanData.taskId,
+                statusList: kanbanData.statusList,
+              }}
+            />
           </div>
-          {task.description && (
-            <p className="text-muted-foreground text-xs whitespace-pre-wrap">{task.description}</p>
+          {taskData.description && (
+            <p className="text-muted-foreground text-xs whitespace-pre-wrap">
+              {taskData.description}
+            </p>
           )}
         </div>
 
         {/* Labels */}
-        {task.labels.length > 0 && (
+        {taskData.labels.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-1">
-            {task.labels.map((label) => (
+            {taskData.labels.map((label) => (
               <LabelPreview
                 key={label.projectLabelId}
                 name={label.name}
@@ -106,22 +122,23 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {/* Priority Badge */}
-            {task.priority !== 'none' && (
+            {taskData.priority !== 'none' && (
               <Badge
                 variant="outline"
                 className={cn(
                   'text-xs font-medium',
-                  task.priority === 'high' && 'border-red-500 bg-red-50 text-red-700',
-                  task.priority === 'medium' && 'border-yellow-500 bg-yellow-50 text-yellow-700',
-                  task.priority === 'low' && 'border-green-500 bg-green-50 text-green-700',
+                  taskData.priority === 'high' && 'border-red-500 bg-red-50 text-red-700',
+                  taskData.priority === 'medium' &&
+                    'border-yellow-500 bg-yellow-50 text-yellow-700',
+                  taskData.priority === 'low' && 'border-green-500 bg-green-50 text-green-700',
                 )}
               >
-                {task.priority}
+                {taskData.priority}
               </Badge>
             )}
 
             {/* Not Assigned Indicator */}
-            {task.isNotAssigned && (
+            {taskData.isNotAssigned && (
               <div className="flex items-center gap-1">
                 <User className="text-muted-foreground h-3 w-3" />
                 <span className="text-muted-foreground text-xs">Unassigned</span>
@@ -131,10 +148,10 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
 
           {/* Assignees and Position */}
           <div className="flex items-center gap-2">
-            {/* Task Assignees */}
-            {task.assignees.length > 0 && (
+            {/* taskData Assignees */}
+            {taskData.assignees.length > 0 && (
               <div className="flex -space-x-2">
-                {task.assignees.slice(0, 2).map((assignee, index) => (
+                {taskData.assignees.slice(0, 2).map((assignee, index) => (
                   <Avatar
                     key={`${assignee.userId}-${index}`}
                     className="border-background h-8 w-8 border-2"
@@ -146,9 +163,9 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
                     </AvatarFallback>
                   </Avatar>
                 ))}
-                {task.assignees.length > 2 && (
+                {taskData.assignees.length > 2 && (
                   <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-gray-200 text-xs font-medium text-gray-600">
-                    +{task.assignees.length - 2}
+                    +{taskData.assignees.length - 2}
                   </div>
                 )}
               </div>
@@ -156,7 +173,7 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
 
             {/* Position (for debugging) */}
             {SHOW_POSTION && (
-              <span className="text-muted-foreground text-xs">#{task.position}</span>
+              <span className="text-muted-foreground text-xs">#{taskData.position}</span>
             )}
           </div>
         </div>
