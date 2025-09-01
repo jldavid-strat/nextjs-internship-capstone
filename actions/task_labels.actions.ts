@@ -32,9 +32,9 @@ export async function addTaskLabels(
     });
 
     // transform assignee for multiple db insertion
-    const toInsert = validatedData.labels.map((labelId) => ({
+    const toInsert = validatedData.labels.map((projectLabelId) => ({
       taskId: taskId,
-      labelId: labelId,
+      projectLabelId: projectLabelId,
     }));
 
     console.info(toInsert);
