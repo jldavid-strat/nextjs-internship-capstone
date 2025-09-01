@@ -4,15 +4,23 @@ import { DialogTitle, DialogTrigger } from '@radix-ui/react-dialog';
 import { cn } from '../../lib/utils/shadcn-utils';
 
 export type ModalProps = {
-  triggerComponent: React.ReactNode;
+  isOpen: boolean;
+  setIsOpen: (input: boolean) => void;
   children: React.ReactNode;
+  triggerComponent?: React.ReactNode;
   className?: string;
 };
 
-export default function Modal({ children, className, triggerComponent }: ModalProps) {
+export default function Modal({
+  isOpen,
+  setIsOpen,
+  children,
+  className,
+  triggerComponent,
+}: ModalProps) {
   return (
-    <Dialog>
-      <DialogTrigger asChild>{triggerComponent}</DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      {triggerComponent && <DialogTrigger asChild>{triggerComponent}</DialogTrigger>}
       <DialogContent
         className={cn('border-border max-h-screen overflow-y-scroll lg:max-w-screen-lg', className)}
       >
