@@ -11,16 +11,14 @@ import {
 import { Button } from '../ui/button';
 
 interface DeleteAlertDialogProps<T extends string | number> {
-  id: T;
   isOpen: boolean;
   alertTile?: string;
   alertDescription?: string;
   setIsOpen: (i: boolean) => void;
-  handleDelete: (id: T) => Promise<void>;
+  handleDelete: () => Promise<void>;
 }
 
 export function DeleteAlertDialog<T extends string | number>({
-  id,
   isOpen,
   setIsOpen,
   handleDelete,
@@ -37,7 +35,7 @@ export function DeleteAlertDialog<T extends string | number>({
         <AlertDialogFooter>
           <AlertDialogCancel onClick={() => setIsOpen(false)}>Cancel</AlertDialogCancel>
           <AlertDialogAction asChild>
-            <Button type="button" onClick={() => handleDelete(id)}>
+            <Button type="button" onClick={() => handleDelete}>
               Delete
             </Button>
           </AlertDialogAction>

@@ -12,7 +12,6 @@ import { Button } from '../ui/button';
 import EditKanbaColumnForm from '../forms/edit-kanban-column-modal-form';
 import React, { useState } from 'react';
 import { DeleteAlertDialog } from '../alerts/delete-alert-dialog';
-import { ProjectKanbanColumn } from '@/types/db.types';
 import { deleteKanbanColumn } from '@/actions/kanban_column.actions';
 import { EditKanbaColumnFormData } from '@/types/types';
 import { useQueryClient } from '@tanstack/react-query';
@@ -27,9 +26,9 @@ export default function KanbanColumnDropdown({
   const [isEditOpen, setIsEditOpen] = useState<boolean>(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
 
-  async function handleColumnDelete(columnId: ProjectKanbanColumn['id']) {
-    console.log('delete', columnId);
-    const response = await deleteKanbanColumn(columnId, projectId);
+  async function handleColumnDelete() {
+    console.log('delete', projectColumnId);
+    const response = await deleteKanbanColumn(projectColumnId, projectId);
     if (response.success) {
       _queryClient.invalidateQueries({
         queryKey: ['kanban-columns', projectId],
@@ -57,7 +56,6 @@ export default function KanbanColumnDropdown({
         }}
       />
       <DeleteAlertDialog<number>
-        id={projectColumnId}
         alertDescription="This action cannot be undone. This will delete the corresponding kanban column and all the task included in it"
         isOpen={isDeleteOpen}
         setIsOpen={setIsDeleteOpen}

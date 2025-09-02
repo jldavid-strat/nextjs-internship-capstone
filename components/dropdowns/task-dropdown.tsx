@@ -33,9 +33,9 @@ export default function TaskCardDropdown({ kanbanData, taskData }: TaskSheetProp
   const { open: setTaskOpen } = useSheetStore();
   const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
 
-  async function handleTaskDelete(deleteTaskID: Task['id']) {
-    console.log('delete', deleteTaskID);
-    const response = await deleteTask(deleteTaskID, projectId);
+  async function handleTaskDelete() {
+    console.log('delete', taskId);
+    const response = await deleteTask(taskId, projectId);
     if (response.success) {
       _queryClient.invalidateQueries({
         queryKey: ['tasks', projectId],
@@ -50,7 +50,6 @@ export default function TaskCardDropdown({ kanbanData, taskData }: TaskSheetProp
   return (
     <>
       <DeleteAlertDialog<number>
-        id={taskId}
         alertDescription="This action cannot be undone. This will delete the corresponding task and all the related included in it"
         isOpen={isDeleteOpen}
         setIsOpen={setIsDeleteOpen}
