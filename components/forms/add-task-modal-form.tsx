@@ -119,141 +119,151 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
         setIsOpen={(isModalOpen) => {
           setIsModalOpen(isModalOpen);
           if (!isModalOpen) {
+            // disable scroll lock due to overflow auto
+
+            document.body.style.overflow = '';
             // clears the form when dialog closes
             reset();
           }
         }}
-        className="max-h-[700px] overflow-x-hidden overflow-y-scroll sm:max-w-[600px] lg:max-w-[600px]"
+        className="max-h-[700px] overflow-x-hidden p-0 sm:max-w-[600px] lg:max-w-[600px]"
         triggerComponent={
           <Button variant={'outline'} className="border-0 bg-transparent dark:bg-transparent">
             <Plus size={12} />
           </Button>
         }
       >
-        <div className="mb-4 flex items-center gap-4">
-          <FilePlus2 size={20} className="text-primary" />
-          <h3 className="text-primary text-lg font-medium">Create New Task</h3>
-          <Badge variant={'outline'} className="text-primary/50 capitalize">
-            {kanbanData.kanbanName}
-          </Badge>
-        </div>
-        <form ref={formRef} onSubmit={handleSubmit(onSubmitHandler)} className="space-y-4">
-          <div>
-            <label className="mb-2 block text-sm font-medium">Task Title *</label>
-            {/* TODO: add way to auto-focus title input */}
-            <Input {...register('title')} type="text" name="title" placeholder="Enter task title" />
-            <p className="mt-2 text-sm text-red-400">{errors.title?.message}</p>
+        <header className="px-6 pt-6">
+          <div className="flex items-center gap-4">
+            <FilePlus2 size={20} className="text-primary" />
+            <h3 className="text-primary text-lg font-medium">Create New Task</h3>
+            <Badge variant={'outline'} className="text-primary/50 capitalize">
+              {kanbanData.kanbanName}
+            </Badge>
           </div>
-          <div>
-            <label className="text-outer_space-500 dark:text-platinum-500 mb-2 block text-sm font-medium">
-              Description
-            </label>
-            <textarea
-              {...register('description')}
-              name="description"
-              rows={2}
-              className="focus:ring-visible border-border bg-input/30 w-full rounded-lg border px-3 py-2 text-sm focus:outline-hidden"
-              placeholder="Concisely describe what the task is about"
-            />
-            <p className="mt-2 text-sm text-red-400">{errors.description?.message}</p>
-          </div>
-          <section className="my-2 flex w-full flex-row gap-4">
+        </header>
+        <form ref={formRef} onSubmit={handleSubmit(onSubmitHandler)} className="">
+          <section className="px-6">
+            <div>
+              <label className="mb-2 block text-sm font-medium">Task Title *</label>
+              {/* TODO: add way to auto-focus title input */}
+              <Input
+                {...register('title')}
+                type="text"
+                name="title"
+                placeholder="Enter task title"
+              />
+              <p className="mt-2 text-sm text-red-400">{errors.title?.message}</p>
+            </div>
             <div>
               <label className="text-outer_space-500 dark:text-platinum-500 mb-2 block text-sm font-medium">
-                Start Date
+                Description
               </label>
-              <Input
-                {...register('startDate', { setValueAs: (val) => (val === '' ? null : val) })}
-                type="date"
-                name="startDate"
-                className="w-[170px]"
+              <textarea
+                {...register('description')}
+                name="description"
+                rows={2}
+                className="focus:ring-visible border-border bg-input/30 w-full rounded-lg border px-3 py-2 text-sm focus:outline-hidden"
+                placeholder="Concisely describe what the task is about"
               />
+              <p className="mt-2 text-sm text-red-400">{errors.description?.message}</p>
             </div>
+            <section className="my-2 flex w-full flex-row gap-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium">Start Date</label>
+                <Input
+                  {...register('startDate', { setValueAs: (val) => (val === '' ? null : val) })}
+                  type="date"
+                  name="startDate"
+                  className="w-[170px]"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium">Due Date</label>
+                <Input
+                  {...register('dueDate', { setValueAs: (val) => (val === '' ? null : val) })}
+                  type="date"
+                  name="dueDate"
+                  className="w-[170px]"
+                />
+              </div>
+              <div className="items-center gap-2">
+                <label className="mb-2 block text-sm font-medium">Priority</label>
+                <select
+                  {...register('priority')}
+                  name="priority"
+                  className="bg-card border-border h-8.5 w-[180px] rounded-lg border px-2 focus:outline-hidden focus-visible:ring"
+                >
+                  {TASK_PRIORITY_VALUES.map((priority, index) => (
+                    <option key={index} value={priority}>
+                      {capitalize(priority)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </section>
+            <p className="mt-2 text-sm text-red-400">{errors.dueDate?.message}</p>
+            <p className="mt-2 text-sm text-red-400">{errors.startDate?.message}</p>
+            <p className="mt-2 text-sm text-red-400">{errors.priority?.message}</p>
+            <p className="mt-2 text-sm text-red-400">{errors.status?.message}</p>
             <div>
-              <label className="mb-2 block text-sm font-medium">Due Date</label>
-              <Input
-                {...register('dueDate', { setValueAs: (val) => (val === '' ? null : val) })}
-                type="date"
-                name="dueDate"
-                className="w-[170px]"
+              <label className="mb-2 block text-sm font-medium">Task Detail</label>
+              <Controller
+                control={control}
+                name="detail"
+                render={({ field: { onChange, value } }) => (
+                  <MarkdownEditor
+                    value={value ?? ''}
+                    onValueChange={onChange}
+                    placeholder="Enter task detail in markdown"
+                  />
+                )}
               />
+              <p className="mt-2 text-sm text-red-400">{errors.description?.message}</p>
             </div>
-            <div className="items-center gap-2">
-              <label className="mb-2 block text-sm font-medium">Priority</label>
-              <select
-                {...register('priority')}
-                name="priority"
-                className="bg-card border-border h-8.5 w-[180px] rounded-lg border px-2 focus:outline-hidden focus-visible:ring"
-              >
-                {TASK_PRIORITY_VALUES.map((priority, index) => (
-                  <option key={index} value={priority}>
-                    {capitalize(priority)}
-                  </option>
-                ))}
-              </select>
+            {/* task label multiselect */}
+            <div>
+              <label className="mb-2 block text-sm font-medium">Task Labels</label>
+              <div className="flex flex-col gap-2">
+                <Controller
+                  name="labels"
+                  control={control}
+                  render={({ field }) => (
+                    <AddLabelMultiSelect
+                      value={field.value || []}
+                      onChange={field.onChange}
+                      fetchFunction={fetchProjectLabels}
+                    />
+                  )}
+                />
+              </div>
+            </div>
+            {/* task assignee multiselect  */}
+            <div>
+              <label className="mb-2 block text-sm font-medium">Task Assignees</label>
+              <div className="flex flex-col gap-2">
+                <Controller
+                  name="assignees"
+                  control={control}
+                  render={({ field }) => (
+                    <AddUserMultiSelect
+                      value={field.value || []}
+                      onChange={field.onChange}
+                      fetchFunction={fetchProjectMembers}
+                    />
+                  )}
+                />
+              </div>
+            </div>
+            {/* Server validation error messages */}
+            <div className="my-4">
+              {state?.success === false && (
+                <ErrorBox key={`error-${errorCount}`} message={state.error} />
+              )}
             </div>
           </section>
-          <p className="mt-2 text-sm text-red-400">{errors.dueDate?.message}</p>
-          <p className="mt-2 text-sm text-red-400">{errors.startDate?.message}</p>
-          <p className="mt-2 text-sm text-red-400">{errors.priority?.message}</p>
-          <p className="mt-2 text-sm text-red-400">{errors.status?.message}</p>
-          <div>
-            <label className="text-outer_space-500 dark:text-platinum-500 mb-2 block text-sm font-medium">
-              Task Detail
-            </label>
-            <Controller
-              control={control}
-              name="detail"
-              render={({ field: { onChange, value } }) => (
-                <MarkdownEditor
-                  value={value ?? ''}
-                  onValueChange={onChange}
-                  placeholder="Enter task detail in markdown"
-                />
-              )}
-            />
-            <p className="mt-2 text-sm text-red-400">{errors.description?.message}</p>
-          </div>
-          {/* TODO add task assignees */}
-          <div>
-            <label className="mb-2 block text-sm font-medium">Task Labels</label>
-            <div className="flex flex-col gap-2">
-              <Controller
-                name="labels"
-                control={control}
-                render={({ field }) => (
-                  <AddLabelMultiSelect
-                    value={field.value || []}
-                    onChange={field.onChange}
-                    fetchFunction={fetchProjectLabels}
-                  />
-                )}
-              />
-            </div>
-          </div>
-          <div>
-            <label className="mb-2 block text-sm font-medium">Task Assignees</label>
-            <div className="flex flex-col gap-2">
-              <Controller
-                name="assignees"
-                control={control}
-                render={({ field }) => (
-                  <AddUserMultiSelect
-                    value={field.value || []}
-                    onChange={field.onChange}
-                    fetchFunction={fetchProjectMembers}
-                  />
-                )}
-              />
-            </div>
-          </div>
-          {/* Server validation error messages */}
-          <div className="my-4">
-            {state?.success === false && (
-              <ErrorBox key={`error-${errorCount}`} message={state.error} />
-            )}
-          </div>
-          <div className="z-1 flex justify-end space-x-3 border-red-500 pt-4">
+
+          <div className="bg-card border-accent sticky right-0 bottom-0 left-0 flex w-full justify-end gap-2 rounded-t-md border-t-1 p-4">
             <Button
               type="button"
               disabled={isPending}
