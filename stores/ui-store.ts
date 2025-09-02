@@ -1,60 +1,42 @@
-// TODO: Task 5.3 - Set up client-side state management with Zustand
-
-/*
-TODO: Implementation Notes for Interns:
-
-UI state management store for:
-- Modal states (create project, create task, etc.)
-- Sidebar state
-- Theme preferences
-- Loading states
-- Error states
-- Notifications/toasts
-
-Install: pnpm add zustand
-
-Example structure:
-import { create } from 'zustand'
+import { create } from 'zustand';
 
 interface UIState {
-  // Modal states
-  isCreateProjectModalOpen: boolean
-  isCreateTaskModalOpen: boolean
-  isTaskDetailModalOpen: boolean
-  selectedTaskId: string | null
+  sidebarOpen: boolean;
+  sidebarCollapsed: boolean;
 
-  // UI states
-  sidebarOpen: boolean
-  theme: 'light' | 'dark'
+  isModalOpen: boolean;
 
-  // Loading states
-  isLoading: boolean
-  loadingMessage: string
+  theme: 'light' | 'dark' | 'system';
 
-  // Actions
-  openCreateProjectModal: () => void
-  closeCreateProjectModal: () => void
-  openCreateTaskModal: () => void
-  closeCreateTaskModal: () => void
-  openTaskDetailModal: (taskId: string) => void
-  closeTaskDetailModal: () => void
-  toggleSidebar: () => void
-  setTheme: (theme: 'light' | 'dark') => void
-  setLoading: (loading: boolean, message?: string) => void
+  toggleSidebar: () => void;
+  setSidebarOpen: (open: boolean) => void;
+  toggleSidebarCollapsed: () => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
+
+  setIsModalOpen: (isOpen: boolean) => void;
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
-  // ... implementation
-}))
-*/
+  // sidebar state
+  sidebarOpen: true,
+  sidebarCollapsed: false,
 
-// Placeholder to prevent import errors
-export const useUIStore = () => {
-  console.log("TODO: Implement UI store with Zustand")
-  return {
-    isCreateProjectModalOpen: false,
-    isCreateTaskModalOpen: false,
-    openCreateProjectModal: () => console.log("TODO: Open create project modal"),
-    closeCreateProjectModal: () => console.log("TODO: Close create project modal"),
-  }
-}
+  // modal state
+  isModalOpen: false,
+
+  // theme preferences
+  theme: 'system',
+
+  // sidebar actions
+  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+  setSidebarOpen: (open) => set({ sidebarOpen: open }),
+  toggleSidebarCollapsed: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+  setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+
+  // modal actions
+  setIsModalOpen: (isOpen) => set({ isModalOpen: isOpen }),
+
+  // theme actions
+  setTheme: (theme) => set({ theme }),
+}));
