@@ -130,7 +130,17 @@ export function KanbanColumnBase({
           <CardContent className="flex flex-grow flex-col gap-2 p-2">
             <SortableContext items={tasksIds}>
               {columnTasks.length > 0 ? (
-                columnTasks.map((task) => <TaskCard key={task.id} task={task} />)
+                columnTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    taskData={task}
+                    kanbanData={{
+                      projectId: projectId,
+                      statusList: statusList,
+                      taskId: task.id,
+                    }}
+                  />
+                ))
               ) : (
                 <div
                   className={cn(

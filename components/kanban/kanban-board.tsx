@@ -247,7 +247,7 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
     // Task -> Column (drop into empty area of column)
     if (isActiveATask && isOverAColumn) {
       setTasks((prev) => {
-        const activeTask = activeData.task as Task;
+        const activeTask = activeData.task as TaskDragData['task'];
         const targetColumnId = overId;
 
         if (activeTask.projectkanbanColumnId === targetColumnId) return prev;
@@ -334,7 +334,18 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
                 statusList={statusList}
               />
             )}
-            {activeTask && <TaskCard key={activeTask.id} task={activeTask} isOverlay />}
+            {activeTask && (
+              <TaskCard
+                key={activeTask.id}
+                taskData={activeTask}
+                kanbanData={{
+                  projectId: projectId,
+                  taskId: activeTask.id,
+                  statusList: statusList,
+                }}
+                isOverlay
+              />
+            )}
           </DragOverlay>,
           document.body,
         )}
