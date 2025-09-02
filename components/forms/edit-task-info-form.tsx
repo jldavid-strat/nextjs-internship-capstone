@@ -1,7 +1,7 @@
 import { updateTaskInfo } from '@/actions/task.actions';
-import { startTransition, useActionState, useEffect, useRef, useState } from 'react';
+import { startTransition, useActionState, useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { EditFormTaskSchema, EditFormTaskType } from '@/lib/validations/task.validations';
+import { FormTaskSchema, FormTaskSchemaType } from '@/lib/validations/task.validations';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TASK_PRIORITY_VALUES } from '@/lib/db/schema/enums';
 import { Input } from '../ui/input';
@@ -11,11 +11,17 @@ import { capitalize } from 'lodash';
 import { ErrorBox } from '../ui/error-box';
 import MarkdownPreview from '@uiw/react-markdown-preview';
 import { useQueryClient } from '@tanstack/react-query';
-import { TaskCardData } from '@/types/types';
 import { Project, Task } from '@/types/db.types';
 import SubHeader from '../ui/subheader';
 import { BookOpenText, Edit } from 'lucide-react';
-import { useSheetStore } from '@/stores/modal-store';
+import { EditTaskCardData } from '@/types/types';
+import { AddLabelMultiSelect } from '../ui/add-label-multi-select';
+import { LabelPreview } from './add-project-label-modal-form';
+import { DEFAULT_COLOR } from '@/lib/validations/project-label.validations';
+import { Badge } from '../ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { AddUserMultiSelect } from '../ui/add-user-multi-select';
+import { useFetchMultiSelect } from '@/hooks/use-fetch-multiselect';
 
 export type EditTaskInfoFormProps = {
   kanbanData: {
@@ -23,15 +29,25 @@ export type EditTaskInfoFormProps = {
     taskId: Task['id'];
     statusList: string[];
   };
-  taskInfoData: EditFormTaskType;
+  taskInfoData: EditTaskCardData;
 };
 
 export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskInfoFormProps) {
   const { taskId, projectId, statusList } = kanbanData;
+
   const [state, updateTaskInfoAction, isPending] = useActionState(
     updateTaskInfo.bind(null, { taskId: taskId, projectId: projectId }),
     undefined,
   );
+
+  const labelIds = useMemo(() => {
+    taskInfoData.labels.map((l) => l.id);
+  }, [taskInfoData.labels]);
+
+  const assigneeIds = useMemo(() => {
+    taskInfoData.assignees.map((u) => u.id);
+  }, [taskInfoData.assignees]);
+
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const {
@@ -40,11 +56,13 @@ export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskI
     control,
     reset,
     formState: { errors },
-  } = useForm<EditFormTaskType>({
+  } = useForm<FormTaskSchemaType>({
     mode: 'onBlur',
-    resolver: zodResolver(EditFormTaskSchema),
+    resolver: zodResolver(FormTaskSchema),
     defaultValues: {
       ...taskInfoData,
+      labels: labelIds ?? [],
+      assignees: assigneeIds ?? [],
       startDate:
         taskInfoData.startDate && new Date(taskInfoData.startDate!).toISOString().split('T')[0],
       dueDate: taskInfoData.dueDate && new Date(taskInfoData.dueDate!).toISOString().split('T')[0],
@@ -53,12 +71,17 @@ export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskI
 
   const formRef = useRef(null);
   const [errorCount, setErrorCount] = useState(0);
+  const _queryClient = useQueryClient();
 
-  const onSubmitHandler = (data: EditFormTaskType) => {
+  const { fetchProjectLabels, fetchProjectMembers } = useFetchMultiSelect(kanbanData.projectId);
+
+  const onSubmitHandler = (data: FormTaskSchemaType) => {
     const formData = new FormData(formRef.current!);
 
     formData.append('detail', data.detail as string);
-
+    formData.append('labels', JSON.stringify([...(data.labels ?? [])]));
+    formData.append('assignees', JSON.stringify([...(data.assignees ?? [])]));
+    // console.log(formData);
     startTransition(() => updateTaskInfoAction(formData));
   };
 
@@ -74,10 +97,15 @@ export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskI
       setErrorCount((prev) => prev + 1);
     }
     if (state?.success === true) {
+      // refresh task list query
+      _queryClient.invalidateQueries({
+        queryKey: ['task-list', projectId],
+      });
+
       console.log('succesful added');
       //   toast
     }
-  }, [state, close]);
+  }, [state, _queryClient, projectId]);
 
   return (
     <form ref={formRef} onSubmit={handleSubmit(onSubmitHandler)} className="space-y-4">
@@ -99,9 +127,7 @@ export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskI
           </Button>
         </section>
         <div>
-          <label className="text-outer_space-500 dark:text-platinum-500 mb-2 block text-sm font-medium">
-            Task Title
-          </label>
+          <label className="mb-2 block text-sm font-medium">Task Title</label>
           <textarea
             {...register('title')}
             readOnly={!isEditing}
@@ -113,9 +139,7 @@ export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskI
           <p className="mt-2 text-sm text-red-400">{errors.title?.message}</p>
         </div>
         <div>
-          <label className="text-outer_space-500 dark:text-platinum-500 mb-2 block text-sm font-medium">
-            Description
-          </label>
+          <label className="mb-2 block text-sm font-medium">Description</label>
           <textarea
             {...register('description')}
             readOnly={!isEditing}
@@ -186,7 +210,7 @@ export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskI
         <p className="mt-2 text-sm text-red-400">{errors.startDate?.message}</p>
         <p className="mt-2 text-sm text-red-400">{errors.priority?.message}</p>
         <p className="mt-2 text-sm text-red-400">{errors.status?.message}</p>
-        <div>
+        <div className="mt-6">
           <label className="mb-2 block text-sm font-medium">Task Detail</label>
           {isEditing ? (
             <>
@@ -207,7 +231,122 @@ export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskI
           )}
           <p className="mt-2 text-sm text-red-400">{errors.detail?.message}</p>
         </div>
+
+        {/* task label multiselect */}
+        <div className="mt-6 mb-2 flex flex-row items-center gap-2">
+          <label className="text-sm font-medium">Task Labels</label>
+          {!isEditing && (
+            <div>
+              {taskInfoData.labels.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {taskInfoData.labels.map((label) => (
+                    <LabelPreview
+                      key={label.id}
+                      name={label.labelName}
+                      color={label.color ?? DEFAULT_COLOR}
+                      className="mt-0"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-primary text-sm italic">No Task Labels</p>
+              )}
+            </div>
+          )}
+        </div>
+        {isEditing && (
+          <div className="flex flex-col gap-2">
+            <Controller
+              name="labels"
+              control={control}
+              render={({ field }) => (
+                <AddLabelMultiSelect
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  fetchFunction={fetchProjectLabels}
+                  defaultValues={taskInfoData.labels}
+                />
+              )}
+            />
+          </div>
+        )}
+
+        <p className="mt-2 text-sm text-red-400">{errors.labels?.message}</p>
+
+        <div className="mt-6 mb-2 flex flex-row items-center gap-2">
+          <label className="text-sm font-medium">Task Assigness</label>
+          {!isEditing && (
+            <div>
+              {taskInfoData.assignees.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {taskInfoData.assignees.map((user, index) => (
+                    <Badge
+                      key={`${user.id}-${index}`}
+                      variant="secondary"
+                      className="flex items-center gap-1 pr-1"
+                    >
+                      {user.imgLink && (
+                        <Avatar className="h-4 w-4">
+                          <AvatarImage
+                            src={user.imgLink}
+                            alt={`${user.firstName} ${user.lastName}`}
+                          />
+                          <AvatarFallback>
+                            {user.firstName.charAt(0)}
+                            {user.lastName.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      <span className="max-w-[100px] truncate text-xs">
+                        {user.primaryEmailAddress}
+                      </span>
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-primary text-sm italic">Task is not assigned</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        <p className="mt-2 text-sm text-red-400">{errors.assignees?.message}</p>
+
+        {isEditing && (
+          <div className="flex flex-col gap-2">
+            <Controller
+              name="assignees"
+              control={control}
+              render={({ field }) => (
+                <AddUserMultiSelect
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  fetchFunction={fetchProjectMembers}
+                  defaultValues={taskInfoData.assignees}
+                />
+              )}
+            />
+          </div>
+        )}
+        {/* task assignee multiselect  */}
+        {/* <div>
+          <label className="mb-2 block text-sm font-medium">Task Assignees</label>
+          <div className="flex flex-col gap-2">
+            <Controller
+              name="assignees"
+              control={control}
+              render={({ field }) => (
+                <AddUserMultiSelect
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  fetchFunction={fetchProjectMembers}
+                />
+              )}
+            />
+          </div>
+        </div> */}
         <p className="mt-2 text-sm text-red-400">{errors.root?.message}</p>
+
         <div className="my-4">
           {state?.success === false && (
             <ErrorBox key={`error-${errorCount}`} message={state.error} />
