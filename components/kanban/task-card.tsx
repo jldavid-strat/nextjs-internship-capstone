@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cva } from 'class-variance-authority';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '../../lib/utils/shadcn-utils';
-import { TaskCardData, TaskDragData } from '@/types/types';
+import { TaskDragData } from '@/types/types';
 import { Calendar, GripVertical, User } from 'lucide-react';
 import { formatDueDate } from '@/lib/utils/format_date';
 import { LabelPreview } from '../forms/add-project-label-modal-form';
@@ -96,8 +96,8 @@ export function TaskCard({ taskData, isOverlay, kanbanData }: TaskCardProps) {
           <div className="mb-3 flex flex-wrap gap-1">
             {taskData.labels.map((label) => (
               <LabelPreview
-                key={label.projectLabelId}
-                name={label.name}
+                key={label.id}
+                name={label.labelName}
                 color={label.color ?? DEFAULT_COLOR}
                 className="mt-0"
               />
@@ -153,10 +153,10 @@ export function TaskCard({ taskData, isOverlay, kanbanData }: TaskCardProps) {
               <div className="flex -space-x-2">
                 {taskData.assignees.slice(0, 2).map((assignee, index) => (
                   <Avatar
-                    key={`${assignee.userId}-${index}`}
+                    key={`${assignee.id}-${index}`}
                     className="border-background h-8 w-8 border-2"
                   >
-                    <AvatarImage src={assignee.userImgLink} alt={assignee.userImgLink} />
+                    <AvatarImage src={assignee.imgLink} alt={assignee.imgLink} />
                     <AvatarFallback className="text-xs font-medium">
                       {assignee.firstName.charAt(0)}
                       {assignee.lastName.charAt(0)}
