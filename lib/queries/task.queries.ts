@@ -49,9 +49,12 @@ export async function getTaskList(
     const taskLabelsData = await db
       .select({
         taskId: taskLabels.taskId,
-        projectLabelId: projectLabels.id,
-        name: labels.name,
+        id: projectLabels.id,
+        projectId: projectLabels.projectId,
         color: projectLabels.color,
+        isCustom: projectLabels.isCustom,
+        labelId: labels.id,
+        labelName: labels.name,
       })
       .from(taskLabels)
       .innerJoin(projectLabels, eq(projectLabels.id, taskLabels.projectLabelId))
@@ -62,23 +65,29 @@ export async function getTaskList(
     const taskAssigneesData = await db
       .select({
         taskId: taskAssignees.taskId,
-        userId: users.id,
+        id: users.id,
+        clerkId: users.clerkId,
         firstName: users.firstName,
         lastName: users.lastName,
         primaryEmailAddress: users.primaryEmailAddress,
-        userImgLink: users.imgLink,
+        imgLink: users.imgLink,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
       })
       .from(taskAssignees)
-      .innerJoin(users, eq(taskAssignees.assignedById, users.id))
+      .innerJoin(users, eq(taskAssignees.assigneeId, users.id))
       .where(inArray(taskAssignees.taskId, taskIds));
 
     // group labels and assignees by task id
     const labelsMap: TaskLabelMap = taskLabelsData.reduce((acc, item) => {
       if (!acc[item.taskId]) acc[item.taskId] = [];
       acc[item.taskId].push({
-        projectLabelId: item.projectLabelId,
-        name: item.name,
+        id: item.id,
+        projectId: item.projectId,
         color: item.color,
+        isCustom: item.isCustom,
+        labelId: item.id,
+        labelName: item.labelName,
       });
       return acc;
     }, {} as TaskLabelMap);
@@ -86,11 +95,14 @@ export async function getTaskList(
     const assigneesMap: TaskAssgineeMap = taskAssigneesData.reduce((acc, item) => {
       if (!acc[item.taskId]) acc[item.taskId] = [];
       acc[item.taskId].push({
-        userId: item.userId,
+        clerkId: item.clerkId,
+        id: item.id,
         firstName: item.firstName,
         lastName: item.lastName,
         primaryEmailAddress: item.primaryEmailAddress,
-        userImgLink: item.userImgLink,
+        imgLink: item.imgLink,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
       });
       return acc;
     }, {} as TaskAssgineeMap);
