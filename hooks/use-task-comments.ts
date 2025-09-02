@@ -2,7 +2,7 @@
 
 import { getTaskComments } from '@/actions/task_comment.actions';
 import { Task, TaskCommentQuery } from '@/types/db.types';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 type useTasksCommentsResult = {
   taskComments: TaskCommentQuery[];
