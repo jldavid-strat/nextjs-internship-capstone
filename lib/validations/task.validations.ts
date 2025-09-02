@@ -87,3 +87,21 @@ export const AssignTaskSchema = z.object({
 });
 
 export type FormTaskSchemaType = z.input<typeof FormTaskSchema>;
+
+// TASK COMMENTS
+
+export const TaskCommentSchema = z.object({
+  content: z
+    .string(errorMessages.invalidType('Comment Content', 'a text'))
+    .min(MIN_CHAR, errorMessages.minChar('Task comment'))
+    .trim(),
+  projectId: z.uuidv4(errorMessages.uuid('Project ID')).trim(),
+  taskId: z.int(errorMessages.invalidType('Task ID', 'a number')).nonnegative(),
+  authorId: z.uuidv4(errorMessages.uuid('Author ID')).trim(),
+});
+
+export const FormTaskCommentSchema = TaskCommentSchema.pick({
+  content: true,
+});
+
+export type FormTaskCommentSchemaType = z.input<typeof FormTaskCommentSchema>;
