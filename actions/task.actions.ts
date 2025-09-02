@@ -18,7 +18,6 @@ import { DatabaseOperationError, UnauthorizedError } from '@/constants/error';
 import { getErrorMessage } from '@/lib/utils/error.utils';
 import { addTaskLabels, updateTaskLabels } from './task_labels.actions';
 import { assignTask, updateTaskAssignees } from './task_assignee.actions';
-import { getTaskLabels } from '@/lib/queries/task-label.queries';
 
 export async function createTask(
   kanbanData: CreateTaskProps,
@@ -264,24 +263,31 @@ export async function updateTaskInfo(
   }
 }
 
-// export async function deleteTask(taskId: Task['id']): Promise<QueryResult> {
-//   try {
-//     await db.delete(tasks).where(eq(tasks.id, taskId));
+export async function deleteTask(
+  taskId: Task['id'],
+  projectId: Project['id'],
+): Promise<ActionResult> {
+  try {
+    const currentUserId = await getCurrentUserId();
+    const { isAuthorize } = await checkMemberPermission(
+      currentUserId,
+      projectId,
+      RESOURCES.TASKS,
+      ACTIONS.UPDATE,
+    );
 
-//     // TODO: also delete the records of team in teamMember
+    if (!isAuthorize) throw new Error('User is unauthorized to delet tasks');
 
-//     return { success: true, message: `Task successfully deleted`, data: undefined };
-//   } catch (error) {
-//     return {
-//       success: false,
-//       message: `Failed to delete task. Error ${error}`,
-//       error: JSON.stringify(error),
-//     };
-//   }
-// }
+    await db.delete(tasks).where(eq(tasks.id, taskId));
 
-// moves task to another column
-// TODO add validations
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: getErrorMessage(error),
+    };
+  }
+}
 
 export async function moveTask(moveTaskData: MoveTaskDataType) {
   try {
