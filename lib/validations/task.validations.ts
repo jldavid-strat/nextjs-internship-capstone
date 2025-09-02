@@ -61,7 +61,7 @@ export const AssignTaskSchema = z.object({
   assignees: z.array(z.uuidv4(errorMessages.uuid('Assignee ID')).trim()),
 });
 
-export const InserFormTaskSchema = FormTaskSchema.pick({
+export const InsertFormTaskSchema = FormTaskSchema.pick({
   title: true,
   description: true,
   detail: true,
@@ -72,4 +72,16 @@ export const InserFormTaskSchema = FormTaskSchema.pick({
   status: true,
   assignees: true,
 });
-export type InserFormTaskType = z.input<typeof InserFormTaskSchema>;
+
+export const EditFormTaskSchema = FormTaskSchema.pick({
+  title: true,
+  description: true,
+  detail: true,
+  priority: true,
+  startDate: true,
+  dueDate: true,
+  status: true,
+});
+
+export type InsertFormTaskType = z.input<typeof InsertFormTaskSchema>;
+export type EditFormTaskType = z.input<typeof EditFormTaskSchema>;
