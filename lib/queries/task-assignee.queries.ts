@@ -1,6 +1,6 @@
 import { Task } from '@/types/db.types';
 import { db } from '../db/connect_db';
-import { taskAssignees, tasks, users } from '../db/schema/schema';
+import { taskAssignees, users } from '../db/schema/schema';
 import { eq } from 'drizzle-orm';
 
 // gets user data of assignees
@@ -9,11 +9,10 @@ export async function getTaskAssignees(taskId: Task['id']) {
     const taskAssigneeList = await db
       .select({ assigneeUserData: { ...users } })
       .from(taskAssignees)
-      .innerJoin(tasks, eq(tasks.id, taskAssignees.taskId))
       .innerJoin(users, eq(users.id, taskAssignees.assigneeId))
-      .where(eq(tasks.id, taskId));
+      .where(eq(taskAssignees.taskId, taskId));
 
-    return taskAssigneeList;
+    return taskAssigneeList.map((ta) => ta.assigneeUserData);
   } catch (error) {
     console.error(error);
   }
