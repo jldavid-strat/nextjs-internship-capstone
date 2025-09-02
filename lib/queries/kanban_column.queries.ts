@@ -86,10 +86,33 @@ export async function getColumnById(projectColumnId: ProjectKanbanColumn['id']) 
       })
       .from(projectKanbanColumns)
       .innerJoin(kanbanColumns, eq(kanbanColumns.id, projectKanbanColumns.kanbanColumnId))
-      .where(and(eq(projectKanbanColumns.id, projectColumnId)));
+      .where(eq(projectKanbanColumns.id, projectColumnId));
 
     console.log('projectColumnId', projectColumnId);
     console.log('columnData', columnData);
+
+    return columnData;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function getProjectColumnByName(
+  projectId: Project['id'],
+  kanbanName: KanbanColumn['name'],
+) {
+  try {
+    const [columnData] = await db
+      .select({
+        kanbanColumnId: kanbanColumns.id,
+        projectColumnId: projectKanbanColumns.id,
+        name: kanbanColumns.name,
+      })
+      .from(projectKanbanColumns)
+      .innerJoin(kanbanColumns, eq(kanbanColumns.id, projectKanbanColumns.kanbanColumnId))
+      .where(
+        and(eq(projectKanbanColumns.projectId, projectId), eq(kanbanColumns.name, kanbanName)),
+      );
 
     return columnData;
   } catch (error) {
