@@ -1,3 +1,4 @@
+import { ProjectLabelTableData } from '@/components/data-table/project-label-table';
 import {
   KanbanColumn,
   Label,
@@ -80,13 +81,13 @@ export type TaskQueryResult = {
 
 export type TaskListType = TaskQueryResult[];
 
-type TaskLabel = {
+export type TaskLabel = {
   projectLabelId: ProjectLabel['id'];
   name: Label['name'];
   color: ProjectLabel['color'];
 };
 
-type TaskAssignee = {
+export type TaskAssignee = {
   userId: User['id'];
   firstName: User['firstName'];
   lastName: User['lastName'];
@@ -94,14 +95,27 @@ type TaskAssignee = {
   userImgLink: User['imgLink'];
 };
 export interface TaskCardData extends Task {
-  assignees: TaskAssignee[];
-  labels: TaskLabel[];
+  assignees: User[];
+  labels: ProjectLabelTableData[];
+}
+
+export interface EditTaskCardData {
+  id: Task['id'];
+  title: Task['title'];
+  description: Task['description'];
+  detail: Task['detail'];
+  status: Task['status'];
+  priority: Task['priority'];
+  startDate: Task['startDate'];
+  dueDate: Task['dueDate'];
+  labels: ProjectLabelTableData[];
+  assignees: User[];
 }
 
 export type TaskLabelMap = {
-  [taskId: Task['id']]: TaskLabel[];
+  [taskId: Task['id']]: ProjectLabelTableData[];
 };
 
 export type TaskAssgineeMap = {
-  [taskId: Task['id']]: TaskAssignee[];
+  [taskId: Task['id']]: User[];
 };
