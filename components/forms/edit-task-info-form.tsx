@@ -99,7 +99,7 @@ export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskI
     if (state?.success === true) {
       // refresh task list query
       _queryClient.invalidateQueries({
-        queryKey: ['task-list', projectId],
+        queryKey: ['tasks', projectId],
       });
 
       console.log('succesful added');
