@@ -1,9 +1,9 @@
 'use client';
 
 import { createTask } from '@/actions/task.actions';
-import { startTransition, useActionState, useCallback, useEffect, useRef, useState } from 'react';
+import { startTransition, useActionState, useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { InsertFormTaskSchema, InsertFormTaskType } from '@/lib/validations/task.validations';
+import { FormTaskSchema, FormTaskSchemaType } from '@/lib/validations/task.validations';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TASK_PRIORITY_VALUES } from '@/lib/db/schema/enums';
 import { Input } from '../ui/input';
@@ -12,15 +12,13 @@ import { Button } from '../ui/button';
 import { capitalize } from 'lodash';
 import { ErrorBox } from '../ui/error-box';
 import { AddLabelMultiSelect } from '../ui/add-label-multi-select';
-import { getProjectLabels } from '@/actions/project_labels.actions';
-import { ProjectLabelTableData } from '../data-table/project-label-table';
-import { getProjectMembers } from '@/actions/project_member.actions';
-import { ProjectKanbanColumn, User } from '@/types/db.types';
+import { ProjectKanbanColumn } from '@/types/db.types';
 import { AddUserMultiSelect } from '../ui/add-user-multi-select';
 import { FilePlus2, Plus } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import Modal from '../ui/modal';
 import { Badge } from '../ui/badge';
+import { useFetchMultiSelect } from '../../hooks/use-fetch-multiselect';
 
 // Integration:
 // - Use task validation schema
@@ -51,8 +49,8 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
     control,
     reset,
     formState: { errors },
-  } = useForm<InsertFormTaskType>({
-    resolver: zodResolver(InsertFormTaskSchema),
+  } = useForm<FormTaskSchemaType>({
+    resolver: zodResolver(FormTaskSchema),
     defaultValues: {
       priority: 'none',
       status: kanbanData.kanbanName,
@@ -66,10 +64,11 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [errorCount, setErrorCount] = useState<number>(0);
+  const { fetchProjectLabels, fetchProjectMembers } = useFetchMultiSelect(kanbanData.projectId);
 
   const formRef = useRef(null);
 
-  const onSubmitHandler = (data: InsertFormTaskType) => {
+  const onSubmitHandler = (data: FormTaskSchemaType) => {
     const formData = new FormData(formRef.current!);
 
     formData.append('detail', data.detail ?? '');
@@ -78,23 +77,6 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
 
     startTransition(() => createTaskAction(formData));
   };
-  const fetchProjectLabels = useCallback(
-    async (searchTerm: string): Promise<ProjectLabelTableData[]> => {
-      return (await getProjectLabels(kanbanData.projectId, searchTerm)) ?? [];
-    },
-    [kanbanData.projectId],
-  );
-  const fetchProjectMembers = useCallback(
-    async (searchTerm: string): Promise<User[]> => {
-      const maxCount = 4;
-      const projectMembers =
-        (await getProjectMembers(kanbanData.projectId, searchTerm, maxCount)) ?? [];
-
-      const userData = projectMembers.map((u) => u.userData);
-      return userData;
-    },
-    [kanbanData.projectId],
-  );
 
   useEffect(() => {
     if (state?.success === false && state?.error) {
