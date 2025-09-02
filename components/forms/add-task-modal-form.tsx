@@ -108,7 +108,7 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
             reset();
           }
         }}
-        className="max-h-[700px] overflow-x-hidden p-0 sm:max-w-[600px] lg:max-w-[600px]"
+        className="max-h-[700px] overflow-x-hidden p-0 sm:max-w-[600px] lg:max-w-[700px]"
         triggerComponent={
           <Button variant={'outline'} className="border-0 bg-transparent dark:bg-transparent">
             <Plus size={12} />
@@ -204,7 +204,7 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
               <p className="mt-2 text-sm text-red-400">{errors.description?.message}</p>
             </div>
             {/* task label multiselect */}
-            <div>
+            <div className="mt-2">
               <label className="mb-2 block text-sm font-medium">Task Labels</label>
               <div className="flex flex-col gap-2">
                 <Controller
@@ -221,7 +221,7 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
               </div>
             </div>
             {/* task assignee multiselect  */}
-            <div>
+            <div className="mt-2">
               <label className="mb-2 block text-sm font-medium">Task Assignees</label>
               <div className="flex flex-col gap-2">
                 <Controller
