@@ -22,12 +22,12 @@ export default function ViewTaskModal() {
   // manage scroll-lock override when submitting edit task info form
   useEffect(() => {
     if (isTaskOpen) {
-      document.body.classList.add('task-sheet-open');
+      document.body.style.overflow = 'auto';
     } else {
-      document.body.classList.remove('task-sheet-open');
+      document.body.style.overflow = '';
     }
     return () => {
-      document.body.classList.remove('task-sheet-open');
+      document.body.style.overflow = '';
     };
   }, [isTaskOpen]);
 
