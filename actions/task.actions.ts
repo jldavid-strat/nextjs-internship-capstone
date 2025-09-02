@@ -6,22 +6,19 @@ import { checkMemberPermission } from '@/lib/queries/permssions.queries';
 import { getMaxNumPositionByColumnId, getTaskById } from '@/lib/queries/task.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
 import getDataDiff from '@/lib/utils/data_diff';
-import { TaskSchema } from '@/lib/validations/task.validations';
+import { EditTaskInfoSchema, InsertTaskSchema } from '@/lib/validations/task.validations';
 import { MoveTaskDataType, ActionResult } from '@/types/types';
 import { Project, ProjectLabel, Task, User } from '@/types/db.types';
 import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
-import { getCompletedColumnId } from '@/lib/queries/kanban_column.queries';
+import { getCompletedColumnId, getProjectColumnByName } from '@/lib/queries/kanban_column.queries';
 import { serverEvents } from '@/lib/events/event-emitter';
 import { CreateTaskProps } from '@/components/forms/add-task-modal-form';
 import { DatabaseOperationError, UnauthorizedError } from '@/constants/error';
 import { getErrorMessage } from '@/lib/utils/error.utils';
-import { addTaskLabels } from './task_labels.actions';
-import { assignTask } from './task_assignee.actions';
-
-const InsertTaskSchema = TaskSchema.omit({
-  updatedAt: true,
-});
+import { addTaskLabels, updateTaskLabels } from './task_labels.actions';
+import { assignTask, updateTaskAssignees } from './task_assignee.actions';
+import { getTaskLabels } from '@/lib/queries/task-label.queries';
 
 export async function createTask(
   kanbanData: CreateTaskProps,
@@ -43,6 +40,8 @@ export async function createTask(
     if (!isAuthorize) throw new UnauthorizedError('User is unauthorized to create task');
 
     const transactionResult = await db.transaction(async (tx) => {
+      // get the actual kanban column by status
+
       // default to null if empty
       const currentMaxPosition =
         (await getMaxNumPositionByColumnId(kanbanData.projectColumnId, kanbanData.projectId, tx)) ??
@@ -60,8 +59,8 @@ export async function createTask(
       const taskLabelIds = JSON.parse(taskData.get('labels') as string) as ProjectLabel['id'][];
       const taskAssigneeIds = JSON.parse(taskData.get('assignees') as string) as User['id'][];
 
-      const isNotAssigned = taskAssigneeIds.length === 0 ? true : false;
-      const hasLabels = taskLabelIds.length === 0 ? false : true;
+      const isNotAssigned = taskAssigneeIds.length === 0;
+      const hasLabels = taskLabelIds.length === 0;
 
       const validatedData = InsertTaskSchema.parse({
         title: taskData.get('title') as string,
@@ -123,17 +122,7 @@ export async function createTask(
   }
 }
 
-const EditTaskSchema = TaskSchema.partial().pick({
-  title: true,
-  description: true,
-  detail: true,
-  priority: true,
-  startDate: true,
-  dueDate: true,
-  updatedAt: true,
-});
-
-export async function updateTask(
+export async function updateTaskInfo(
   queryIds: { taskId: Task['id']; projectId: Project['id'] },
   previousState: unknown,
   taskData: FormData,
@@ -149,21 +138,39 @@ export async function updateTask(
       ACTIONS.UPDATE,
     );
 
-    if (!isAuthorize) throw new Error('User is unauthorized to create task');
-    const startDateString = taskData.get('startDate') || null;
-    const dueDateString = taskData.get('dueDate') || null;
-
+    if (!isAuthorize) throw new Error('User is unauthorized to update task info');
     const { success, data: currentTask } = await getTaskById(queryIds.taskId);
+
     console.log(currentTask);
     if (!success || !currentTask) {
       throw new Error('Something went wrong, Please try again');
     }
+
+    const startDateString = taskData.get('startDate') || null;
+    const dueDateString = taskData.get('dueDate') || null;
+
+    const taskLabelIds = JSON.parse(taskData.get('labels') as string) as ProjectLabel['id'][];
+    const taskAssigneeIds = JSON.parse(taskData.get('assignees') as string) as User['id'][];
+
+    console.log('taskLabelIds', taskLabelIds);
+    console.log('taskAssigneeIds', taskAssigneeIds);
+
+    const isNotAssigned = taskAssigneeIds.length === 0;
+
+    const originalProjectColumn = await getProjectColumnByName(
+      queryIds.projectId,
+      currentTask.status,
+    );
+
+    if (!originalProjectColumn) throw new Error('Something went wrong, Please try again');
+
     const originalTaskData = {
       title: currentTask.title as string,
       description: currentTask.description as string,
       detail: currentTask.detail as string,
       priority: currentTask.priority as string,
       startDate: currentTask.startDate as string,
+      status: currentTask.status as string,
       dueDate: currentTask.dueDate as string,
     };
 
@@ -172,26 +179,81 @@ export async function updateTask(
       description: taskData.get('description') as string,
       detail: taskData.get('detail') as string,
       priority: taskData.get('priority') as string,
+      status: taskData.get('status') as string,
       startDate: startDateString as string,
       dueDate: dueDateString as string,
     };
+
     const changes = getDataDiff(originalTaskData, currentTaskData);
 
-    if (changes === null) throw new Error('No changes made');
+    console.log('changes', changes);
 
-    const validatedData = EditTaskSchema.parse({
-      ...changes,
-      updatedAt: new Date(),
+    // dont throw error for now
+    if (changes === null) console.info('[UPDATING TASK]: No changes made');
+
+    const validatedData = EditTaskInfoSchema.parse({
+      ...currentTaskData,
     });
 
-    console.log(validatedData);
+    let newKanbanName = validatedData.status.toLowerCase();
 
+    console.log('validatedData', validatedData);
+
+    // if status is changed move the task the new column
+    if (changes?.status) {
+      console.log('moving task to new column...');
+      const targetProjectColumn = await getProjectColumnByName(
+        queryIds.projectId,
+        validatedData.status,
+      );
+
+      if (!targetProjectColumn) {
+        throw new Error('Something went wrong, Please try again');
+      }
+
+      await moveTask({
+        taskId: queryIds.taskId,
+        sourceColumnId: originalProjectColumn.projectColumnId,
+        targetColumnId: targetProjectColumn.projectColumnId,
+        projectId: queryIds.projectId,
+        newPosition: 0,
+      });
+
+      newKanbanName = targetProjectColumn.name;
+    }
+
+    console.log('updating task labels...');
+
+    const { success: isUpdateLabelSuccess } = await updateTaskLabels(
+      queryIds.taskId,
+      queryIds.projectId,
+      taskLabelIds,
+    );
+
+    if (!isUpdateLabelSuccess) throw new DatabaseOperationError('Failed to update task');
+
+    console.log('updating task assignees...');
+
+    const { success: isUpdateAssigneeSuccess } = await updateTaskAssignees(
+      queryIds.taskId,
+      queryIds.projectId,
+      taskAssigneeIds,
+    );
+
+    if (!isUpdateAssigneeSuccess) throw new DatabaseOperationError('Failed to update task');
+
+    console.log('updating task...');
     await db
       .update(tasks)
-      .set(validatedData)
+      .set({
+        ...validatedData,
+        isCompleted: newKanbanName === 'complteted',
+        isNotAssigned: isNotAssigned,
+      })
       .where(and(eq(tasks.id, queryIds.taskId), eq(tasks.projectId, queryIds.projectId)));
 
-    revalidatePath(`/(dashboard)`);
+    console.log('updated task successfully...');
+    // revalidatePath(`/(dashboard)`);
 
     return { success: true };
   } catch (error) {
