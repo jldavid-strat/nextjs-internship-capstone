@@ -2,7 +2,6 @@
 
 import { reorderKanbanColumns } from '@/actions/kanban_column.actions';
 import { moveTask } from '@/actions/task.actions';
-import { serverEvents } from '@/lib/events/event-emitter';
 import { Task, ProjectKanbanColumn } from '@/types/db.types';
 import { MoveTaskDataType, ReorderColumnDataType } from '@/types/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -117,14 +116,6 @@ export function useMoveTask(projectId: string) {
       //   // TODO call toast method to show successful toast
       queryClient.invalidateQueries({
         queryKey: ['tasks', projectId],
-      });
-      serverEvents.emit('task-moved', {
-        type: 'task-moved',
-        taskId: 1,
-        sourceColumnId: 'some example',
-        targetColumnId: 'some example',
-        newPosition: 1,
-        projectId: 'some example',
       });
       console.log('Task moved successfully');
     },
