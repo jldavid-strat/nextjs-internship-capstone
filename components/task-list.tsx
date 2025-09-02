@@ -4,12 +4,11 @@ import ViewTaskDetailButton from './view-task-detail-button';
 
 export async function TaskList({
   projectId,
-  kanbanColumnId,
 }: {
   kanbanColumnId: KanbanColumn['id'];
   projectId: Project['id'];
 }) {
-  const { data: taskList } = await getTaskList(projectId, kanbanColumnId);
+  const { data: taskList } = await getTaskList(projectId);
 
   return (
     <div className="min-h-[400px] space-y-3 p-4">
