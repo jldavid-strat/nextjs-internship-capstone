@@ -93,7 +93,7 @@ export default function useKanbanEvents(projectId: Project['id']) {
         };
 
         eventSource.onerror = (error) => {
-          console.error('SSE connection error:', error);
+          console.log('SSE connection error:', error);
           eventSource.close();
 
           // only  retry if we should still be connecting and haven't exceeded max retries
