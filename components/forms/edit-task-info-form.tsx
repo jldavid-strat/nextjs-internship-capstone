@@ -179,7 +179,7 @@ export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskI
             </select>
           </div>
         </section>
-        <section className="grid grid-cols-2 gap-2">
+        <section className="mt-2 grid grid-cols-2 gap-2">
           <div>
             <label className="mb-2 block text-sm font-medium">Due Date</label>
             <Input
@@ -227,7 +227,13 @@ export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskI
               />
             </>
           ) : (
-            <MarkdownPreview source={taskInfoData.detail?.trim() || '*No task detail*'} />
+            <MarkdownPreview
+              source={taskInfoData.detail?.trim() || '*No task detail*'}
+              style={{
+                backgroundColor: 'transparent',
+                color: 'inherit',
+              }}
+            />
           )}
           <p className="mt-2 text-sm text-red-400">{errors.detail?.message}</p>
         </div>
