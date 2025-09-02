@@ -51,4 +51,15 @@ export interface ProjectLabelData extends ProjectLabel {
   taskId: Task['id'];
 }
 
+export type TaskCommentQuery = {
+  taskCommentId: TaskComment['id'];
+  authorId: User['id'];
+  firstName: User['firstName'];
+  lastName: User['lastName'];
+  primaryEmailAdress: User['primaryEmailAddress'];
+  userImgLink: User['imgLink'];
+  content: TaskComment['content'];
+  createdAt: TaskComment['createdAt'];
+};
+
 export type ProjectLabels = ProjectLabelData;
