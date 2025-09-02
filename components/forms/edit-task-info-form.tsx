@@ -70,7 +70,7 @@ export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskI
   });
 
   const formRef = useRef(null);
-  const [errorCount, setErrorCount] = useState(0);
+  const [errorCount, setErrorCount] = useState<number>(0);
   const _queryClient = useQueryClient();
 
   const { fetchProjectLabels, fetchProjectMembers } = useFetchMultiSelect(kanbanData.projectId);
@@ -319,42 +319,26 @@ export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskI
           )}
         </div>
 
-        <p className="mt-2 text-sm text-red-400">{errors.assignees?.message}</p>
-
-        {isEditing && (
-          <div className="flex flex-col gap-2">
-            <Controller
-              name="assignees"
-              control={control}
-              render={({ field }) => (
-                <AddUserMultiSelect
-                  value={field.value || []}
-                  onChange={field.onChange}
-                  fetchFunction={fetchProjectMembers}
-                  defaultValues={taskInfoData.assignees}
-                />
-              )}
-            />
-          </div>
-        )}
         {/* task assignee multiselect  */}
-        {/* <div>
-          <label className="mb-2 block text-sm font-medium">Task Assignees</label>
-          <div className="flex flex-col gap-2">
-            <Controller
-              name="assignees"
-              control={control}
-              render={({ field }) => (
-                <AddUserMultiSelect
-                  value={field.value || []}
-                  onChange={field.onChange}
-                  fetchFunction={fetchProjectMembers}
-                />
-              )}
-            />
-          </div>
-        </div> */}
-        <p className="mt-2 text-sm text-red-400">{errors.root?.message}</p>
+        {isEditing && (
+          <>
+            <div className="flex flex-col gap-2">
+              <Controller
+                name="assignees"
+                control={control}
+                render={({ field }) => (
+                  <AddUserMultiSelect
+                    value={field.value || []}
+                    onChange={field.onChange}
+                    fetchFunction={fetchProjectMembers}
+                    defaultValues={taskInfoData.assignees}
+                  />
+                )}
+              />
+            </div>
+            <p className="mt-2 text-sm text-red-400">{errors.assignees?.message}</p>
+          </>
+        )}
 
         <div className="my-4">
           {state?.success === false && (
