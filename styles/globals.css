@@ -162,3 +162,10 @@
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
 }
+
+/* disable scroll lock for sheet component */
+@layer base {
+  body.task-sheet-open {
+    overflow: auto !important;
+  }
+}
