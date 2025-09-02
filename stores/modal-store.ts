@@ -1,5 +1,6 @@
 'use client';
 
+import { TaskSheetProps } from '@/components/dropdowns/task-dropdown';
 import { KanbanColumn, Label, Task } from '@/types/db.types';
 import { create } from 'zustand';
 
@@ -92,3 +93,19 @@ export const useModalActions = () => {
     closeAll: closeAllModals,
   };
 };
+
+type SheetStore = {
+  isTaskOpen: boolean;
+  taskSheetData: TaskSheetProps | null;
+  open: (taskSheetData: TaskSheetProps) => void;
+  close: () => void;
+  reset: () => void;
+};
+
+export const useSheetStore = create<SheetStore>((set) => ({
+  isTaskOpen: false,
+  taskSheetData: null,
+  open: (taskSheetData) => set({ isTaskOpen: true, taskSheetData }),
+  close: () => set({ isTaskOpen: false }),
+  reset: () => set({ isTaskOpen: false, taskSheetData: null }),
+}));
