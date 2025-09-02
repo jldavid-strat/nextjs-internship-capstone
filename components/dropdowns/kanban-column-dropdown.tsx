@@ -55,7 +55,7 @@ export default function KanbanColumnDropdown({
           description: description,
         }}
       />
-      <DeleteAlertDialog<number>
+      <DeleteAlertDialog
         alertDescription="This action cannot be undone. This will delete the corresponding kanban column and all the task included in it"
         isOpen={isDeleteOpen}
         setIsOpen={setIsDeleteOpen}

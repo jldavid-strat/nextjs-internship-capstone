@@ -49,7 +49,7 @@ export default function TaskCardDropdown({ kanbanData, taskData }: TaskSheetProp
   }
   return (
     <>
-      <DeleteAlertDialog<number>
+      <DeleteAlertDialog
         alertDescription="This action cannot be undone. This will delete the corresponding task and all the related included in it"
         isOpen={isDeleteOpen}
         setIsOpen={setIsDeleteOpen}

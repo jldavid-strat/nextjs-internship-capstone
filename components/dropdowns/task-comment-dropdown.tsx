@@ -49,7 +49,7 @@ export default function TaskCommentDropdown({
   }
   return (
     <>
-      <DeleteAlertDialog<number>
+      <DeleteAlertDialog
         alertDescription="This action cannot be undone. This will delete the task comment"
         isOpen={isDeleteOpen}
         setIsOpen={setIsDeleteOpen}
