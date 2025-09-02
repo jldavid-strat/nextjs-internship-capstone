@@ -227,13 +227,16 @@ export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskI
               />
             </>
           ) : (
-            <MarkdownPreview
-              source={taskInfoData.detail?.trim() || '*No task detail*'}
-              style={{
-                backgroundColor: 'transparent',
-                color: 'inherit',
-              }}
-            />
+            <>
+              <MarkdownPreview
+                className="bg-accent border-input h-20 rounded-sm border-1 p-2"
+                source={taskInfoData.detail?.trim() || '*No task detail*'}
+                style={{
+                  backgroundColor: 'transparent',
+                  color: 'inherit',
+                }}
+              />
+            </>
           )}
           <p className="mt-2 text-sm text-red-400">{errors.detail?.message}</p>
         </div>
