@@ -6,6 +6,8 @@ import EditTaskInfoForm from '../forms/edit-task-info-form';
 import { Project, Task } from '@/types/db.types';
 import { useSheetStore } from '@/stores/modal-store';
 import { useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import TaskCommentSection from '../task/task-comment-section';
 
 export type ViewTaskModalProps = {
   taskData: TaskCardData;
@@ -44,10 +46,24 @@ export default function ViewTaskModal() {
           <SheetDescription>View or make changes to your the task here.</SheetDescription>
         </SheetHeader>
 
-        <EditTaskInfoForm
-          kanbanData={taskSheetData.kanbanData}
-          taskInfoData={taskSheetData.taskData}
-        />
+        <Tabs defaultValue="task-info">
+          <TabsList className="ml-4">
+            <TabsTrigger value="task-info">Task Info</TabsTrigger>
+            <TabsTrigger value="task-comments">Comments</TabsTrigger>
+          </TabsList>
+          <TabsContent value="task-info">
+            <EditTaskInfoForm
+              kanbanData={taskSheetData.kanbanData}
+              taskInfoData={taskSheetData.taskData}
+            />
+          </TabsContent>
+          <TabsContent value="task-comments">
+            <TaskCommentSection
+              taskId={taskSheetData.kanbanData.taskId}
+              projectId={taskSheetData.kanbanData.projectId}
+            />
+          </TabsContent>
+        </Tabs>
       </SheetContent>
     </Sheet>
   );
