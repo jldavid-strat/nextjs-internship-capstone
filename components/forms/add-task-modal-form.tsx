@@ -19,10 +19,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import Modal from '../ui/modal';
 import { Badge } from '../ui/badge';
 import { useFetchMultiSelect } from '../../hooks/use-fetch-multiselect';
+import { DialogClose } from '@radix-ui/react-dialog';
 
 // Integration:
-// - Use task validation schema
-// - Call task creation/update API
 // - Update board state optimistically
 // - Handle file uploads
 // - Real-time updates for comments
@@ -246,14 +245,16 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
           </section>
 
           <div className="bg-card border-accent sticky right-0 bottom-0 left-0 flex w-full justify-end gap-2 rounded-t-md border-t-1 p-4">
-            <Button
-              type="button"
-              disabled={isPending}
-              variant={'cancel'}
-              onClick={() => setIsModalOpen(false)}
-            >
-              Cancel
-            </Button>
+            <DialogClose asChild>
+              <Button
+                type="button"
+                disabled={isPending}
+                variant={'cancel'}
+                onClick={() => setIsModalOpen(false)}
+              >
+                Cancel
+              </Button>
+            </DialogClose>
             <Button
               type="submit"
               disabled={isPending}
