@@ -8,6 +8,7 @@ export type MemberValue = Array<{ userId: string; role: string }>;
 
 interface MemberMultiSelectProps {
   value: Array<User['id']>;
+  defaultValues?: Array<User>;
   onChange: (value: Array<User['id']>) => void;
   fetchFunction: (searchTerm: string) => Promise<User[]>;
   placeholder?: string;
@@ -21,6 +22,7 @@ interface MemberMultiSelectProps {
 
 export function AddUserMultiSelect({
   value = [],
+  defaultValues = [],
   onChange,
   fetchFunction,
   placeholder = 'Select users...',
@@ -41,6 +43,14 @@ export function AddUserMultiSelect({
 
   // Extract user IDs from the value array - memoize to prevent infinite re-renders
   const selectedUserIds = useMemo(() => value.map((item) => item), [value]);
+
+  // initialize selected users from defaultValues on mount
+  useEffect(() => {
+    if (defaultValues && defaultValues.length > 0) {
+      setSelectedUsers(defaultValues);
+      onChange(defaultValues.map((u) => u.id));
+    }
+  }, [defaultValues, onChange]);
 
   // fetch users based on search term with debouncing
   useEffect(() => {

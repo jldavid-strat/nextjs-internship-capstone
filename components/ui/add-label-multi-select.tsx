@@ -5,6 +5,7 @@ import { ProjectLabelTableData } from '../data-table/project-label-table';
 
 interface AddLabelMultiSelectProps {
   value: Array<ProjectLabelTableData['id']>;
+  defaultValues?: Array<ProjectLabelTableData>;
   onChange: (value: Array<ProjectLabelTableData['id']>) => void;
   fetchFunction: (searchTerm: string) => Promise<ProjectLabelTableData[]>;
   placeholder?: string;
@@ -18,6 +19,7 @@ interface AddLabelMultiSelectProps {
 
 export function AddLabelMultiSelect({
   value = [],
+  defaultValues = [],
   onChange,
   fetchFunction,
   placeholder = 'Select labels...',
@@ -36,11 +38,17 @@ export function AddLabelMultiSelect({
 
   const debounceRef = useRef<NodeJS.Timeout>(null);
 
-  // extract label IDs from the value array - memoize to prevent infinite re-renders
   const selectedLabelIds = useMemo(() => value.map((item) => item), [value]);
 
-  // fetch labels based on search term with debouncing
-  // also runs on mount even if the search term is empty to get default project labels
+  // sync defaultValues on mount or in the event they change
+  useEffect(() => {
+    if (defaultValues?.length > 0) {
+      setSelectedLabels(defaultValues);
+      onChange(defaultValues.map((d) => d.id));
+    }
+  }, [defaultValues, onChange]);
+
+  // fetch labels with debouncing
   useEffect(() => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -67,14 +75,12 @@ export function AddLabelMultiSelect({
     };
   }, [searchTerm, fetchFunction, debounceMs]);
 
-  // update selected labels - optimize to prevent infinite re-renders
+  // keep selectedLabels updated when `value` changes
   useEffect(() => {
-    console.log(value);
     setSelectedLabels((prev) => {
       const selectedIdSet = new Set(selectedLabelIds);
       const prevIdSet = new Set(prev.map((label) => label.id));
 
-      // only update if the selection actually changed
       if (
         selectedIdSet.size === prevIdSet.size &&
         [...selectedIdSet].every((id) => prevIdSet.has(id))
@@ -82,15 +88,11 @@ export function AddLabelMultiSelect({
         return prev;
       }
 
-      // keep existing labels that are still selected
       const existingLabels = prev.filter((label) => selectedIdSet.has(label.id));
       const existingIds = new Set(existingLabels.map((label) => label.id));
-
-      // find new ids for label data
       const newIds = selectedLabelIds.filter((id) => !existingIds.has(id));
 
       if (newIds.length > 0) {
-        // try and find new labels from search results
         const newLabels = searchResults.filter((label) => newIds.includes(label.id));
         return [...existingLabels, ...newLabels];
       }
@@ -103,14 +105,9 @@ export function AddLabelMultiSelect({
     (label: ProjectLabelTableData) => {
       const isSelected = selectedLabelIds.includes(label.id);
 
-      let newValue;
-      if (isSelected) {
-        // Remove label
-        newValue = value.filter((item) => item !== label.id);
-      } else {
-        // Add label
-        newValue = [...value, label.id];
-      }
+      const newValue = isSelected
+        ? value.filter((item) => item !== label.id)
+        : [...value, label.id];
 
       onChange(newValue);
       setOpen(true);
@@ -125,13 +122,6 @@ export function AddLabelMultiSelect({
         event.preventDefault();
         event.stopPropagation();
       }
-
-      console.log('id', id);
-      console.log(
-        'value',
-        value.filter((item) => item !== id),
-      );
-
       const newValue = value.filter((item) => item !== id);
       onChange(newValue);
     },
@@ -147,51 +137,36 @@ export function AddLabelMultiSelect({
     [onChange],
   );
 
-  // exclude already selected labels from search results
   const availableLabels = useMemo(
     () => searchResults.filter((label) => !selectedLabelIds.includes(label.id)),
     [searchResults, selectedLabelIds],
   );
 
-  // run fetchFunction once on mount
-  // cleanup debounce on mount
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
-  }, []);
-
   const displayLabels = selectedLabels.slice(0, maxDisplayCount);
   const hiddenCount = selectedLabels.length - maxDisplayCount;
 
   return (
-    <>
-      <div>
-        <LabelMultiSelect
-          props={{
-            open,
-            setOpen,
-            className,
-            placeholder,
-            selectedData: selectedLabels,
-            displayData: displayLabels,
-            availableData: availableLabels,
-            disabled,
-            searchTerm,
-            setSearchTerm,
-            searchPlaceholder,
-            loading,
-            emptyMessage,
-            hiddenCount,
-            value: selectedLabelIds,
-            handleRemove,
-            handleClearAll,
-            handleSelect,
-          }}
-        />
-      </div>
-    </>
+    <LabelMultiSelect
+      props={{
+        open,
+        setOpen,
+        className,
+        placeholder,
+        selectedData: selectedLabels,
+        displayData: displayLabels,
+        availableData: availableLabels,
+        disabled,
+        searchTerm,
+        setSearchTerm,
+        searchPlaceholder,
+        loading,
+        emptyMessage,
+        hiddenCount,
+        value: selectedLabelIds,
+        handleRemove,
+        handleClearAll,
+        handleSelect,
+      }}
+    />
   );
 }
