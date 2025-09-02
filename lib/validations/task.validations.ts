@@ -2,7 +2,7 @@ import z from 'zod';
 import { errorMessages, isFuture, MAX_CHAR, MIN_CHAR } from '../utils/validation.utils';
 import { TASK_PRIORITY_VALUES } from '../db/schema/enums';
 
-export const TaskSchema = z.object({
+export const BaseTaskSchema = z.object({
   title: z
     .string(errorMessages.invalidType('Task title', 'text'))
     .min(MIN_CHAR, errorMessages.minChar('Task title'))
@@ -46,13 +46,38 @@ export const TaskSchema = z.object({
   updatedAt: z.date(errorMessages.invalidDate('Task updated date')),
 });
 
-export const FormTaskSchema = TaskSchema.extend({
+const TaskDataSchema = BaseTaskSchema.extend({
   labels: z.array(z.int().positive()).nullable(),
   assignees: z.array(z.uuidv4(errorMessages.uuid('Assignee ID')).trim()).nullable(),
 });
 
+export const InsertTaskSchema = BaseTaskSchema.omit({
+  updatedAt: true,
+});
+
+export const FormTaskSchema = TaskDataSchema.pick({
+  title: true,
+  description: true,
+  status: true,
+  priority: true,
+  detail: true,
+  dueDate: true,
+  startDate: true,
+  labels: true,
+  assignees: true,
+});
+
+export const EditTaskInfoSchema = TaskDataSchema.pick({
+  title: true,
+  description: true,
+  status: true,
+  priority: true,
+  detail: true,
+  dueDate: true,
+});
+
 // assumes it has data
-export const AddTaskLabelSchema = z.object({
+export const TaskLabelSchema = z.object({
   labels: z.array(z.int().positive()),
 });
 
@@ -61,27 +86,4 @@ export const AssignTaskSchema = z.object({
   assignees: z.array(z.uuidv4(errorMessages.uuid('Assignee ID')).trim()),
 });
 
-export const InsertFormTaskSchema = FormTaskSchema.pick({
-  title: true,
-  description: true,
-  detail: true,
-  priority: true,
-  startDate: true,
-  dueDate: true,
-  labels: true,
-  status: true,
-  assignees: true,
-});
-
-export const EditFormTaskSchema = FormTaskSchema.pick({
-  title: true,
-  description: true,
-  detail: true,
-  priority: true,
-  startDate: true,
-  dueDate: true,
-  status: true,
-});
-
-export type InsertFormTaskType = z.input<typeof InsertFormTaskSchema>;
-export type EditFormTaskType = z.input<typeof EditFormTaskSchema>;
+export type FormTaskSchemaType = z.input<typeof FormTaskSchema>;
