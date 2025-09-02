@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Project, Task } from '@/types/db.types';
-import { ColumnQueryResult } from '@/types/types';
+import { Project } from '@/types/db.types';
+import { ColumnQueryResult, TaskCardData } from '@/types/types';
 
 type useKanbanColumnResult = {
   columns: ColumnQueryResult[];
@@ -35,14 +35,14 @@ export function useKanbanColumns(projectId: string): useKanbanColumnResult {
 }
 
 type useTasksByColumnResult = {
-  tasks: Task[];
+  tasks: TaskCardData[];
   isLoading: boolean;
   error: unknown;
   isSuccess: boolean;
 };
 
 export function useTaskList(projectId: Project['id']): useTasksByColumnResult {
-  const { data, isLoading, error, isSuccess } = useQuery<Task[]>({
+  const { data, isLoading, error, isSuccess } = useQuery<TaskCardData[]>({
     queryKey: ['tasks', projectId],
     queryFn: async () => {
       const res = await fetch(`/api/tasks/${projectId}`);
