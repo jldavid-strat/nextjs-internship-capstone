@@ -2,6 +2,7 @@ import { getProjectById } from '@/lib/queries/project.queries';
 import { DBKanbanBoard } from '@/components/kanban/kanban-board';
 import { ProjectNotFound } from '@/components/project/project-not-found';
 import ProjectHeader from '@/components/project/project-header';
+import ViewTaskModal from '@/components/modals/view-task-modal';
 
 export default async function ProjectPage({ params }: { params: { id: string } }) {
   const projectId = (await params).id;
@@ -35,6 +36,9 @@ export default async function ProjectPage({ params }: { params: { id: string } }
         }}
         projectId={projectId}
       />
+      {/* page level for view task sheet */}
+      <ViewTaskModal />
+
       <DBKanbanBoard projectId={project.id} />
       {/* Component Implementation Guide */}
       <div className="mt-8 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6 dark:border-gray-600 dark:bg-gray-800/50">
