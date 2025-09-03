@@ -24,6 +24,7 @@ export type ProjectMemberData = {
   lastName: User['lastName'];
   primaryEmailAddress: User['primaryEmailAddress'];
   userImgLink: User['imgLink'];
+  projectId: Project['id'];
   role: ProjectMember['role'];
   joinedAt: ProjectMember['joinedAt'];
 };
