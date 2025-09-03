@@ -1,10 +1,13 @@
-import { ArrowLeft, Calendar, Clock, Users } from 'lucide-react';
+'use client';
+import { ArrowLeft, Calendar, ChartSpline, Clock, Settings, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import ProjectHeaderButtons from '../buttons/project-header-button';
 import Link from 'next/link';
 import { formatDate } from '@/lib/utils/format_date';
 import { Project } from '@/types/db.types';
+import AddKanbaColumnForm from '../forms/add-kanban-column-modal-form';
+import { Button } from '../ui/button';
+import { redirect } from 'next/navigation';
 
 interface ProjectHeaderProps {
   project: {
@@ -168,7 +171,21 @@ export default function ProjectHeader({ project, projectId }: ProjectHeaderProps
               </div>
             )}
             {/* Project Header Buttons */}
-            <ProjectHeaderButtons projectId={projectId} />
+            <div className="flex items-center justify-end space-x-2">
+              <AddKanbaColumnForm projectId={projectId} />
+              <Button type="button">
+                <ChartSpline size={12} />
+                Analytics
+              </Button>
+              <button
+                className="hover:text-foreground/30 rounded-lg p-2 transition-colors hover:cursor-pointer"
+                onClick={() => {
+                  redirect(`${projectId}/settings`);
+                }}
+              >
+                <Settings size={20} />
+              </button>
+            </div>
           </section>
         </div>
       </div>
