@@ -51,7 +51,6 @@ export async function getAllUserProject(userId: string) {
         description: projects.description,
         status: projects.status,
         dueDate: projects.dueDate,
-        memberCount: countDistinct(projectMembers.userId),
         progress: getProgressCase,
       })
       .from(projects)
@@ -173,6 +172,7 @@ export async function getProjectDataById(projectId: Project['id']) {
       lastName: m.userData.lastName,
       primaryEmailAddress: m.userData.primaryEmailAddress,
       userImgLink: m.userData.imgLink,
+      projectId: m.projectId,
       role: m.role,
       joinedAt: m.joinedAt,
     }));
