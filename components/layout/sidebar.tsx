@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { Home, FolderOpen, Settings, X, BarChart3, Calendar } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import path from 'path';
 import { cn } from '@/lib/utils/shadcn-utils';
 
 const navigation = [
@@ -22,7 +21,6 @@ type SideBarProps = {
 export default function Sidebar({ sideBarOpen, setSideBarOpen }: SideBarProps) {
   const pathName = usePathname();
 
-  console.log(pathName);
   return (
     <>
       {/* Mobile sidebar overlay */}
