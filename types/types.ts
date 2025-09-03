@@ -99,6 +99,13 @@ export interface TaskCardData extends Task {
   labels: ProjectLabelTableData[];
 }
 
+export type CalendarEvent = {
+  id: Project['id'] | Task['id'];
+  project_id: Project['id'];
+  title: string;
+  start: Date;
+  end: Date;
+};
 export interface EditTaskCardData {
   id: Task['id'];
   title: Task['title'];
