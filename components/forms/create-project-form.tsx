@@ -84,7 +84,6 @@ export default function CreateProjectForm({ currentUserId }: { currentUserId: Us
           </header>
           <div>
             <label className="mb-2 block text-sm font-medium">Project Title *</label>
-            {/* TODO: add way to auto-focus title input */}
             <Input
               {...register('title')}
               type="text"

@@ -74,6 +74,7 @@ export default function EditProjectForm({ projectData }: { projectData: Project 
       setErrorCount((prev) => prev + 1);
     }
     if (state?.success === true) {
+      setIsEditing(false);
       toast.success('Succesfully updated project information');
     }
   }, [state, router]);
@@ -124,7 +125,7 @@ export default function EditProjectForm({ projectData }: { projectData: Project 
         <p className="mt-2 text-sm text-red-400">{errors.description?.message}</p>
       </div>
 
-      <div className="flex flex-row gap-4">
+      <div className="my-4 flex flex-row gap-4">
         <div className="flex flex-row items-center gap-2">
           {projectData.dueDate || isEditing ? (
             <>
