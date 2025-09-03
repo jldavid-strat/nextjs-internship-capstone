@@ -231,7 +231,7 @@ export const tasks = pgTable("tasks", {
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }),
 	createdById: uuid("created_by_id").notNull(),
-	isCompeleted: boolean("is_compeleted").notNull(),
+	isCompleted: boolean("is_completed").notNull(),
 	position: integer().notNull(),
 	isNotAssigned: boolean("is_not_assigned").default(false).notNull(),
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
@@ -360,7 +360,7 @@ export const taskLabels = pgTable("task_labels", {
 			columns: [table.projectLabelId],
 			foreignColumns: [projectLabels.id],
 			name: "task_labels_project_label_id_project_labels_id_fk"
-		}),
+		}).onDelete("cascade"),
 	primaryKey({ columns: [table.taskId, table.projectLabelId], name: "custom_task_labels_pk"}),
 ]);
 
