@@ -15,6 +15,7 @@ import {
 import { addKanbanColumn } from '@/actions/kanban_column.actions';
 import { useQueryClient } from '@tanstack/react-query';
 import Modal from '../ui/modal';
+import { toast } from 'sonner';
 
 export default function AddKanbaColumnForm({ projectId }: { projectId: Project['id'] }) {
   const [state, addKanbanColumnAction, isPending] = useActionState(
@@ -57,7 +58,7 @@ export default function AddKanbaColumnForm({ projectId }: { projectId: Project['
       });
       reset();
       setIsModalOpen(false);
-      //   toast
+      toast.success('Succesfully added a new kanban board');
     }
   }, [state, reset, _queryClient, projectId]);
 

@@ -20,6 +20,7 @@ import Modal from '../ui/modal';
 import { Badge } from '../ui/badge';
 import { useFetchMultiSelect } from '../../hooks/use-fetch-multiselect';
 import { DialogClose } from '@radix-ui/react-dialog';
+import { toast } from 'sonner';
 
 // Integration:
 // - Update board state optimistically
@@ -88,8 +89,7 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
       });
       reset();
       setIsModalOpen(false);
-      console.log('succesful added');
-      //   toast
+      toast.success('Succesfully added a new task');
     }
   }, [state, _queryClient, kanbanData.projectId, reset]);
 

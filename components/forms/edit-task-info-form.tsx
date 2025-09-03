@@ -22,6 +22,7 @@ import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { AddUserMultiSelect } from '../ui/add-user-multi-select';
 import { useFetchMultiSelect } from '@/hooks/use-fetch-multiselect';
+import { toast } from 'sonner';
 
 export type EditTaskInfoFormProps = {
   kanbanData: {
@@ -101,8 +102,9 @@ export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskI
       _queryClient.invalidateQueries({
         queryKey: ['tasks', projectId],
       });
+      setIsEditing(false);
+      toast.success('Succesfully edited task detail');
 
-      console.log('succesful added');
       //   toast
     }
   }, [state, _queryClient, projectId]);

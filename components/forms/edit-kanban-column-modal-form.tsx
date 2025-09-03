@@ -23,6 +23,7 @@ import { updateKanbanColumn } from '@/actions/kanban_column.actions';
 import { useQueryClient } from '@tanstack/react-query';
 import { EditKanbaColumnFormData } from '@/types/types';
 import Modal from '../ui/modal';
+import { toast } from 'sonner';
 
 type EditKanbaColumnFormProps = {
   isEditOpen: boolean;
@@ -78,7 +79,7 @@ export default function EditKanbaColumnForm({
         queryKey: ['kanban-columns', projectId],
       });
       setIsEditOpen(false);
-      //   toast
+      toast.success('Succesfully updated the kanban column');
     }
   }, [state, _queryClient, projectId, setIsEditOpen]);
 

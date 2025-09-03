@@ -15,6 +15,7 @@ import { Badge } from '../ui/badge';
 import { capitalize } from 'lodash';
 import { ErrorBox } from '../ui/error-box';
 import SubHeader from '../ui/subheader';
+import { toast } from 'sonner';
 
 const projectStatusBadgeStyle = {
   active: 'bg-primary/10 border-primary',
@@ -73,8 +74,7 @@ export default function EditProjectForm({ projectData }: { projectData: Project 
       setErrorCount((prev) => prev + 1);
     }
     if (state?.success === true) {
-      console.log('succesful added');
-      //   toast
+      toast.success('Succesfully updated project information');
     }
   }, [state, router]);
   return (

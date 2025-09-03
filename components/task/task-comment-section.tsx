@@ -20,6 +20,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTaskComments } from '@/hooks/use-task-comments';
 import MarkdownPreview from '@uiw/react-markdown-preview';
 import TaskCommentDropdown from '../dropdowns/task-comment-dropdown';
+import { toast } from 'sonner';
 
 export default function TaskCommentSection({
   taskId,
@@ -69,11 +70,9 @@ export default function TaskCommentSection({
         queryKey: ['task-comments', taskId],
       });
 
-      alert('task is comment');
-
       setIsCommenting(false);
+      toast.success('Successfully added a new comment');
 
-      console.log('succesful added tas comment');
       //   toast
     }
   }, [state, _queryClient, taskId]);
@@ -244,10 +243,7 @@ function EditTaskContentForm({
         queryKey: ['task-comments', taskId],
       });
       setIsEditKey(null);
-
-      alert('task updated');
-
-      console.log('succesful update task comment');
+      toast.success('Successfully edited the task comment');
     }
   }, [state, _queryClient, taskId, setIsEditKey]);
 

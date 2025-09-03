@@ -16,6 +16,7 @@ import { Label, Project, ProjectLabel } from '@/types/db.types';
 import { updateProjectLabel } from '@/actions/project_labels.actions';
 import { LabelPreview } from './add-project-label-modal-form';
 import Modal from '../ui/modal';
+import { toast } from 'sonner';
 
 export type EditProjectLabelFormProps = {
   name: Label['name'];
@@ -76,8 +77,7 @@ export default function EditProjectLabelForm({
     }
     if (state?.success === true) {
       setIsModalOpen(false);
-      console.log('succesful edit');
-      //   toast
+      toast.success('Succesfully updated project label');
     }
     return;
   }, [state]);

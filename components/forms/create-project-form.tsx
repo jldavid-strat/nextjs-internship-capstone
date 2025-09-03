@@ -16,6 +16,7 @@ import { User } from '@/types/db.types';
 import { getSuggestedUsersByEmail } from '@/actions/user.actions';
 import { AddMemberMultiSelect } from '../ui/add-member-multiselect';
 import { ErrorBox } from '../ui/error-box';
+import { toast } from 'sonner';
 
 export default function CreateProjectForm({ currentUserId }: { currentUserId: User['id'] }) {
   const [state, createProjectAction, isPending] = useActionState(createProject, undefined);
@@ -68,7 +69,7 @@ export default function CreateProjectForm({ currentUserId }: { currentUserId: Us
       setErrorCount((prev) => prev + 1);
     }
     if (state?.success === true) {
-      console.log('succesful added');
+      toast.success('Succesfully created a new project');
       //   toast
     }
   }, [state, router]);

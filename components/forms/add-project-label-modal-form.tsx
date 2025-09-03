@@ -16,6 +16,7 @@ import { Project } from '@/types/db.types';
 import { addProjectLabel } from '@/actions/project_labels.actions';
 import Modal from '../ui/modal';
 import { cn } from '@/lib/utils/shadcn-utils';
+import { toast } from 'sonner';
 
 export default function AddProjectLabelForm({ projectId }: { projectId: Project['id'] }) {
   const [state, addProjectLabelAction, isPending] = useActionState(
@@ -72,6 +73,7 @@ export default function AddProjectLabelForm({ projectId }: { projectId: Project[
         if (!isModalOpen) {
           // clears the form when dialog closes
           reset();
+          toast.success('Succesfully added a new project label');
         }
       }}
       className="w-[500px]"
