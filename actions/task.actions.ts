@@ -151,6 +151,7 @@ export async function updateTaskInfo(
     const taskLabelIds = JSON.parse(taskData.get('labels') as string) as ProjectLabel['id'][];
     const taskAssigneeIds = JSON.parse(taskData.get('assignees') as string) as User['id'][];
 
+    console.log('taskData', taskData);
     console.log('taskLabelIds', taskLabelIds);
     console.log('taskAssigneeIds', taskAssigneeIds);
 
@@ -252,7 +253,7 @@ export async function updateTaskInfo(
       .where(and(eq(tasks.id, queryIds.taskId), eq(tasks.projectId, queryIds.projectId)));
 
     console.log('updated task successfully...');
-    // revalidatePath(`/(dashboard)`);
+    revalidatePath(`/(dashboard)`);
 
     return { success: true };
   } catch (error) {
