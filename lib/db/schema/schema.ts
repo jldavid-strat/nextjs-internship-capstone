@@ -244,7 +244,7 @@ export const tasks = pgTable(
     status: varchar('status').notNull(),
     position: integer('position').notNull(),
     priority: taskPriorityEnum().default('none').notNull(),
-    isCompleted: boolean('is_compeleted').notNull(),
+    isCompleted: boolean('is_completed').notNull(),
     createdById: uuid('created_by_id')
       .references(() => users.id, { onDelete: 'restrict' })
       .notNull(),
