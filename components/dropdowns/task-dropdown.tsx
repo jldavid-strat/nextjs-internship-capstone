@@ -16,6 +16,7 @@ import { Project, ProjectKanbanColumn, Task } from '@/types/db.types';
 import { deleteTask } from '@/actions/task.actions';
 import { DeleteAlertDialog } from '../alerts/delete-alert-dialog';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 export type TaskSheetProps = {
   taskData: EditTaskCardData;
@@ -33,7 +34,7 @@ export default function TaskCardDropdown({ kanbanData, taskData }: TaskSheetProp
   const { open: setTaskOpen } = useSheetStore();
   const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
 
-  async function handleTaskDelete() {
+  async function handleTaskDelete(taskId: Task['id']) {
     console.log('delete', taskId);
     const response = await deleteTask(taskId, projectId);
     if (response.success) {
@@ -41,15 +42,16 @@ export default function TaskCardDropdown({ kanbanData, taskData }: TaskSheetProp
         queryKey: ['tasks', projectId],
       });
       setIsDeleteOpen(false);
-      //   show toast
+      toast.success('Deleted task successfully');
       return;
     }
-    alert(response.error);
+    toast.error('Failed to delete task');
     return;
   }
   return (
     <>
-      <DeleteAlertDialog
+      <DeleteAlertDialog<Task['id']>
+        id={taskId}
         alertDescription="This action cannot be undone. This will delete the corresponding task and all the related included in it"
         isOpen={isDeleteOpen}
         setIsOpen={setIsDeleteOpen}

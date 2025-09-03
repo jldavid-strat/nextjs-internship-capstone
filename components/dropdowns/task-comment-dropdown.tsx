@@ -14,6 +14,7 @@ import { Task, TaskComment } from '@/types/db.types';
 import { DeleteAlertDialog } from '../alerts/delete-alert-dialog';
 import { useQueryClient } from '@tanstack/react-query';
 import { deleteTaskComment } from '@/actions/task_comment.actions';
+import { toast } from 'sonner';
 
 export type TaskCommentDropdownProps = {
   taskId: Task['id'];
@@ -33,7 +34,7 @@ export default function TaskCommentDropdown({
 
   const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
 
-  async function handleTasCommentDelete() {
+  async function handleTasCommentDelete(taskCommentId: TaskComment['id']) {
     console.log('delete', taskCommentId);
     const response = await deleteTaskComment(taskCommentId);
     if (response.success) {
@@ -41,15 +42,16 @@ export default function TaskCommentDropdown({
         queryKey: ['task-comments', taskId],
       });
       setIsDeleteOpen(false);
-      //   show toast
+      toast.success('Deleted task comment successfully');
       return;
     }
-    alert(response.error);
+    toast.success('Failed to task comment');
     return;
   }
   return (
     <>
-      <DeleteAlertDialog
+      <DeleteAlertDialog<TaskComment['id']>
+        id={taskCommentId}
         alertDescription="This action cannot be undone. This will delete the task comment"
         isOpen={isDeleteOpen}
         setIsOpen={setIsDeleteOpen}

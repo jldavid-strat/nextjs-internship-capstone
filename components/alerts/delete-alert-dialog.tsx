@@ -10,21 +10,23 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '../ui/button';
 
-interface DeleteAlertDialogProps {
+interface DeleteAlertDialogProps<T extends string | number> {
+  id: T;
   isOpen: boolean;
   alertTile?: string;
   alertDescription?: string;
   setIsOpen: (i: boolean) => void;
-  handleDelete: () => Promise<void>;
+  handleDelete: (id: T) => Promise<void>;
 }
 
-export function DeleteAlertDialog({
+export function DeleteAlertDialog<T extends string | number>({
+  id,
   isOpen,
   setIsOpen,
   handleDelete,
   alertTile = 'Are you absolutely sure?',
   alertDescription = 'This action cannot be undone. This will permanently delete your account and remove your data from our servers.',
-}: DeleteAlertDialogProps) {
+}: DeleteAlertDialogProps<T>) {
   return (
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogContent>
@@ -35,7 +37,7 @@ export function DeleteAlertDialog({
         <AlertDialogFooter>
           <AlertDialogCancel onClick={() => setIsOpen(false)}>Cancel</AlertDialogCancel>
           <AlertDialogAction asChild>
-            <Button type="button" onClick={() => handleDelete}>
+            <Button type="button" onClick={() => handleDelete(id)}>
               Delete
             </Button>
           </AlertDialogAction>
