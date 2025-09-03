@@ -5,14 +5,13 @@ import { moveTask } from '@/actions/task.actions';
 import { Task, ProjectKanbanColumn } from '@/types/db.types';
 import { MoveTaskDataType, ReorderColumnDataType } from '@/types/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
-// TODO: authorize user
 export function useMoveTask(projectId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: MoveTaskDataType) => {
-      // TODO create moveTask server action
       const response = await moveTask(data);
 
       if (!response.success) {
@@ -23,7 +22,7 @@ export function useMoveTask(projectId: string) {
     },
 
     onMutate: async (moveData) => {
-      // Cancel any outgoing refetches
+      // cancel any outgoing refetches
       await queryClient.cancelQueries({
         queryKey: ['tasks', projectId],
       });
@@ -87,8 +86,6 @@ export function useMoveTask(projectId: string) {
     },
 
     onError: (err, moveData, context) => {
-      console.log('Failed to move task');
-      // console.error(err);
       // undo optimistic updates on error
       if (context?.previousSourceTasks) {
         queryClient.setQueryData(
@@ -103,21 +100,17 @@ export function useMoveTask(projectId: string) {
           context.previousTargetTasks,
         );
       }
+      toast.error('Failed to move task', {
+        description: 'Please try again',
+      });
     },
 
-    // onSettled: () => {
-    //   // refetch the task list
-    //   queryClient.invalidateQueries({
-    //     queryKey: ['tasks', projectId],
-    //   });
-    // },
-
     onSuccess: () => {
-      //   // TODO call toast method to show successful toast
       queryClient.invalidateQueries({
         queryKey: ['tasks', projectId],
       });
-      console.log('Task moved successfully');
+
+      toast.success('Successfully move task');
     },
   });
 }
@@ -137,67 +130,57 @@ export function useReorderColumns(projectId: string) {
       return response;
     },
 
-    // onMutate: async (reorderData) => {
-    //   await queryClient.cancelQueries({
-    //     queryKey: ['kanban-columns', projectId],
-    //   });
+    onMutate: async (reorderData) => {
+      await queryClient.cancelQueries({
+        queryKey: ['kanban-columns', projectId],
+      });
 
-    //   // get snapshot the previous columns
-    //   const previousColumns = queryClient.getQueryData<ProjectKanbanColumn[]>([
-    //     'kanban-columns',
-    //     projectId,
-    //   ]);
+      // get snapshot the previous columns
+      const previousColumns = queryClient.getQueryData<ProjectKanbanColumn[]>([
+        'kanban-columns',
+        projectId,
+      ]);
 
-    //   // optimistically update the kanban columns
-    //   if (previousColumns) {
-    //     const { columnId, newPosition } = reorderData;
+      // optimistically update the kanban columns
+      if (previousColumns) {
+        const { projectColumnId, newPosition } = reorderData;
 
-    //     const columnToMove = previousColumns.find((col) => col.kanbanColumnId === columnId);
+        const columnToMove = previousColumns.find((col) => col.id === projectColumnId);
 
-    //     if (columnToMove) {
-    //       // remove the column from original position
-    //       const columnsWithoutMoved = previousColumns.filter(
-    //         (col) => col.kanbanColumnId !== columnId,
-    //       );
+        if (columnToMove) {
+          // remove the column from original position
+          const columnsWithoutMoved = previousColumns.filter((col) => col.id !== projectColumnId);
 
-    //       // insert it at the new position
-    //       const reorderedColumns = [...columnsWithoutMoved];
-    //       reorderedColumns.splice(newPosition, 0, columnToMove);
+          // insert it at the new position
+          const reorderedColumns = [...columnsWithoutMoved];
+          reorderedColumns.splice(newPosition, 0, columnToMove);
 
-    //       // update kanban column positions
-    //       const updatedColumns = reorderedColumns.map((col, index) => ({
-    //         ...col,
-    //         position: index,
-    //       }));
+          // update kanban column positions
+          const updatedColumns = reorderedColumns.map((col, index) => ({
+            ...col,
+            position: index,
+          }));
 
-    //       queryClient.setQueryData(['kanban-columns', projectId], updatedColumns);
-    //     }
-    //   }
+          queryClient.setQueryData(['kanban-columns', projectId], updatedColumns);
+        }
+      }
 
-    //   return { previousColumns };
-    // },
+      return { previousColumns };
+    },
 
-    // onError: (error, reorderData, context) => {
-    //   // undo the optimistic update on error
-    //   if (context?.previousColumns) {
-    //     queryClient.setQueryData(['kanban-columns', projectId], context.previousColumns);
-    //   }
+    onError: (error, reorderData, context) => {
+      // undo the optimistic update on error
+      if (context?.previousColumns) {
+        queryClient.setQueryData(['kanban-columns', projectId], context.previousColumns);
+      }
 
-    //   console.error('Failed to reorder columns:', error);
+      toast.error('Failed to move kanban column', {
+        description: 'Please try again',
+      });
+    },
 
-    //   // TODO: show toast
-    //   // toast.error('Failed to reorder columns. Please try again.');
-    // },
-
-    // onSuccess: () => {
-    //   console.log('Kanban column has been moved successfully');
-
-    //   // TODO: show toast
-    //   // toast.success('Column reordered successfully');
-    // },
-
-    onSettled: () => {
-      // refetch the task list
+    onSuccess: () => {
+      toast.error('Successfully move kanban column');
       queryClient.invalidateQueries({
         queryKey: ['kanban-columns', projectId],
       });
