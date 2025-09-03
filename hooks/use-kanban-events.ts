@@ -4,6 +4,7 @@ import { Project } from '@/types/db.types';
 import { useAuth } from '@clerk/nextjs';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 
 const KanbanEventValues = ['task-moved', 'reorder-kanban-columns'] as const;
 
@@ -18,25 +19,29 @@ type EventHandler = (
   event: SSEEvent,
   queryClient: ReturnType<typeof useQueryClient>,
   projectId: Project['id'],
-  currentSessionId?: string,
+  userId?: string,
 ) => void;
 
 // handles the actions when an event is triggered
 const eventHandlers: Record<string, EventHandler> = {
-  'task-moved': (event, _queryClient, projectId) => {
+  'task-moved': (event, _queryClient, projectId, userId) => {
     console.log(`Task has been moved: ${event.taskId}`);
-    if (event.projectId === projectId) {
+    if (event.projectId === projectId && event.userId !== userId) {
+      console.log(`invalidating cache`);
       _queryClient.invalidateQueries({
         queryKey: ['tasks', projectId],
       });
+      toast.info('A task has been moved');
     }
   },
-  'reorder-kanban-columns': (event, _queryClient, projectId) => {
+  'reorder-kanban-columns': (event, _queryClient, projectId, userId) => {
     console.log(`Reordered kanban columns on project: ${event.projectId}`);
-
-    _queryClient.invalidateQueries({
-      queryKey: ['tasks', projectId],
-    });
+    if (event.projectId === projectId && event.userId !== userId) {
+      _queryClient.invalidateQueries({
+        queryKey: ['kanban-columns', projectId],
+      });
+      toast.info('Kanban columns has been reordered');
+    }
   },
   connected: () => {
     console.log('SSE connected successfully');
@@ -49,14 +54,14 @@ const eventHandlers: Record<string, EventHandler> = {
 
 export default function useKanbanEvents(projectId: Project['id']) {
   const queryClient = useQueryClient();
-  const { sessionId, isSignedIn, isLoaded } = useAuth();
+  const { userId, isSignedIn, isLoaded } = useAuth();
   const retryCountRef = useRef<number>(0);
   const shouldConnectRef = useRef<boolean>(true);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isLoaded) {
-      if (!isSignedIn || !sessionId) return;
+      if (!isSignedIn || !userId) return;
 
       shouldConnectRef.current = true;
       retryCountRef.current = 0;
@@ -82,8 +87,9 @@ export default function useKanbanEvents(projectId: Project['id']) {
             // use the event handler pattern for extensible event processing
             const handler = eventHandlers[data.type];
             if (handler) {
-              handler(data, queryClient, projectId);
+              handler(data, queryClient, projectId, userId);
               console.log('EVENT ACTION HAS BEEN RAN');
+              console.log('EVENT SENDER', userId);
             } else {
               console.warn(`Unhandled SSE event type: ${data.type}`);
             }
@@ -132,5 +138,5 @@ export default function useKanbanEvents(projectId: Project['id']) {
         }
       };
     }
-  }, [isLoaded, sessionId, projectId, isSignedIn, queryClient]);
+  }, [isLoaded, userId, projectId, isSignedIn, queryClient]);
 }
