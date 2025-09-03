@@ -2,7 +2,7 @@ import 'server-only';
 import { projectMembers, users } from '@/lib/db/schema/schema';
 import { db } from '../db/connect_db';
 import { projects } from '../db/schema/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq, max } from 'drizzle-orm';
 import { Project, User } from '@/types/db.types';
 
 export async function getMemberRole(userId: User['id'], projectId: Project['id']) {
@@ -26,5 +26,18 @@ export async function getMemberRole(userId: User['id'], projectId: Project['id']
       success: false,
       data: null,
     };
+  }
+}
+
+export async function getMemberCount(projectId: Project['id']) {
+  try {
+    const [result] = await db
+      .select({ memberCount: count(projectMembers.userId) })
+      .from(projectMembers)
+      .where(eq(projectMembers.projectId, projectId));
+
+    return result.memberCount;
+  } catch (error) {
+    console.error(error);
   }
 }
