@@ -141,7 +141,7 @@ export async function updateKanbanColumn(
     );
     if (!isAuthorize) throw new UnauthorizedError('User is unauthorized to update kanban columns');
 
-    const originalKanbanColumnData = await getColumnById(projectColumnId);
+    const originalKanbanColumnData = await getColumnById(projectId, projectColumnId);
 
     if (!originalKanbanColumnData)
       throw new DatabaseOperationError('Something went wrong. Please try again');
