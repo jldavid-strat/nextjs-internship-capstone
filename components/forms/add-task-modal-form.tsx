@@ -9,7 +9,6 @@ import { TASK_PRIORITY_VALUES } from '@/lib/db/schema/enums';
 import { Input } from '../ui/input';
 import MarkdownEditor from '../markdown/markdown-editor';
 import { Button } from '../ui/button';
-import { capitalize } from 'lodash';
 import { ErrorBox } from '../ui/error-box';
 import { AddLabelMultiSelect } from '../ui/add-label-multi-select';
 import { ProjectKanbanColumn } from '@/types/db.types';
@@ -168,11 +167,11 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
                 <select
                   {...register('priority')}
                   name="priority"
-                  className="bg-card border-border h-8.5 w-[180px] rounded-lg border px-2 focus:outline-hidden focus-visible:ring"
+                  className="bg-card border-border h-8.5 w-[180px] rounded-lg border px-2 capitalize focus:outline-hidden focus-visible:ring"
                 >
                   {TASK_PRIORITY_VALUES.map((priority, index) => (
                     <option key={index} value={priority}>
-                      {capitalize(priority)}
+                      {priority}
                     </option>
                   ))}
                 </select>
