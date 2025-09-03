@@ -247,8 +247,6 @@ export async function getProjectLabels(projectId: Project['id'], withSearchTerm?
       .innerJoin(labels, eq(projectLabels.labelId, labels.id))
       .where(and(...conditions));
 
-    console.log('projectLabelList', projectLabelList);
-
     return projectLabelList;
   } catch (error) {
     console.error(error);
