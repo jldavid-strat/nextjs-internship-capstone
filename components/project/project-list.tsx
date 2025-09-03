@@ -2,10 +2,9 @@
 
 import { formatDate } from '@/lib/utils/format_date';
 import { Project } from '@/types/db.types';
-import { Calendar, Filter, MoreHorizontal, Search, SearchX, Users } from 'lucide-react';
+import { Calendar, Filter, Search, SearchX } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { capitalize } from 'lodash';
 import { Badge } from '../ui/badge';
 import { ProjectDataNotFound } from './project-not-found';
 import { Input } from '../ui/input';
@@ -18,6 +17,7 @@ import {
 } from '../ui/dropdown-menu';
 import { Button } from '../ui/button';
 import { PROJECT_STATUS_VALUES } from '@/lib/db/schema/enums';
+import ProjectCardDropdown from '../dropdowns/project-card-dropdown';
 
 const STATUS_VALUES = ['all', ...PROJECT_STATUS_VALUES];
 
@@ -104,7 +104,6 @@ type ProjectCardProps = {
   description: Project['description'];
   status: Project['status'];
   dueDate: Project['dueDate'];
-  memberCount: number;
   // in percentage
   progress: number;
 };
@@ -116,26 +115,21 @@ function ProjectCard({ projectData }: { projectData: ProjectCardProps }) {
         <CardHeader>
           <div className="mb-4 flex items-start justify-between">
             <div className={`h-3 w-3 rounded-full ${'bg-green-400'}`} />
-            <button className="hover:bg-platinum-500 rounded p-1">
-              <MoreHorizontal size={16} />
-            </button>
+            <ProjectCardDropdown projectId={projectData.id} />
           </div>
           <CardTitle className="text-lg">{projectData.title}</CardTitle>
           {<CardDescription>{projectData.description}</CardDescription>}
         </CardHeader>
 
         <CardContent>
-          <div className="mb-4 flex items-center justify-between text-sm">
-            <div className="flex items-center">
-              <Users size={16} className="mr-1" />
-              {/* member count */}
-              {projectData.memberCount}
+          {projectData?.dueDate && (
+            <div className="mb-4 flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                {projectData?.dueDate && <Calendar size={16} className="mr-1" />}
+                {projectData?.dueDate ? formatDate(projectData.dueDate) : ''}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              {projectData?.dueDate ? formatDate(projectData.dueDate) : ''}
-              {projectData?.dueDate && <Calendar size={16} className="mr-1" />}
-            </div>
-          </div>
+          )}
           <div className="mb-4">
             <div className="mb-2 flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Progress</span>
@@ -148,8 +142,8 @@ function ProjectCard({ projectData }: { projectData: ProjectCardProps }) {
               />
             </div>
           </div>
-          <Badge className="rounded-full py-1 text-sm font-medium">
-            {capitalize(projectData.status)}
+          <Badge className="rounded-full py-1 text-sm font-medium capitalize">
+            {projectData.status}
           </Badge>
         </CardContent>
       </Link>
