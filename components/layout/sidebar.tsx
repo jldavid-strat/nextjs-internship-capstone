@@ -53,7 +53,7 @@ export default function Sidebar({ sideBarOpen, setSideBarOpen }: SideBarProps) {
                   href={item.href}
                   className={cn(
                     'hover:bg-accent flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                    pathName.includes(item.href) && 'bg-primary',
+                    pathName === item.href && 'bg-primary',
                   )}
                 >
                   <item.icon className="mr-3" size={20} />
