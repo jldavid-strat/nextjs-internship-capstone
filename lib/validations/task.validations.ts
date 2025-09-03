@@ -74,6 +74,7 @@ export const EditTaskInfoSchema = TaskDataSchema.pick({
   priority: true,
   detail: true,
   dueDate: true,
+  startDate: true,
 });
 
 // assumes it has data
