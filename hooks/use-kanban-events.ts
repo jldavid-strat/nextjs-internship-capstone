@@ -5,6 +5,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+import { useUserData } from './use-user-data';
 
 const KanbanEventValues = ['task-moved', 'reorder-kanban-columns'] as const;
 
@@ -54,14 +55,14 @@ const eventHandlers: Record<string, EventHandler> = {
 
 export default function useKanbanEvents(projectId: Project['id']) {
   const queryClient = useQueryClient();
-  const { userId, isSignedIn, isLoaded } = useAuth();
+  const { user, isLoading } = useUserData();
   const retryCountRef = useRef<number>(0);
   const shouldConnectRef = useRef<boolean>(true);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (isLoaded) {
-      if (!isSignedIn || !userId) return;
+    if (!isLoading) {
+      if (!user) return;
 
       shouldConnectRef.current = true;
       retryCountRef.current = 0;
@@ -87,9 +88,9 @@ export default function useKanbanEvents(projectId: Project['id']) {
             // use the event handler pattern for extensible event processing
             const handler = eventHandlers[data.type];
             if (handler) {
-              handler(data, queryClient, projectId, userId);
+              handler(data, queryClient, projectId, user.id);
               console.log('EVENT ACTION HAS BEEN RAN');
-              console.log('EVENT SENDER', userId);
+              console.log('EVENT SENDER', user.id);
             } else {
               console.warn(`Unhandled SSE event type: ${data.type}`);
             }
@@ -138,5 +139,5 @@ export default function useKanbanEvents(projectId: Project['id']) {
         }
       };
     }
-  }, [isLoaded, userId, projectId, isSignedIn, queryClient]);
+  }, [user, projectId, isLoading, queryClient]);
 }
