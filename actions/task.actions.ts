@@ -294,6 +294,16 @@ export async function moveTask(moveTaskData: MoveTaskDataType) {
   try {
     const { taskId, sourceColumnId, targetColumnId, projectId, newPosition } = moveTaskData;
 
+    const currentUserId = await getCurrentUserId();
+
+    const { isAuthorize } = await checkMemberPermission(
+      currentUserId,
+      projectId,
+      RESOURCES.TASKS,
+      ACTIONS.UPDATE,
+    );
+    if (!isAuthorize) throw new Error('User is unauthorized to move task');
+
     // retrieve tasks that need position updates
     const affectedTasks = await db
       .select()
@@ -328,13 +338,9 @@ export async function moveTask(moveTaskData: MoveTaskDataType) {
     // if task is moved to another column
     if (sourceColumnId !== targetColumnId) {
       const completedColumnId = await getCompletedColumnId(projectId);
+
       const updateKanbanColumnCase = sql`case 
       when ${tasks.id} = ${taskId} then ${targetColumnId} 
-      else ${tasks.projectkanbanColumnId} 
-      end`;
-
-      const isTaskCompletedCase = sql`case 
-      when ${tasks.id} = ${taskId} then ${targetColumnId === completedColumnId} 
       else ${tasks.projectkanbanColumnId} 
       end`;
 
@@ -342,10 +348,16 @@ export async function moveTask(moveTaskData: MoveTaskDataType) {
       await db
         .update(tasks)
         .set({
-          position: TaskPositionCaseSql,
           // only update the kanban column of moved task
+          isCompleted: targetColumnId === completedColumnId,
+        })
+        .where(eq(tasks.id, taskId));
+
+      await db
+        .update(tasks)
+        .set({
+          position: TaskPositionCaseSql,
           projectkanbanColumnId: updateKanbanColumnCase,
-          isCompleted: isTaskCompletedCase,
           updatedAt: new Date(),
         })
         .where(inArray(tasks.id, taskIds));
@@ -361,6 +373,7 @@ export async function moveTask(moveTaskData: MoveTaskDataType) {
     // emit event to update task list
     serverEvents.emit('task-moved', {
       type: 'task-moved',
+      userId: currentUserId,
       taskId: taskId,
       sourceColumnId: sourceColumnId,
       targetColumnId: targetColumnId,
