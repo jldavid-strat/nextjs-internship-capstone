@@ -11,7 +11,7 @@ import { capitalize } from 'lodash';
 import { ErrorBox } from '../ui/error-box';
 import MarkdownPreview from '@uiw/react-markdown-preview';
 import { useQueryClient } from '@tanstack/react-query';
-import { Project, Task } from '@/types/db.types';
+import { Project, ProjectKanbanColumn, Task } from '@/types/db.types';
 import SubHeader from '../ui/subheader';
 import { BookOpenText, Edit } from 'lucide-react';
 import { EditTaskCardData } from '@/types/types';
@@ -28,16 +28,20 @@ export type EditTaskInfoFormProps = {
   kanbanData: {
     projectId: Project['id'];
     taskId: Task['id'];
-    statusList: string[];
+    projectColumnId: ProjectKanbanColumn['id'];
   };
   taskInfoData: EditTaskCardData;
 };
 
 export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskInfoFormProps) {
-  const { taskId, projectId, statusList } = kanbanData;
+  const { taskId, projectId, projectColumnId } = kanbanData;
 
   const [state, updateTaskInfoAction, isPending] = useActionState(
-    updateTaskInfo.bind(null, { taskId: taskId, projectId: projectId }),
+    updateTaskInfo.bind(null, {
+      taskId: taskId,
+      projectId: projectId,
+      projectColumnId: projectColumnId,
+    }),
     undefined,
   );
 
@@ -152,44 +156,23 @@ export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskI
           />
           <p className="mt-2 text-sm text-red-400">{errors.description?.message}</p>
         </div>
-        <section className="grid grid-cols-2 gap-2">
+        <section className="my-4 flex w-full flex-row gap-4">
           <div>
-            <label className="text-outer_space-500 dark:text-platinum-500 mb-2 block text-sm font-medium">
-              Start Date
-            </label>
+            <label className="mb-2 block text-sm font-medium">Start Date</label>
             <Input
               {...register('startDate', { setValueAs: (val) => (val === '' ? null : val) })}
               type="date"
               name="startDate"
-              className="w-[180px]"
-              readOnly={!isEditing}
+              className="w-[150px]"
             />
           </div>
-          <div className="items-center gap-2">
-            <label className="mb-2 block text-sm font-medium">Status</label>
-            <select
-              {...register('status')}
-              name="status"
-              className="bg-card border-border h-8 w-[180px] rounded-lg border px-2 focus:outline-hidden focus-visible:ring"
-              disabled={!isEditing}
-            >
-              {statusList.map((status, index) => (
-                <option key={index} value={status}>
-                  {capitalize(status)}
-                </option>
-              ))}
-            </select>
-          </div>
-        </section>
-        <section className="mt-2 grid grid-cols-2 gap-2">
           <div>
             <label className="mb-2 block text-sm font-medium">Due Date</label>
             <Input
               {...register('dueDate', { setValueAs: (val) => (val === '' ? null : val) })}
               type="date"
               name="dueDate"
-              className="w-[180px]"
-              readOnly={!isEditing}
+              className="w-[150px]"
             />
           </div>
           <div className="items-center gap-2">
@@ -197,8 +180,7 @@ export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskI
             <select
               {...register('priority')}
               name="priority"
-              className="bg-card border-border h-8 w-[180px] rounded-lg border px-2 focus:outline-hidden focus-visible:ring"
-              disabled={!isEditing}
+              className="bg-card border-border h-8.5 w-[150px] rounded-lg border px-2 focus:outline-hidden focus-visible:ring"
             >
               {TASK_PRIORITY_VALUES.map((priority, index) => (
                 <option key={index} value={priority}>
@@ -211,7 +193,6 @@ export default function EditTaskInfoForm({ kanbanData, taskInfoData }: EditTaskI
         <p className="mt-2 text-sm text-red-400">{errors.dueDate?.message}</p>
         <p className="mt-2 text-sm text-red-400">{errors.startDate?.message}</p>
         <p className="mt-2 text-sm text-red-400">{errors.priority?.message}</p>
-        <p className="mt-2 text-sm text-red-400">{errors.status?.message}</p>
         <div className="mt-6">
           <label className="mb-2 block text-sm font-medium">Task Detail</label>
           {isEditing ? (

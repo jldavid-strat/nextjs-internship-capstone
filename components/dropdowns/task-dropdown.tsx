@@ -12,7 +12,7 @@ import { Button } from '../ui/button';
 import React, { useState } from 'react';
 import { useSheetStore } from '@/stores/modal-store';
 import { EditTaskCardData } from '@/types/types';
-import { Project, Task } from '@/types/db.types';
+import { Project, ProjectKanbanColumn, Task } from '@/types/db.types';
 import { deleteTask } from '@/actions/task.actions';
 import { DeleteAlertDialog } from '../alerts/delete-alert-dialog';
 import { useQueryClient } from '@tanstack/react-query';
@@ -22,12 +22,12 @@ export type TaskSheetProps = {
   kanbanData: {
     projectId: Project['id'];
     taskId: Task['id'];
-    statusList: string[];
+    projectColumnId: ProjectKanbanColumn['id'];
   };
 };
 
 export default function TaskCardDropdown({ kanbanData, taskData }: TaskSheetProps) {
-  const { projectId, taskId } = kanbanData;
+  const { projectId, taskId, projectColumnId } = kanbanData;
   const _queryClient = useQueryClient();
 
   const { open: setTaskOpen } = useSheetStore();
@@ -76,8 +76,8 @@ export default function TaskCardDropdown({ kanbanData, taskData }: TaskSheetProp
               setTaskOpen({
                 kanbanData: {
                   projectId: kanbanData.projectId,
-                  taskId: kanbanData.taskId,
-                  statusList: kanbanData.statusList,
+                  taskId: taskId,
+                  projectColumnId: projectColumnId,
                 },
                 taskData: { ...taskData },
               });

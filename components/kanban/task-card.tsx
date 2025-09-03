@@ -80,7 +80,7 @@ export function TaskCard({ taskData, isOverlay, kanbanData }: TaskCardProps) {
               kanbanData={{
                 projectId: kanbanData.projectId,
                 taskId: kanbanData.taskId,
-                statusList: kanbanData.statusList,
+                projectColumnId: kanbanData.projectColumnId,
               }}
             />
           </div>

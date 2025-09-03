@@ -45,9 +45,6 @@ export function KanbanBoard({ projectId }: { projectId: Project['id'] }) {
 
   const columnsId = useMemo(() => columns.map((col) => col.projectColumnId), [columns]);
 
-  // TODO make a status map
-  const statusList = useMemo(() => columns.map((col) => col.name), [columns]);
-
   const [activeColumn, setActiveColumn] = useState<ColumnQueryResult | null>(null);
   const [activeTask, setActiveTask] = useState<TaskCardData | null>(null);
 
@@ -316,7 +313,6 @@ export function KanbanBoard({ projectId }: { projectId: Project['id'] }) {
               column={col}
               tasks={tasks}
               projectId={projectId}
-              statusList={statusList}
             />
           ))}
         </SortableContext>
@@ -332,7 +328,6 @@ export function KanbanBoard({ projectId }: { projectId: Project['id'] }) {
                 column={activeColumn}
                 tasks={tasks}
                 projectId={projectId}
-                statusList={statusList}
               />
             )}
             {activeTask && (
@@ -342,7 +337,7 @@ export function KanbanBoard({ projectId }: { projectId: Project['id'] }) {
                 kanbanData={{
                   projectId: projectId,
                   taskId: activeTask.id,
-                  statusList: statusList,
+                  projectColumnId: activeTask.projectkanbanColumnId,
                 }}
                 isOverlay
               />

@@ -14,7 +14,6 @@ export const BaseTaskSchema = z.object({
     .trim()
     .nullable(),
   detail: z.string(errorMessages.invalidType('Task detail', 'text')).trim().nullable(),
-  status: z.string(errorMessages.invalidType('Task status', 'text')),
   priority: z.enum(TASK_PRIORITY_VALUES),
   position: z.int(errorMessages.integer('Task position')).refine((n) => n >= 0, {
     error: 'Task position must be zero or positive',
@@ -58,7 +57,6 @@ export const InsertTaskSchema = BaseTaskSchema.omit({
 export const FormTaskSchema = TaskDataSchema.pick({
   title: true,
   description: true,
-  status: true,
   priority: true,
   detail: true,
   dueDate: true,
@@ -70,7 +68,6 @@ export const FormTaskSchema = TaskDataSchema.pick({
 export const EditTaskInfoSchema = TaskDataSchema.pick({
   title: true,
   description: true,
-  status: true,
   priority: true,
   detail: true,
   dueDate: true,

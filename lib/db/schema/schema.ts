@@ -241,7 +241,7 @@ export const tasks = pgTable(
       .references(() => projectKanbanColumns.id, { onDelete: 'cascade' })
       .notNull(),
     milestoneId: integer('milestone_id').references(() => milestones.id, { onDelete: 'restrict' }),
-    status: varchar('status').notNull(),
+    status: varchar('status'),
     position: integer('position').notNull(),
     priority: taskPriorityEnum().default('none').notNull(),
     isCompleted: boolean('is_completed').notNull(),

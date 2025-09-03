@@ -224,7 +224,7 @@ export const tasks = pgTable("tasks", {
 	detail: text(),
 	projectId: uuid("project_id").notNull(),
 	milestoneId: integer("milestone_id"),
-	status: varchar().notNull(),
+	status: varchar(),
 	priority: taskPriority().default('none').notNull(),
 	dueDate: date("due_date"),
 	startDate: date("start_date"),
