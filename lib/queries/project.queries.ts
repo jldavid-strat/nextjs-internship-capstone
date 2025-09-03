@@ -13,7 +13,7 @@ import { getMemberCount } from './project_member.queries';
 import { getCompletedTaskCount, getTotalTaskCount } from './task.queries';
 import { getCurrentUserId } from './user.queries';
 
-// TODO [CONSIDER] check read authorization in fetching projects
+// [CONSIDER] check read authorization in fetching projects
 
 // NOTE: change to Partial<SelectProject[]> if you don't need all the columns
 export async function getAllProjects(): Promise<QueryResult<Project[]>> {
@@ -58,7 +58,7 @@ export async function getAllUserProject(userId: string) {
       .leftJoin(projectMembers, eq(projectMembers.projectId, projects.id))
       .leftJoin(users, eq(users.id, userId))
       .leftJoin(tasks, eq(tasks.projectId, projects.id))
-      .where(eq(projects.id, projects.id))
+      .where(and(eq(projectMembers.userId, userId), eq(projects.isArchived, false)))
       .groupBy(projects.id);
 
     if (projectList.length === 0) {
@@ -93,7 +93,10 @@ export async function getProjectProgress(projectId: Project['id']) {
 
 export async function getProjectById(projectId: Project['id']) {
   try {
-    const singularProject = await db.select().from(projects).where(eq(projects.id, projectId));
+    const singularProject = await db
+      .select()
+      .from(projects)
+      .where(and(eq(projects.id, projectId), eq(projects.isArchived, false)));
     return {
       success: true,
       message: 'Succesfully retrieved project',
@@ -120,7 +123,7 @@ export async function getProjectHeaderData(projectId: Project['id']) {
         createdAt: projects.createdAt,
       })
       .from(projects)
-      .where(eq(projects.id, projectId));
+      .where(and(eq(projects.id, projectId), eq(projects.isArchived, false)));
 
     const response = await Promise.all([
       getMemberCount(projectId),
@@ -226,7 +229,7 @@ export async function getRecentProjects() {
       })
       .from(projects)
       .innerJoin(projectMembers, eq(projectMembers.projectId, projects.id))
-      .where(eq(projectMembers.userId, currentUserId))
+      .where(and(eq(projectMembers.userId, currentUserId), eq(projects.isArchived, false)))
       .orderBy(projects.updatedAt)
       .limit(maxCount);
 
