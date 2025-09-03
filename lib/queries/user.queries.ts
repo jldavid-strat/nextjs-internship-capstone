@@ -7,6 +7,7 @@ import { User } from '@/types/db.types';
 import { auth } from '@clerk/nextjs/server';
 import { eq } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
+import { NotFoundError } from '@/constants/error';
 
 export async function getCurrentUserId() {
   const { userId: clerkId, isAuthenticated } = await auth();
@@ -29,10 +30,13 @@ export async function getCurrentUserId() {
 
 export async function getUserByClerkId(userClerkId: User['clerkId']): Promise<QueryResult<User>> {
   try {
-    const result = await db.select().from(users).where(eq(users.clerkId, userClerkId));
+    const [result] = await db.select().from(users).where(eq(users.clerkId, userClerkId));
+
+    if (!result) throw new NotFoundError('User does not exist in the database');
+
     return {
       success: true,
-      data: result[0],
+      data: result,
     };
   } catch (error) {
     return {
