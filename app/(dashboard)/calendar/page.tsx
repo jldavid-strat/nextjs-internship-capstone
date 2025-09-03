@@ -1,92 +1,116 @@
+'use client';
+import { CalendarDays, ChevronLeft, ChevronRight, ClipboardList, Folder } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
-import { Calendar, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Calendar } from '@/components/calendar/calendar';
+import React, { useState } from 'react';
+import { View } from 'react-big-calendar';
+import { format, addDays, addWeeks, addMonths, startOfWeek, endOfWeek } from 'date-fns';
+import { useUserData } from '@/hooks/use-user-data';
+import { useCalendar } from '@/hooks/use-calendar-events';
 
 export default function CalendarPage() {
+  const now = new Date();
+  const [view, setView] = useState<View>('month');
+  const [date, setDate] = useState(now);
+  const { user, isLoading: isUserDataLoading } = useUserData();
+  const { events, isLoading: isCalendarLoading } = useCalendar(user?.id);
+  const isLoading = isUserDataLoading || isCalendarLoading;
+
+  if (isLoading) {
+    return <div>Loading Calendar...</div>;
+  }
+  function onViewChange(next: View) {
+    setView(next);
+  }
+
+  function goPrev() {
+    setDate((d) => {
+      if (view === 'day') return addDays(d, -1);
+      if (view === 'week') return addWeeks(d, -1);
+      return addMonths(d, -1);
+    });
+  }
+
+  function goNext() {
+    setDate((d) => {
+      if (view === 'day') return addDays(d, 1);
+      if (view === 'week') return addWeeks(d, 1);
+      return addMonths(d, 1);
+    });
+  }
+
+  function formatCalendarDate(d: Date) {
+    switch (view) {
+      case 'day': // Sunday, August 31
+        return format(d, 'EEEE, MMMM d');
+      case 'week': {
+        const start = startOfWeek(d, { weekStartsOn: 0 }); // Sunday-start
+        const end = endOfWeek(d, { weekStartsOn: 0 });
+        return `${format(start, 'MMMM d')} - ${format(end, 'MMMM d')}`;
+      }
+      case 'month': // August 2025
+        return format(d, 'MMMM yyyy');
+      default:
+        return 'Invalid view';
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Calendar</h1>
+          <h1 className="text-primary text-3xl font-bold">Calendar</h1>
           <p className="text-md text-muted-foreground mt-2">
             View project deadlines and team schedules
           </p>
         </div>
-        <Button className="inline-flex items-center rounded-lg px-2 py-2 text-white transition-colors">
+        {/* <Button className="inline-flex items-center rounded-lg px-2 py-2 text-white transition-colors">
           <Plus size={20} />
           Add Event
-        </Button>
-      </div>
-
-      {/* Implementation Tasks Banner */}
-      <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20">
-        <h3 className="mb-2 text-sm font-medium text-yellow-800 dark:text-yellow-200">
-          📅 Calendar Implementation Tasks
-        </h3>
-        <ul className="space-y-1 text-sm text-yellow-700 dark:text-yellow-300">
-          <li>• Task 6.2: Add task due dates, priorities, and labels</li>
-          <li>• Task 6.6: Add bulk task operations and keyboard shortcuts</li>
-        </ul>
+        </Button> */}
       </div>
 
       {/* Calendar Header */}
-      <div className="bg-card border-border rounded-lg border p-6">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <button className="hover:bg-accent rounded-lg p-2 hover:cursor-pointer">
-              <ChevronLeft size={20} />
-            </button>
-            <h2 className="text-outer_space-500 dark:text-platinum-500 text-xl font-semibold">
-              December 2024
-            </h2>
-            <button className="hover:bg-accent rounded-lg p-2 hover:cursor-pointer">
-              <ChevronRight size={20} />
-            </button>
-          </div>
-          <div className="flex space-x-2">
-            <button className="hover:bg-accent text-smhover:cursor-pointer rounded px-3 py-1">
-              Month
-            </button>
-            <button className="hover:bg-accent text-smhover:cursor-pointer rounded px-3 py-1">
-              Week
-            </button>
-            <button className="hover:bg-accent text-smhover:cursor-pointer rounded px-3 py-1">
-              Day
-            </button>
-          </div>
-        </div>
+      <Card>
+        <CardHeader className="flex flex-col items-center justify-between gap-4 md:flex-row">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" aria-label="Previous" onClick={goPrev}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
 
-        {/* Calendar Grid Placeholder */}
-        <div className="flex h-96 items-center justify-center rounded-lg">
-          <div className="text-center">
-            <Calendar size={48} className="mx-auto mb-2" />
-            <p>Calendar Component Placeholder</p>
-            <p className="text-sm">TODO: Implement with react-big-calendar or similar</p>
-          </div>
-        </div>
-      </div>
+            <CardTitle className="text-xl">{formatCalendarDate(date)}</CardTitle>
 
-      {/* Upcoming Events */}
-      <div className="bg-card border-border rounded-lg border p-6">
-        <h3 className="mb-4 text-lg font-semibold">Upcoming Deadlines</h3>
-        <div className="space-y-3">
-          {[
-            { title: 'Website Redesign', date: 'Dec 15, 2024', type: 'Project Deadline' },
-            { title: 'Team Meeting', date: 'Dec 18, 2024', type: 'Meeting' },
-            { title: 'Mobile App Launch', date: 'Dec 22, 2024', type: 'Milestone' },
-          ].map((event, index) => (
-            <div
-              key={index}
-              className="bg-card hover:bg-accent flex items-center justify-between rounded-lg p-3 text-sm hover:cursor-pointer"
-            >
-              <div>
-                <div className="font-medium">{event.title}</div>
-                <div className="text-sm">{event.type}</div>
-              </div>
-              <div className="text-sm">{event.date}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+            <Button variant="ghost" size="icon" aria-label="Next" onClick={goNext}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="flex flex-col gap-3 md:flex-row">
+            <Tabs value={view} onValueChange={(v) => onViewChange(v as View)} className="w-fit">
+              <TabsList>
+                <TabsTrigger value="month" className="hover:cursor-pointer">
+                  Month
+                </TabsTrigger>
+                <TabsTrigger value="week" className="hover:cursor-pointer">
+                  Week
+                </TabsTrigger>
+                <TabsTrigger value="day" className="hover:cursor-pointer">
+                  Day
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          <div className="bg-muted/40 border-input h-[600px] w-full rounded-xs border-1">
+            <Calendar view={view} setView={setView} date={date} setDate={setDate} events={events} />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
