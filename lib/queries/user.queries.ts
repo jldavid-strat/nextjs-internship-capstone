@@ -26,33 +26,17 @@ export async function getCurrentUserId() {
 
   return user.id;
 }
-export async function getCurrentUserData() {
-  const { userId: clerkId, isAuthenticated } = await auth();
-
-  if (!isAuthenticated) redirect('/sign-in');
-
-  const user = await db.query.users.findFirst({
-    where: (users, { eq }) => eq(users.clerkId, clerkId),
-  });
-
-  // TODO send proper error message
-  if (user === undefined) redirect('/sign-in');
-
-  return user;
-}
 
 export async function getUserByClerkId(userClerkId: User['clerkId']): Promise<QueryResult<User>> {
   try {
     const result = await db.select().from(users).where(eq(users.clerkId, userClerkId));
     return {
       success: true,
-      message: 'User succesfully retrieved',
       data: result[0],
     };
   } catch (error) {
     return {
       success: false,
-      message: 'Failed to retrieve user',
       error: JSON.stringify(error),
     };
   }
