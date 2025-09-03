@@ -330,7 +330,13 @@ export async function moveTask(moveTaskData: MoveTaskDataType) {
       const updateKanbanColumnCase = sql`case 
       when ${tasks.id} = ${taskId} then ${targetColumnId} 
       else ${tasks.projectkanbanColumnId} 
-    end`;
+      end`;
+
+      const isTaskCompletedCase = sql`case 
+      when ${tasks.id} = ${taskId} then ${targetColumnId === completedColumnId} 
+      else ${tasks.projectkanbanColumnId} 
+      end`;
+
       // update task position and kanban column id
       await db
         .update(tasks)
@@ -338,7 +344,7 @@ export async function moveTask(moveTaskData: MoveTaskDataType) {
           position: TaskPositionCaseSql,
           // only update the kanban column of moved task
           projectkanbanColumnId: updateKanbanColumnCase,
-          isCompleted: targetColumnId === completedColumnId,
+          isCompleted: isTaskCompletedCase,
           updatedAt: new Date(),
         })
         .where(inArray(tasks.id, taskIds));
