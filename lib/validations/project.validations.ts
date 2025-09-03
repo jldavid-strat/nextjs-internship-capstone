@@ -1,6 +1,6 @@
 import z from 'zod';
 import { errorMessages, isFuture, MAX_CHAR, MIN_CHAR } from '../utils/validation.utils';
-import { PROJECT_STATUS_VALUES, SELECT_ROLE_VALUES } from '../db/schema/enums';
+import { CHANGE_ROLE_VALUES, PROJECT_STATUS_VALUES, SELECT_ROLE_VALUES } from '../db/schema/enums';
 
 export const ProjectSchema = z.object({
   title: z
@@ -36,7 +36,7 @@ export const FormProjectSchema = ProjectSchema.extend({
   members: z
     .array(
       z.object({
-        userId: z.uuidv4(errorMessages.uuid('Owner ID')).trim(),
+        userId: z.uuidv4(errorMessages.uuid('User ID')).trim(),
         role: z.enum(SELECT_ROLE_VALUES, 'Only select status from the listed options'),
       }),
     )
@@ -49,6 +49,14 @@ export const AddProjectMemberSchema = z.object({
       userId: z.uuidv4(errorMessages.uuid('User ID')).trim(),
       role: z.enum(SELECT_ROLE_VALUES, 'Only select status from the listed options'),
     }),
+  ),
+});
+
+export const ChangeRoleMemberSchema = z.object({
+  role: z.enum(
+    // owner cannot be assigned to members
+    CHANGE_ROLE_VALUES,
+    'Only select status from the listed options',
   ),
 });
 
@@ -89,3 +97,5 @@ export type InsertProjectFormType = z.input<typeof InsertProjectFormSchema>;
 
 export type EditProjectFormType = z.infer<typeof EditProjectFormSchema>;
 export type EditProjectType = z.infer<typeof EditProjectSchema>;
+
+export type ChangeRoleMemberSchemaType = z.infer<typeof ChangeRoleMemberSchema>;
