@@ -5,11 +5,12 @@ import '@/styles/globals.css';
 import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from '@/providers/theme-provider';
 import Providers from '@/providers/query-provider';
+import Toaster from '@/providers/toast-provider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Project Management Tool',
-  description: 'Team collaboration and project management platform',
+  title: 'taskflow',
+  description: 'A project and task management platform',
   generator: 'v0.dev',
 };
 
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             disableTransitionOnChange
           >
             <Providers>{children}</Providers>
+            <Toaster />
           </ThemeProvider>
         </body>
       </html>
