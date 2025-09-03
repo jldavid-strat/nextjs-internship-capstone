@@ -21,7 +21,7 @@ export function useKanbanColumns(projectId: string): useKanbanColumnResult {
     // refetch every 5 seconds for now
     // refetchInterval: 5000,
     refetchInterval: 30000,
-    refetchIntervalInBackground: false,
+    refetchIntervalInBackground: true,
     // 1 minutes
     // staleTime: 1000 * 60 * 5,
   });
@@ -53,7 +53,7 @@ export function useTaskList(projectId: Project['id']): useTasksByColumnResult {
     // refetch every 5 seconds for now
     // refetchInterval: 5000,
     refetchInterval: 30000,
-    refetchIntervalInBackground: false,
+    refetchIntervalInBackground: true,
 
     // 2 minutes
     // staleTime: 1000 * 60 * 2,
