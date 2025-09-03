@@ -110,7 +110,7 @@ export function useMoveTask(projectId: string) {
         queryKey: ['tasks', projectId],
       });
 
-      toast.success('Successfully move task');
+      toast.success('Successfully moved task');
     },
   });
 }
@@ -180,7 +180,7 @@ export function useReorderColumns(projectId: string) {
     },
 
     onSuccess: () => {
-      toast.error('Successfully move kanban column');
+      toast.error('Successfully moved kanban column');
       queryClient.invalidateQueries({
         queryKey: ['kanban-columns', projectId],
       });
