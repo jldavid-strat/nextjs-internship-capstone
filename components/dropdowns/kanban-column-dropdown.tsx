@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { Button } from '../ui/button';
-import EditKanbaColumnForm from '../forms/edit-kanban-column-modal-form';
+import EditKanbanColumnForm from '../forms/edit-kanban-column-modal-form';
 import React, { useState } from 'react';
 import { DeleteAlertDialog } from '../alerts/delete-alert-dialog';
 import { deleteKanbanColumn } from '@/actions/kanban_column.actions';
@@ -42,7 +42,7 @@ export default function KanbanColumnDropdown({
   }
   return (
     <>
-      <EditKanbaColumnForm
+      <EditKanbanColumnForm
         isEditOpen={isEditOpen}
         setIsEditOpen={setIsEditOpen}
         kanbanData={{

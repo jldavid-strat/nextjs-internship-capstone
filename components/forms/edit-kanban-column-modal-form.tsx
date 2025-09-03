@@ -25,17 +25,17 @@ import { EditKanbaColumnFormData } from '@/types/types';
 import Modal from '../ui/modal';
 import { toast } from 'sonner';
 
-type EditKanbaColumnFormProps = {
+type EditKanbanColumnFormProps = {
   isEditOpen: boolean;
   setIsEditOpen: Dispatch<SetStateAction<boolean>>;
   kanbanData: EditKanbaColumnFormData;
 };
 
-export default function EditKanbaColumnForm({
+export default function EditKanbanColumnForm({
   isEditOpen,
   setIsEditOpen,
   kanbanData,
-}: EditKanbaColumnFormProps) {
+}: EditKanbanColumnFormProps) {
   const { projectId, name, description, projectColumnId, kanbanColumnId } = kanbanData;
   const [state, updateKanbanColumnAction, isPending] = useActionState(
     updateKanbanColumn.bind(null, projectId, projectColumnId, kanbanColumnId),
