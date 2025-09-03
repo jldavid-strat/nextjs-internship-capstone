@@ -7,7 +7,6 @@ import ViewTaskModal from '@/components/modals/view-task-modal';
 export default async function ProjectPage({ params }: { params: { id: string } }) {
   const projectId = (await params).id;
 
-  console.log(projectId);
   const { data: projectHeaderData } = await getProjectHeaderData(projectId);
 
   if (!projectHeaderData) return <ProjectNotFound />;
