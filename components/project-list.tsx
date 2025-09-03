@@ -1,24 +1,100 @@
-import { getAllUserProject } from '@/lib/queries/project.queries';
+'use client';
+
 import { formatDate } from '@/lib/utils/format_date';
-import { User as DBUser, Project } from '@/types/db.types';
-import { Calendar, MoreHorizontal, Users } from 'lucide-react';
+import { Project } from '@/types/db.types';
+import { Calendar, Filter, MoreHorizontal, Search, SearchX, Users } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { capitalize } from 'lodash';
 import { Badge } from './ui/badge';
-import ProjectListNotFound from './project/project-list-not-found';
+import { ProjectDataNotFound } from './project/project-not-found';
+import { Input } from './ui/input';
+import { useMemo, useState } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
+import { Button } from './ui/button';
+import { PROJECT_STATUS_VALUES } from '@/lib/db/schema/enums';
 
-export default async function ProjectList({ userId }: { userId: DBUser['id'] }) {
-  const { success, data } = await getAllUserProject(userId);
-  if (!success || !data) return <ProjectListNotFound />;
-  const projectList = data;
+const STATUS_VALUES = ['all', ...PROJECT_STATUS_VALUES];
+
+export default function ProjectList({ projectList }: { projectList: ProjectCardProps[] }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  // filter projects based on search + status
+  const filteredProjects = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+    return projectList.filter((project) => {
+      const matchesSearch =
+        !query ||
+        project.title.toLowerCase().includes(query) ||
+        project.description?.toLowerCase().includes(query);
+
+      const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [searchQuery, statusFilter, projectList]);
 
   return (
-    <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {projectList?.map((project) => (
-        <ProjectCard key={project.id} projectData={project} />
-      ))}
-    </section>
+    <div className="flex flex-col gap-4">
+      {/* Search and Filter Bar */}
+      <div className="flex items-center gap-4 sm:flex-row">
+        <div className="relative flex-1">
+          <Search className="absolute top-1/2 left-3 -translate-y-1/2 transform" size={18} />
+          <Input
+            type="text"
+            placeholder="Search projects..."
+            className="border-border h-12 w-full rounded-lg py-2 pr-4 pl-10 focus:ring focus:outline-hidden"
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        {/* Filter Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="bg-input inline-flex h-12 items-center rounded-lg px-4 py-2"
+            >
+              <Filter size={16} className="mr-2" />
+              {statusFilter === 'all' ? 'Filter' : statusFilter}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {STATUS_VALUES.map((status) => (
+              <DropdownMenuItem
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className="capitalize"
+              >
+                {status}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {filteredProjects.length > 0 ? (
+        <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredProjects.map((project) => (
+            <ProjectCard key={project.id} projectData={project} />
+          ))}
+        </section>
+      ) : (
+        <section className="flex w-full">
+          <ProjectDataNotFound
+            className="h-30 w-full"
+            message="Cannot find this project"
+            icon={<SearchX size={40} className="text-muted-foreground" />}
+          />
+        </section>
+      )}
+    </div>
   );
 }
 
@@ -28,6 +104,9 @@ type ProjectCardProps = {
   description: Project['description'];
   status: Project['status'];
   dueDate: Project['dueDate'];
+  memberCount: number;
+  // in percentage
+  progress: number;
 };
 
 function ProjectCard({ projectData }: { projectData: ProjectCardProps }) {
@@ -50,8 +129,7 @@ function ProjectCard({ projectData }: { projectData: ProjectCardProps }) {
             <div className="flex items-center">
               <Users size={16} className="mr-1" />
               {/* member count */}
-              {/* {project.members} members */}
-              14
+              {projectData.memberCount}
             </div>
             <div className="flex items-center gap-2">
               {projectData?.dueDate ? formatDate(projectData.dueDate) : ''}
@@ -61,18 +139,12 @@ function ProjectCard({ projectData }: { projectData: ProjectCardProps }) {
           <div className="mb-4">
             <div className="mb-2 flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Progress</span>
-              <span className="text-muted-foreground font-medium">
-                {/* {project.progress}% */}
-                {/* derived value from completed tasks */}
-                20%
-              </span>
+              <span className="text-muted-foreground font-medium">{projectData.progress}%</span>
             </div>
             <div className="bg-french_gray-300 dark:bg-payne's_gray-400 h-2 w-full rounded-full">
               <div
-                // className={`h-2 rounded-full transition-all duration-300 ${project.color}`}
                 className={`h-2 rounded-full transition-all duration-300 ${'bg-green-300'}`}
-                // style={{ width: `${project.progress}%` }}
-                style={{ width: `20%` }}
+                style={{ width: `${projectData.progress}%` }}
               />
             </div>
           </div>
