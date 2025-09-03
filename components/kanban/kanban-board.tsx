@@ -26,7 +26,7 @@ import { TaskCard } from './task-card';
 import { ColumnQueryResult, TaskCardData, TaskDragData } from '@/types/types';
 import useKanbanEvents from '@/hooks/use-kanban-events';
 
-export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
+export function KanbanBoard({ projectId }: { projectId: Project['id'] }) {
   // connect to Kanban SSE
   useKanbanEvents(projectId);
 
@@ -45,6 +45,7 @@ export function DBKanbanBoard({ projectId }: { projectId: Project['id'] }) {
 
   const columnsId = useMemo(() => columns.map((col) => col.projectColumnId), [columns]);
 
+  // TODO make a status map
   const statusList = useMemo(() => columns.map((col) => col.name), [columns]);
 
   const [activeColumn, setActiveColumn] = useState<ColumnQueryResult | null>(null);
