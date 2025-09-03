@@ -75,7 +75,10 @@ export async function getMaxNumColumnPositions(projectId: Project['id']) {
   }
 }
 
-export async function getColumnById(projectColumnId: ProjectKanbanColumn['id']) {
+export async function getColumnById(
+  projectId: Project['id'],
+  projectColumnId: ProjectKanbanColumn['id'],
+) {
   try {
     const [columnData] = await db
       .select({
@@ -86,7 +89,12 @@ export async function getColumnById(projectColumnId: ProjectKanbanColumn['id']) 
       })
       .from(projectKanbanColumns)
       .innerJoin(kanbanColumns, eq(kanbanColumns.id, projectKanbanColumns.kanbanColumnId))
-      .where(eq(projectKanbanColumns.id, projectColumnId));
+      .where(
+        and(
+          eq(projectKanbanColumns.projectId, projectId),
+          eq(projectKanbanColumns.id, projectColumnId),
+        ),
+      );
 
     console.log('projectColumnId', projectColumnId);
     console.log('columnData', columnData);
