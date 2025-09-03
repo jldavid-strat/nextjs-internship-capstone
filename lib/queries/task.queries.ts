@@ -1,7 +1,7 @@
 import 'server-only';
 import { db, DBTransaction } from '../db/connect_db';
 import { labels, projectLabels, taskLabels, tasks, users } from '../db/schema/schema';
-import { and, eq, inArray, max } from 'drizzle-orm';
+import { and, eq, inArray, max, count } from 'drizzle-orm';
 import { Project, ProjectKanbanColumn, Task } from '@/types/db.types';
 import { taskAssignees } from '@/migrations/schema';
 import { TaskAssgineeMap, TaskLabelMap } from '@/types/types';
@@ -138,5 +138,31 @@ export async function getTaskById(taskId: Task['id']) {
       message: `Failed to fetch task list`,
       error: JSON.stringify(error),
     };
+  }
+}
+
+export async function getCompletedTaskCount(projectId: Project['id']) {
+  try {
+    const [task] = await db
+      .select({ completedCount: count(tasks.id) })
+      .from(tasks)
+      .where(and(eq(tasks.projectId, projectId), eq(tasks.isCompleted, true)));
+
+    return task.completedCount;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function getTotalTaskCount(projectId: Project['id']) {
+  try {
+    const [task] = await db
+      .select({ taskCount: count(tasks.id) })
+      .from(tasks)
+      .where(eq(tasks.projectId, projectId));
+
+    return task.taskCount;
+  } catch (error) {
+    console.error(error);
   }
 }
