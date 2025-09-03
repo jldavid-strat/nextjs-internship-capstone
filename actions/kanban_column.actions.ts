@@ -327,6 +327,7 @@ export async function reorderKanbanColumns(
     // emit event to update kanban column
     serverEvents.emit('reorder-kanban-columns', {
       type: 'reorder-kanban-columns',
+      userId: currentUserId,
       columnId: projectColumnId,
       newPosition: newPosition,
       projectId: projectId,
