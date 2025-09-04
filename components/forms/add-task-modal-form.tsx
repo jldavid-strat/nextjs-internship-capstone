@@ -9,7 +9,6 @@ import { TASK_PRIORITY_VALUES } from '@/lib/db/schema/enums';
 import { Input } from '../ui/input';
 import MarkdownEditor from '../markdown/markdown-editor';
 import { Button } from '../ui/button';
-import { capitalize } from 'lodash';
 import { ErrorBox } from '../ui/error-box';
 import { AddLabelMultiSelect } from '../ui/add-label-multi-select';
 import { ProjectKanbanColumn } from '@/types/db.types';
@@ -25,16 +24,12 @@ import { toast } from 'sonner';
 // Integration:
 // - Update board state optimistically
 // - Handle file uploads
-// - Real-time updates for comments
 // */
-
-// TODO add toast promise to UNDO mutation via drizzle transaction
 
 export type CreateTaskProps = {
   projectColumnId: ProjectKanbanColumn['id'];
   projectId: string;
   kanbanName: string;
-  statusList: string[];
 };
 
 export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
@@ -53,7 +48,6 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
     resolver: zodResolver(FormTaskSchema),
     defaultValues: {
       priority: 'none',
-      status: kanbanData.kanbanName,
       detail: '',
       labels: [],
       assignees: [],
@@ -87,8 +81,9 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
       _queryClient.invalidateQueries({
         queryKey: ['tasks', kanbanData.projectId],
       });
-      reset();
       setIsModalOpen(false);
+      document.body.style.overflow = '';
+      reset();
       toast.success('Succesfully added a new task');
     }
   }, [state, _queryClient, kanbanData.projectId, reset]);
@@ -173,11 +168,11 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
                 <select
                   {...register('priority')}
                   name="priority"
-                  className="bg-card border-border h-8.5 w-[180px] rounded-lg border px-2 focus:outline-hidden focus-visible:ring"
+                  className="bg-card border-border h-8.5 w-[180px] rounded-lg border px-2 capitalize focus:outline-hidden focus-visible:ring"
                 >
                   {TASK_PRIORITY_VALUES.map((priority, index) => (
                     <option key={index} value={priority}>
-                      {capitalize(priority)}
+                      {priority}
                     </option>
                   ))}
                 </select>
@@ -186,7 +181,6 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
             <p className="mt-2 text-sm text-red-400">{errors.dueDate?.message}</p>
             <p className="mt-2 text-sm text-red-400">{errors.startDate?.message}</p>
             <p className="mt-2 text-sm text-red-400">{errors.priority?.message}</p>
-            <p className="mt-2 text-sm text-red-400">{errors.status?.message}</p>
             <div>
               <label className="mb-2 block text-sm font-medium">Task Detail</label>
               <Controller
@@ -203,7 +197,7 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
               <p className="mt-2 text-sm text-red-400">{errors.description?.message}</p>
             </div>
             {/* task label multiselect */}
-            <div className="mt-2">
+            <div className="mt-4">
               <label className="mb-2 block text-sm font-medium">Task Labels</label>
               <div className="flex flex-col gap-2">
                 <Controller
@@ -220,7 +214,7 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
               </div>
             </div>
             {/* task assignee multiselect  */}
-            <div className="mt-2">
+            <div className="mt-4">
               <label className="mb-2 block text-sm font-medium">Task Assignees</label>
               <div className="flex flex-col gap-2">
                 <Controller

@@ -1,16 +1,9 @@
+import MemberTableDropdown from '@/components/dropdowns/member-table-dropdown';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { formatDate } from '@/lib/utils/format_date';
 import { ProjectMemberData } from '@/types/db.types';
 import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal } from 'lucide-react';
 
 export const projectMemberColumns = (canMutate: boolean): ColumnDef<ProjectMemberData>[] => [
   {
@@ -42,7 +35,7 @@ export const projectMemberColumns = (canMutate: boolean): ColumnDef<ProjectMembe
     header: () => <div className="text-center">Role</div>,
     cell: ({ row }) => (
       <div className="flex flex-row items-center justify-center gap-2">
-        <Badge className="text-sm text-gray-500" variant="outline">
+        <Badge className="text-sm text-gray-500 capitalize" variant="outline">
           {row.original.role}
         </Badge>
       </div>
@@ -59,30 +52,6 @@ export const projectMemberColumns = (canMutate: boolean): ColumnDef<ProjectMembe
 const actionColumn: ColumnDef<ProjectMemberData>[] = [
   {
     id: 'actions',
-    cell: ({ row }) => {
-      const member = row.original;
-      const handleChangeRole = () => {
-        console.log('Change role for:', member.userId);
-      };
-
-      const handleRemove = () => {
-        console.log('Remove member:', member.userId);
-      };
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={handleChangeRole}>Change Role</DropdownMenuItem>
-            <DropdownMenuItem onClick={handleRemove}>Remove</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
+    cell: ({ row }) => <MemberTableDropdown row={row} />,
   },
 ];

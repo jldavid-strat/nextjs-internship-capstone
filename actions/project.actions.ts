@@ -147,6 +147,7 @@ export async function updateProject(
 
     await db.update(projects).set(validatedData).where(eq(projects.id, editProjectId));
     revalidatePath('/(dashboard)');
+    revalidatePath(`/projects/${editProjectId}/settings`);
     return { success: true };
   } catch (error) {
     console.error(error);

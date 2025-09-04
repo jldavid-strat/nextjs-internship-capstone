@@ -5,7 +5,6 @@ import { X } from 'lucide-react';
 import { User } from '@/types/db.types';
 import { Table, TableBody, TableRow, TableCell } from './table';
 import { SELECT_ROLE_VALUES } from '@/lib/db/schema/enums';
-import { capitalize } from 'lodash';
 import { UserMultiSelect } from './multi-select';
 import { Avatar, AvatarFallback, AvatarImage } from './avatar';
 
@@ -272,13 +271,13 @@ function SelectedUserTable({
                     name="role"
                     value={getUserRole(user.id)}
                     onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                    className="border-border bg-card rounded-lg border px-3 py-2 focus:outline-hidden focus-visible:ring"
+                    className="border-border bg-card rounded-lg border px-3 py-2 capitalize focus:outline-hidden focus-visible:ring"
                   >
                     {
                       // exclude owner as selectable role
                       SELECT_ROLE_VALUES.filter((v) => v !== 'owner').map((role, index) => (
                         <option key={index} value={role}>
-                          {capitalize(role)}
+                          {role}
                         </option>
                       ))
                     }

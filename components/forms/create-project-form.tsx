@@ -69,6 +69,7 @@ export default function CreateProjectForm({ currentUserId }: { currentUserId: Us
       setErrorCount((prev) => prev + 1);
     }
     if (state?.success === true) {
+      router.push(`/projects/${state.data}`);
       toast.success('Succesfully created a new project');
       //   toast
     }
@@ -84,7 +85,6 @@ export default function CreateProjectForm({ currentUserId }: { currentUserId: Us
           </header>
           <div>
             <label className="mb-2 block text-sm font-medium">Project Title *</label>
-            {/* TODO: add way to auto-focus title input */}
             <Input
               {...register('title')}
               type="text"

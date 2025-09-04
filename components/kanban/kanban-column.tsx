@@ -18,18 +18,11 @@ import KanbanColumnDropdown from '../dropdowns/kanban-column-dropdown';
 interface BoardColumnProps {
   column: ColumnQueryResult;
   projectId: Project['id'];
-  statusList: string[];
   isOverlay?: boolean;
   tasks: TaskCardData[];
 }
 
-export function KanbanColumnBase({
-  column,
-  isOverlay,
-  tasks,
-  projectId,
-  statusList,
-}: BoardColumnProps) {
+export function KanbanColumnBase({ column, isOverlay, tasks, projectId }: BoardColumnProps) {
   const tasksIds = useMemo(() => {
     return tasks.map((task) => task.id);
   }, [tasks]);
@@ -108,7 +101,6 @@ export function KanbanColumnBase({
                 projectId: projectId,
                 projectColumnId: column.projectColumnId,
                 kanbanName: column.name,
-                statusList: statusList,
               }}
             />
             {canEditColumn && (
@@ -136,8 +128,8 @@ export function KanbanColumnBase({
                     taskData={task}
                     kanbanData={{
                       projectId: projectId,
-                      statusList: statusList,
                       taskId: task.id,
+                      projectColumnId: task.projectkanbanColumnId,
                     }}
                   />
                 ))

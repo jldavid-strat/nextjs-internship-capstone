@@ -7,8 +7,8 @@ import { ProjectLabelTableData } from '../project-label-table';
 import { deleteProjectLabel } from '@/actions/project_labels.actions';
 import { useState } from 'react';
 import { DEFAULT_COLOR } from '@/lib/validations/project-label.validations';
-import { useModalActions } from '@/stores/modal-store';
 import EditProjectLabelForm from '@/components/forms/edit-project-label-modal-form';
+import { toast } from 'sonner';
 
 export const projectLabelColumns = (canMutate: boolean): ColumnDef<ProjectLabelTableData>[] => [
   {
@@ -51,9 +51,8 @@ function ActionCell({ row }: { row: Row<ProjectLabelTableData> }) {
     setIsPending(false);
 
     // show toast
-    if (!success) alert('did not delete');
-    alert('did delete');
-    // call delete project label server action
+    if (!success) toast.success('Deleted project label successfully');
+    toast.error('Failed to delete project label');
   };
 
   return (

@@ -8,10 +8,10 @@ import { getCurrentUserId } from '@/lib/queries/user.queries';
 import getDataDiff from '@/lib/utils/data_diff';
 import { EditTaskInfoSchema, InsertTaskSchema } from '@/lib/validations/task.validations';
 import { MoveTaskDataType, ActionResult } from '@/types/types';
-import { Project, ProjectLabel, Task, User } from '@/types/db.types';
+import { Project, ProjectKanbanColumn, ProjectLabel, Task, User } from '@/types/db.types';
 import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
-import { getCompletedColumnId, getProjectColumnByName } from '@/lib/queries/kanban_column.queries';
+import { getColumnById, getCompletedColumnId } from '@/lib/queries/kanban_column.queries';
 import { serverEvents } from '@/lib/events/event-emitter';
 import { CreateTaskProps } from '@/components/forms/add-task-modal-form';
 import { DatabaseOperationError, UnauthorizedError } from '@/constants/error';
@@ -122,7 +122,11 @@ export async function createTask(
 }
 
 export async function updateTaskInfo(
-  queryIds: { taskId: Task['id']; projectId: Project['id'] },
+  queryIds: {
+    taskId: Task['id'];
+    projectId: Project['id'];
+    projectColumnId: ProjectKanbanColumn['id'];
+  },
   previousState: unknown,
   taskData: FormData,
 ): Promise<ActionResult> {
@@ -157,10 +161,7 @@ export async function updateTaskInfo(
 
     const isNotAssigned = taskAssigneeIds.length === 0;
 
-    const originalProjectColumn = await getProjectColumnByName(
-      queryIds.projectId,
-      currentTask.status,
-    );
+    const originalProjectColumn = await getColumnById(queryIds.projectId, queryIds.projectColumnId);
 
     if (!originalProjectColumn) throw new Error('Something went wrong, Please try again');
 
@@ -170,7 +171,6 @@ export async function updateTaskInfo(
       detail: currentTask.detail as string,
       priority: currentTask.priority as string,
       startDate: currentTask.startDate as string,
-      status: currentTask.status as string,
       dueDate: currentTask.dueDate as string,
     };
 
@@ -179,7 +179,6 @@ export async function updateTaskInfo(
       description: taskData.get('description') as string,
       detail: taskData.get('detail') as string,
       priority: taskData.get('priority') as string,
-      status: taskData.get('status') as string,
       startDate: startDateString as string,
       dueDate: dueDateString as string,
     };
@@ -195,17 +194,14 @@ export async function updateTaskInfo(
       ...currentTaskData,
     });
 
-    let newKanbanName = validatedData.status.toLowerCase();
-
     console.log('validatedData', validatedData);
+
+    let newColumnId = queryIds.projectColumnId;
 
     // if status is changed move the task the new column
     if (changes?.status) {
       console.log('moving task to new column...');
-      const targetProjectColumn = await getProjectColumnByName(
-        queryIds.projectId,
-        validatedData.status,
-      );
+      const targetProjectColumn = await getColumnById(queryIds.projectId, queryIds.projectColumnId);
 
       if (!targetProjectColumn) {
         throw new Error('Something went wrong, Please try again');
@@ -219,7 +215,7 @@ export async function updateTaskInfo(
         newPosition: 0,
       });
 
-      newKanbanName = targetProjectColumn.name;
+      newColumnId = targetProjectColumn.projectColumnId;
     }
 
     console.log('updating task labels...');
@@ -242,12 +238,14 @@ export async function updateTaskInfo(
 
     if (!isUpdateAssigneeSuccess) throw new DatabaseOperationError('Failed to update task');
 
+    const completedColumnId = await getCompletedColumnId(queryIds.projectId);
+
     console.log('updating task...');
     await db
       .update(tasks)
       .set({
         ...validatedData,
-        isCompleted: newKanbanName === 'complteted',
+        isCompleted: completedColumnId === newColumnId,
         isNotAssigned: isNotAssigned,
       })
       .where(and(eq(tasks.id, queryIds.taskId), eq(tasks.projectId, queryIds.projectId)));
@@ -294,6 +292,16 @@ export async function moveTask(moveTaskData: MoveTaskDataType) {
   try {
     const { taskId, sourceColumnId, targetColumnId, projectId, newPosition } = moveTaskData;
 
+    const currentUserId = await getCurrentUserId();
+
+    const { isAuthorize } = await checkMemberPermission(
+      currentUserId,
+      projectId,
+      RESOURCES.TASKS,
+      ACTIONS.UPDATE,
+    );
+    if (!isAuthorize) throw new Error('User is unauthorized to move task');
+
     // retrieve tasks that need position updates
     const affectedTasks = await db
       .select()
@@ -328,13 +336,9 @@ export async function moveTask(moveTaskData: MoveTaskDataType) {
     // if task is moved to another column
     if (sourceColumnId !== targetColumnId) {
       const completedColumnId = await getCompletedColumnId(projectId);
+
       const updateKanbanColumnCase = sql`case 
       when ${tasks.id} = ${taskId} then ${targetColumnId} 
-      else ${tasks.projectkanbanColumnId} 
-      end`;
-
-      const isTaskCompletedCase = sql`case 
-      when ${tasks.id} = ${taskId} then ${targetColumnId === completedColumnId} 
       else ${tasks.projectkanbanColumnId} 
       end`;
 
@@ -342,10 +346,16 @@ export async function moveTask(moveTaskData: MoveTaskDataType) {
       await db
         .update(tasks)
         .set({
-          position: TaskPositionCaseSql,
           // only update the kanban column of moved task
+          isCompleted: targetColumnId === completedColumnId,
+        })
+        .where(eq(tasks.id, taskId));
+
+      await db
+        .update(tasks)
+        .set({
+          position: TaskPositionCaseSql,
           projectkanbanColumnId: updateKanbanColumnCase,
-          isCompleted: isTaskCompletedCase,
           updatedAt: new Date(),
         })
         .where(inArray(tasks.id, taskIds));
@@ -361,6 +371,7 @@ export async function moveTask(moveTaskData: MoveTaskDataType) {
     // emit event to update task list
     serverEvents.emit('task-moved', {
       type: 'task-moved',
+      userId: currentUserId,
       taskId: taskId,
       sourceColumnId: sourceColumnId,
       targetColumnId: targetColumnId,

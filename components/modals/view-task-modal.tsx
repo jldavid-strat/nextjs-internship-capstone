@@ -3,7 +3,7 @@
 import { TaskCardData } from '@/types/types';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '../ui/sheet';
 import EditTaskInfoForm from '../forms/edit-task-info-form';
-import { Project, Task } from '@/types/db.types';
+import { Project, ProjectKanbanColumn, Task } from '@/types/db.types';
 import { useSheetStore } from '@/stores/modal-store';
 import { useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
@@ -14,7 +14,7 @@ export type ViewTaskModalProps = {
   kanbanData: {
     projectId: Project['id'];
     taskId: Task['id'];
-    statusList: string[];
+    projectColumnId: ProjectKanbanColumn['id'];
   };
 };
 

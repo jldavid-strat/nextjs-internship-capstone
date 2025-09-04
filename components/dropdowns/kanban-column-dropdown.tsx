@@ -9,12 +9,14 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { Button } from '../ui/button';
-import EditKanbaColumnForm from '../forms/edit-kanban-column-modal-form';
+import EditKanbanColumnForm from '../forms/edit-kanban-column-modal-form';
 import React, { useState } from 'react';
 import { DeleteAlertDialog } from '../alerts/delete-alert-dialog';
 import { deleteKanbanColumn } from '@/actions/kanban_column.actions';
 import { EditKanbaColumnFormData } from '@/types/types';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { ProjectKanbanColumn } from '@/types/db.types';
 
 export default function KanbanColumnDropdown({
   kanbanData,
@@ -26,7 +28,7 @@ export default function KanbanColumnDropdown({
   const [isEditOpen, setIsEditOpen] = useState<boolean>(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
 
-  async function handleColumnDelete() {
+  async function handleColumnDelete(projectColumnId: ProjectKanbanColumn['id']) {
     console.log('delete', projectColumnId);
     const response = await deleteKanbanColumn(projectColumnId, projectId);
     if (response.success) {
@@ -34,15 +36,15 @@ export default function KanbanColumnDropdown({
         queryKey: ['kanban-columns', projectId],
       });
       setIsDeleteOpen(false);
-      //   show toast
+      toast.success('Deleted kanban column successfully');
       return;
     }
-    alert(response.error);
+    toast.error('Failed to delete kanban column');
     return;
   }
   return (
     <>
-      <EditKanbaColumnForm
+      <EditKanbanColumnForm
         isEditOpen={isEditOpen}
         setIsEditOpen={setIsEditOpen}
         kanbanData={{
@@ -55,7 +57,8 @@ export default function KanbanColumnDropdown({
           description: description,
         }}
       />
-      <DeleteAlertDialog
+      <DeleteAlertDialog<ProjectKanbanColumn['id']>
+        id={projectColumnId}
         alertDescription="This action cannot be undone. This will delete the corresponding kanban column and all the task included in it"
         isOpen={isDeleteOpen}
         setIsOpen={setIsDeleteOpen}

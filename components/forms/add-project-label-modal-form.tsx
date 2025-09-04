@@ -59,6 +59,7 @@ export default function AddProjectLabelForm({ projectId }: { projectId: Project[
       setErrorCount((prev) => prev + 1);
     }
     if (state?.success === true) {
+      toast.success('Succesfully added a new project label');
       reset();
       setIsModalOpen(false);
       //   toast
@@ -73,7 +74,6 @@ export default function AddProjectLabelForm({ projectId }: { projectId: Project[
         if (!isModalOpen) {
           // clears the form when dialog closes
           reset();
-          toast.success('Succesfully added a new project label');
         }
       }}
       className="w-[500px]"

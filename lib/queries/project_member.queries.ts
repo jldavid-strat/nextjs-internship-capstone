@@ -4,6 +4,9 @@ import { db } from '../db/connect_db';
 import { projects } from '../db/schema/schema';
 import { and, count, eq, max } from 'drizzle-orm';
 import { Project, User } from '@/types/db.types';
+import { getErrorMessage } from '../utils/error.utils';
+import { QueryResult } from '@/types/types';
+import { MemberRole } from '../db/schema/enums';
 
 export async function getMemberRole(userId: User['id'], projectId: Project['id']) {
   try {
@@ -39,5 +42,28 @@ export async function getMemberCount(projectId: Project['id']) {
     return result.memberCount;
   } catch (error) {
     console.error(error);
+  }
+}
+
+export async function getMember(userId: User['id'], projectId: Project['id']) {
+  try {
+    const [member] = await db
+      .select({
+        userId: projectMembers.userId,
+        role: projectMembers.role,
+      })
+      .from(projectMembers)
+      .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, userId)));
+
+    return {
+      success: true,
+      data: member,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      error: getErrorMessage(error),
+    };
   }
 }

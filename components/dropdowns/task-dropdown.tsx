@@ -12,28 +12,29 @@ import { Button } from '../ui/button';
 import React, { useState } from 'react';
 import { useSheetStore } from '@/stores/modal-store';
 import { EditTaskCardData } from '@/types/types';
-import { Project, Task } from '@/types/db.types';
+import { Project, ProjectKanbanColumn, Task } from '@/types/db.types';
 import { deleteTask } from '@/actions/task.actions';
 import { DeleteAlertDialog } from '../alerts/delete-alert-dialog';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 export type TaskSheetProps = {
   taskData: EditTaskCardData;
   kanbanData: {
     projectId: Project['id'];
     taskId: Task['id'];
-    statusList: string[];
+    projectColumnId: ProjectKanbanColumn['id'];
   };
 };
 
 export default function TaskCardDropdown({ kanbanData, taskData }: TaskSheetProps) {
-  const { projectId, taskId } = kanbanData;
+  const { projectId, taskId, projectColumnId } = kanbanData;
   const _queryClient = useQueryClient();
 
   const { open: setTaskOpen } = useSheetStore();
   const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
 
-  async function handleTaskDelete() {
+  async function handleTaskDelete(taskId: Task['id']) {
     console.log('delete', taskId);
     const response = await deleteTask(taskId, projectId);
     if (response.success) {
@@ -41,15 +42,16 @@ export default function TaskCardDropdown({ kanbanData, taskData }: TaskSheetProp
         queryKey: ['tasks', projectId],
       });
       setIsDeleteOpen(false);
-      //   show toast
+      toast.success('Deleted task successfully');
       return;
     }
-    alert(response.error);
+    toast.error('Failed to delete task');
     return;
   }
   return (
     <>
-      <DeleteAlertDialog
+      <DeleteAlertDialog<Task['id']>
+        id={taskId}
         alertDescription="This action cannot be undone. This will delete the corresponding task and all the related included in it"
         isOpen={isDeleteOpen}
         setIsOpen={setIsDeleteOpen}
@@ -76,8 +78,8 @@ export default function TaskCardDropdown({ kanbanData, taskData }: TaskSheetProp
               setTaskOpen({
                 kanbanData: {
                   projectId: kanbanData.projectId,
-                  taskId: kanbanData.taskId,
-                  statusList: kanbanData.statusList,
+                  taskId: taskId,
+                  projectColumnId: projectColumnId,
                 },
                 taskData: { ...taskData },
               });

@@ -141,7 +141,7 @@ export async function updateKanbanColumn(
     );
     if (!isAuthorize) throw new UnauthorizedError('User is unauthorized to update kanban columns');
 
-    const originalKanbanColumnData = await getColumnById(projectColumnId);
+    const originalKanbanColumnData = await getColumnById(projectId, projectColumnId);
 
     if (!originalKanbanColumnData)
       throw new DatabaseOperationError('Something went wrong. Please try again');
@@ -327,6 +327,7 @@ export async function reorderKanbanColumns(
     // emit event to update kanban column
     serverEvents.emit('reorder-kanban-columns', {
       type: 'reorder-kanban-columns',
+      userId: currentUserId,
       columnId: projectColumnId,
       newPosition: newPosition,
       projectId: projectId,

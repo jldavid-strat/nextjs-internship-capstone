@@ -4,12 +4,14 @@ import { getCurrentUserId } from '@/lib/queries/user.queries';
 import { Project } from '@/types/db.types';
 import MemberDataBox from '@/components/project/member-data-box';
 import EditDangerZone from '@/components/project/edit-danger-zone';
-import { SearchX, User, Users } from 'lucide-react';
+import { ArrowLeft, SearchX, User, Users } from 'lucide-react';
 import { ProjectDataNotFound } from '@/components/project/project-not-found';
 import SubHeader from '@/components/ui/subheader';
 import { MemberDataTable } from '@/components/data-table/member-data-table';
 import { hasRole } from '@/lib/utils/has_role';
 import ProjectLabelSection from '@/components/project/project-label-section';
+import Link from 'next/link';
+import AddProjectMemberForm from '@/components/forms/add-project-member-modal-form';
 
 export default async function ProjectSettingsPage({
   params,
@@ -29,7 +31,6 @@ export default async function ProjectSettingsPage({
   const projectTeams = projectData.projectTeams;
   const projectLabels = projectData.projectLabels ?? [];
 
-  console.log('projectMembers', projectMembers);
   const currentProjectMember = projectMembers.find((m) => m.userId === currentUserId)!;
 
   const canMutateMember = hasRole(currentProjectMember.role, ['admin', 'owner']);
@@ -38,15 +39,27 @@ export default async function ProjectSettingsPage({
   return (
     <div className="space-y-6">
       <div className="max-w-[800px] space-y-4">
-        <MemberDataBox memberData={{ ...currentProjectMember }} />
+        <section className="flex flex-col gap-4">
+          <Link
+            href={`/projects/${projectId}`}
+            className="hover:text-accent pn-8 inline-flex gap-2 transition-all duration-200"
+          >
+            <ArrowLeft size={24} className="text-muted-foreground hover:text-foreground" />
+            <span className="text-muted-foreground hover:text-foreground"> Back</span>
+          </Link>
+          <MemberDataBox memberData={{ ...currentProjectMember }} />
+        </section>
         <EditProjectForm projectData={projectInfo} />
         <EditDangerZone />
-        <SubHeader
-          title={'Project Members'}
-          description={'View, add, remove and change roles of project member'}
-          icon={<User size={20} />}
-          color="text-primary"
-        />
+        <div className="flex w-full flex-row items-center justify-between">
+          <SubHeader
+            title={'Project Members'}
+            description={'View, add, remove and change roles of project member'}
+            icon={<User size={20} />}
+            color="text-primary"
+          />
+          <AddProjectMemberForm projectId={projectId} />
+        </div>
         {/* TODO: add way to change roles or add new members */}
         <MemberDataTable data={projectMembers} canMutate={canMutateMember} />
         <ProjectLabelSection
