@@ -1,6 +1,6 @@
 'use client';
 
-import { updateProject } from '@/lib/queries/project.queries';
+import { updateProject } from '@/actions/project.actions';
 import { X } from 'lucide-react';
 import { startTransition, useActionState, useLayoutEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';

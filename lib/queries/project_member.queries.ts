@@ -1,72 +1,9 @@
-'use server';
-
+import 'server-only';
 import { projectMembers, users } from '@/lib/db/schema/schema';
 import { db } from '../db/connect_db';
 import { projects } from '../db/schema/schema';
 import { and, eq } from 'drizzle-orm';
 import { Project, User } from '@/types/db.types';
-import { checkMemberPermission } from './permssions.queries';
-import { getCurrentUserId } from './user.queries';
-import { ACTIONS, RESOURCES } from '@/constants/permissions';
-import { MemberRole } from '../db/schema/enums';
-
-// assumes that inputs are already validated
-export async function addProjectMember(
-  additionalInfo: { projectId: Project['id'] },
-  previousState: unknown,
-  formData: FormData,
-) {
-  try {
-    const currentUserId = await getCurrentUserId();
-
-    const { success: isAuthorize } = await checkMemberPermission(
-      currentUserId,
-      additionalInfo.projectId,
-      RESOURCES.PROJECTS,
-      ACTIONS.ASSIGN_MEMBERS,
-    );
-
-    if (!isAuthorize) throw new Error('User is unauthorized to update project');
-
-    // decode member array from form data
-    const usersToBeAdded = JSON.parse(formData.get('members') as string) as string[];
-    const role = formData.get('role') as MemberRole;
-    const toInsert = [];
-
-    for (let i = 0; i < usersToBeAdded.length; i++) {
-      toInsert.push({
-        userId: usersToBeAdded[i],
-        projectId: additionalInfo.projectId,
-        role: role,
-      });
-    }
-    await db.insert(projectMembers).values(toInsert);
-    return {
-      success: true,
-      message: 'Successfully added project members',
-      data: null,
-    };
-  } catch (error) {
-    console.error(error);
-    return {
-      success: false,
-      message: 'Something went wrong in adding project member. Please try again',
-      error: JSON.stringify(error),
-    };
-  }
-}
-
-export async function addOwnerInProjectMembers(userId: User['id'], projectId: Project['id']) {
-  try {
-    await db.insert(projectMembers).values({
-      userId: userId,
-      projectId: projectId,
-      role: 'owner',
-    });
-  } catch (error) {
-    console.error(error);
-  }
-}
 
 export async function getMemberRole(userId: User['id'], projectId: Project['id']) {
   try {

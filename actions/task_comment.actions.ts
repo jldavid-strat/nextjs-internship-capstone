@@ -1,12 +1,11 @@
-import { queryResult } from '@/types';
-import { db } from '../db/connect_db';
-import { tasks, taskComments, taskLabels } from '../db/schema/schema';
+'use server';
+import { ActionResult } from '@/types';
+import { db } from '@/lib/db/connect_db';
+import { taskComments } from '@/lib/db/schema/schema';
 import { eq } from 'drizzle-orm';
 import { TaskComment, CreateTaskComment, UpdateTaskComment } from '@/types/db.types';
 
-export async function createTask(
-  taskCommentData: CreateTaskComment,
-): Promise<queryResult> {
+export async function createTask(taskCommentData: CreateTaskComment): Promise<ActionResult> {
   try {
     await db.insert(taskComments).values({
       authorId: taskCommentData.authorId,
@@ -27,7 +26,7 @@ export async function createTask(
 export async function updateTaskComment(
   taskCommentId: TaskComment['id'],
   taskCommentData: UpdateTaskComment,
-): Promise<queryResult> {
+): Promise<ActionResult> {
   try {
     await db
       .update(taskComments)
@@ -46,9 +45,7 @@ export async function updateTaskComment(
     };
   }
 }
-export async function deleteTaskComment(
-  taskCommentId: TaskComment['id'],
-): Promise<queryResult> {
+export async function deleteTaskComment(taskCommentId: TaskComment['id']): Promise<ActionResult> {
   try {
     await db.delete(taskComments).where(eq(taskComments.id, taskCommentId));
 

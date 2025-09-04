@@ -1,3 +1,4 @@
+import 'server-only';
 import { eq, sql } from 'drizzle-orm';
 import { db } from '../db/connect_db';
 import { rolePermissions } from '@/migrations/schema';
@@ -14,7 +15,7 @@ export async function checkPermission(
   try {
     if (!role || !resource || !action) {
       return {
-        success: false,
+        isAuthorize: false,
         result: PermissionResult.DENIED,
       };
     }
@@ -27,26 +28,26 @@ export async function checkPermission(
 
     if (!result.isAllowed) {
       return {
-        success: true,
+        isAuthorize: true,
         result: PermissionResult.DENIED,
       };
     }
 
     if (!result.isAllowed) {
       return {
-        success: false,
+        isAuthorize: false,
         result: PermissionResult.DENIED,
       };
     }
 
     return {
-      success: true,
+      isAuthorize: true,
       result: PermissionResult.ALLOWED,
     };
   } catch (error) {
     console.error('Permission check failed:', error);
     return {
-      success: false,
+      isAuthorize: false,
       result: PermissionResult.ERROR,
     };
   }
@@ -68,7 +69,7 @@ export async function checkMemberPermission(
     const { success, data: userRole } = await getMemberRole(userId, projectId);
     if (!success || !userRole) {
       return {
-        success: false,
+        isAuthorize: false,
         result: PermissionResult.DENIED,
       };
     }
@@ -77,7 +78,7 @@ export async function checkMemberPermission(
   } catch (error) {
     console.error('Project member permission check failed:', error);
     return {
-      success: false,
+      isAuthorize: false,
       result: PermissionResult.ERROR,
     };
   }
@@ -102,7 +103,7 @@ export async function checkResourcePermission(
     // check if authenticated users can perform this action on their own resources
     const ownershipResult = await checkPermission('admin', resource, action);
     if (ownershipResult.result === PermissionResult.ALLOWED) {
-      return { success: true, result: PermissionResult.ALLOWED };
+      return { isAuthorize: true, result: PermissionResult.ALLOWED };
     }
   }
 
