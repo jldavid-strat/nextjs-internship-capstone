@@ -4,81 +4,81 @@ import { db } from '@/lib/db/connect_db';
 import { projects } from '@/lib/db/schema/schema';
 import { checkMemberPermission, checkPermission } from '@/lib/queries/permssions.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
-import { ActionResult, QueryResult } from '@/types/types';
+import { ActionResult } from '@/types/types';
 import { Project } from '@/types/db.types';
 import { addProjectMembers } from './project_member.actions';
 import { createDefaultKanbanColumns } from './kanban_column.actions';
 import { revalidatePath } from 'next/cache';
-import { ZodError } from 'zod';
 import { getProjectById } from '@/lib/queries/project.queries';
 import getDataDiff from '@/lib/utils/data_diff';
 import { eq } from 'drizzle-orm';
 import { EditProjectSchema, InsertProjectSchema } from '@/lib/validations/project.validations';
 import { checkAuthenticationStatus } from '@/lib/utils/is_authenticated';
 import { MemberValue } from '@/components/ui/add-member-multiselect';
+import { createDefaultProjectLabels } from './project_labels.actions';
+import { getErrorMessage } from '@/lib/utils/error.utils';
+import { DatabaseOperationError, UnauthorizedError } from '@/constants/error';
 
 export async function createProject(
   previousState: unknown,
   projectData: FormData,
-): Promise<QueryResult<Project['id'], string[] | string>> {
+): Promise<ActionResult<Project['id']>> {
   try {
     await checkAuthenticationStatus();
 
     // all users by default can create projects
     const { isAuthorize } = await checkPermission('public', RESOURCES.PROJECTS, ACTIONS.CREATE);
 
-    if (!isAuthorize) throw new Error('User is unauthorized to create project');
+    if (!isAuthorize) throw new UnauthorizedError('User is unauthorized to create project');
 
     // [CONSIDER] const data = Object.fromEntries(projectData.entries())
     // must be formatted as "YYYY-MM-DD"
     // default to null to handle empty string
-    const dueDateString = projectData.get('dueDate') || null;
-    const members = JSON.parse(projectData.get('members') as string) as MemberValue[];
 
-    const validatedData = InsertProjectSchema.parse({
-      title: projectData.get('title') as string,
-      description: projectData.get('description') as string,
-      ownerId: projectData.get('owner-id') as string,
-      dueDate: dueDateString,
-    });
+    const transactionResult = await db.transaction(async (tx) => {
+      const dueDateString = projectData.get('dueDate') || null;
+      const members = JSON.parse(projectData.get('members') as string) as MemberValue[];
 
-    console.log('creating new project...');
+      const validatedData = InsertProjectSchema.parse({
+        title: projectData.get('title') as string,
+        description: projectData.get('description') as string,
+        ownerId: projectData.get('owner-id') as string,
+        dueDate: dueDateString,
+      });
 
-    const [{ newProjectId }] = await db
-      .insert(projects)
-      .values(validatedData)
-      .returning({ newProjectId: projects.id });
+      console.log('creating new project...');
 
-    // // TODO wrap in a db transaction
-    console.log('adding project members...');
-    const { success } = await addProjectMembers(newProjectId, members, true);
-    if (!success) throw new Error('Something went wrong adding project members');
+      const [{ newProjectId }] = await tx
+        .insert(projects)
+        .values(validatedData)
+        .returning({ newProjectId: projects.id });
 
-    // create default kanban boards
-    console.log('creating default kanban boards...');
-    const kanbanResponse = await createDefaultKanbanColumns(newProjectId);
+      console.log('adding project members...');
+      const { success } = await addProjectMembers(newProjectId, members, true, tx);
+      if (!success) throw new DatabaseOperationError('Something went wrong adding project members');
 
-    if (!kanbanResponse.success) throw new Error(kanbanResponse.message);
+      // create default kanban boards
+      console.log('creating default kanban boards...');
+      const kanbanResponse = await createDefaultKanbanColumns(newProjectId, tx);
+      if (!kanbanResponse.success) throw new DatabaseOperationError(kanbanResponse.error as string);
 
-    revalidatePath('/projects');
-    return {
-      success: true,
-      message: `Project successfully created`,
-      data: newProjectId,
-    };
-  } catch (error) {
-    if (error instanceof ZodError) {
+      // create default labels for this project
+      console.log('creating default project labels...');
+      const labelResponse = await createDefaultProjectLabels(newProjectId, tx);
+      if (!labelResponse.success) throw new DatabaseOperationError(labelResponse.error as string);
+
+      revalidatePath('/projects');
       return {
-        success: false,
-        message: error.issues[0].message,
-        error: error.issues.map((issue) => issue.message),
+        success: true,
       };
-    }
+    });
+    if (!transactionResult.success) throw new DatabaseOperationError('Failed to create project');
+    return { success: true };
+  } catch (error) {
     console.error(error);
     return {
       success: false,
-      message: `Failed to create project`,
-      error: JSON.stringify(error),
+      error: getErrorMessage(error),
     };
   }
 }
@@ -93,7 +93,7 @@ export async function updateProject(
   editProjectId: string,
   previousState: unknown,
   projectData: FormData,
-) {
+): Promise<ActionResult<null>> {
   try {
     const currentUserId = await getCurrentUserId();
 
@@ -104,7 +104,7 @@ export async function updateProject(
       ACTIONS.UPDATE,
     );
 
-    if (!isAuthorize) throw new Error('User is unauthorized to update project');
+    if (!isAuthorize) throw new UnauthorizedError('User is unauthorized to update project');
 
     const dueDateString = projectData.get('dueDate') || null;
 
@@ -147,20 +147,12 @@ export async function updateProject(
 
     await db.update(projects).set(validatedData).where(eq(projects.id, editProjectId));
     revalidatePath('/(dashboard)');
-    return { success: true, message: `Successfully updated project` };
+    return { success: true };
   } catch (error) {
     console.error(error);
-    if (error instanceof ZodError) {
-      return {
-        success: false,
-        message: `Failed to update project`,
-        error: error.message,
-      };
-    }
     return {
       success: false,
-      message: `Failed to update project`,
-      error: error,
+      error: getErrorMessage(error),
     };
   }
 }
@@ -169,11 +161,10 @@ export async function deleteProject(projectId: Project['id']): Promise<ActionRes
   try {
     await db.delete(projects).where(eq(projects.id, projectId));
 
-    return { success: true, message: `Project successfully deleted` };
+    return { success: true };
   } catch (error) {
     return {
       success: false,
-      message: `Failed to delete project`,
       error: JSON.stringify(error),
     };
   }

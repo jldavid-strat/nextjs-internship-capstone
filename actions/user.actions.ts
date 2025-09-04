@@ -2,6 +2,7 @@
 import { db } from '@/lib/db/connect_db';
 import { users } from '@/lib/db/schema/schema';
 import { CreateUser, UpdateUser, User } from '@/types/db.types';
+import { auth } from '@clerk/nextjs/server';
 import { and, eq, ilike, notInArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -54,6 +55,7 @@ export async function deleteUser(clerkId: User['clerkId']): Promise<void> {
   }
 }
 
+// moved to work with add user multiselect
 export async function getSuggestedUsersByEmail(
   input: string | null,
   filterIds: string[] = [],
@@ -91,4 +93,19 @@ export async function getSuggestedUsersByEmail(
     // };
     return [];
   }
+}
+
+// moved to server action work with tanstack query
+export async function getCurrentUserData() {
+  const { userId: clerkId, isAuthenticated } = await auth();
+
+  if (!isAuthenticated) redirect('/sign-in');
+
+  const user = await db.query.users.findFirst({
+    where: (users, { eq }) => eq(users.clerkId, clerkId),
+  });
+
+  if (user === undefined) return { success: false };
+
+  return { success: true, data: user };
 }

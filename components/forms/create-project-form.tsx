@@ -2,7 +2,7 @@
 
 import { createProject } from '@/actions/project.actions';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { startTransition, useActionState, useCallback, useEffect, useRef } from 'react';
+import { startTransition, useActionState, useCallback, useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
@@ -15,6 +15,8 @@ import { Info, User as UserIcon } from 'lucide-react';
 import { User } from '@/types/db.types';
 import { getSuggestedUsersByEmail } from '@/actions/user.actions';
 import { AddMemberMultiSelect } from '../ui/add-member-multiselect';
+import { ErrorBox } from '../ui/error-box';
+import { toast } from 'sonner';
 
 export default function CreateProjectForm({ currentUserId }: { currentUserId: User['id'] }) {
   const [state, createProjectAction, isPending] = useActionState(createProject, undefined);
@@ -33,6 +35,8 @@ export default function CreateProjectForm({ currentUserId }: { currentUserId: Us
     },
   });
 
+  const [errorCount, setErrorCount] = useState(0);
+
   const formRef = useRef(null);
   const router = useRouter();
 
@@ -41,15 +45,12 @@ export default function CreateProjectForm({ currentUserId }: { currentUserId: Us
   };
 
   const onSubmitHandler = (data: InsertProjectFormType) => {
-    const formData = new FormData();
+    const formData = new FormData(formRef.current!);
     const ownerData = {
       userId: currentUserId,
       role: 'owner',
     };
-    formData.append('title', data.title);
     formData.append('owner-id', data.ownerId);
-    formData.append('due-date', data.dueDate ?? '');
-    formData.append('description', data.description ?? '');
     formData.append('members', JSON.stringify([...(data.members ?? []), ownerData]));
 
     startTransition(() => createProjectAction(formData));
@@ -62,15 +63,17 @@ export default function CreateProjectForm({ currentUserId }: { currentUserId: Us
     [currentUserId],
   );
 
-  // NOTE only handle success state
   useEffect(() => {
-    if (state?.success) {
-      // alert('Successfully added project');
-      // redirect to newly project page
-      router.push(`/projects/${state.data}`);
+    if (state?.success === false && state?.error) {
+      //   always increment on unsuccesful attempt
+      setErrorCount((prev) => prev + 1);
     }
-    return;
+    if (state?.success === true) {
+      toast.success('Succesfully created a new project');
+      //   toast
+    }
   }, [state, router]);
+
   return (
     <div className="max-w-[800px] space-y-4">
       <form ref={formRef} onSubmit={handleSubmit(onSubmitHandler)}>
@@ -137,11 +140,10 @@ export default function CreateProjectForm({ currentUserId }: { currentUserId: Us
           </div>
         </section>
 
-        {/* TODO display all error messages not just one */}
-        {/* Server validation error messages */}
-        <div>
+        {/* Server side error */}
+        <div className="my-4">
           {state?.success === false && (
-            <p className="mt-2 text-sm text-red-400">{`SERVER: ${state?.error}`}</p>
+            <ErrorBox key={`error-${errorCount}`} message={state.error} />
           )}
         </div>
 

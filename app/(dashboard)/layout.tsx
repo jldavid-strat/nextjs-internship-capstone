@@ -3,12 +3,12 @@
 import type React from 'react';
 
 import { useState, Suspense } from 'react';
-import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Menu, Bell, Search } from 'lucide-react';
 import { UserButton, useUser } from '@clerk/nextjs';
 import ProtectedPage from '@/components/protected/protected-page';
 import { Input } from '@/components/ui/input';
 import Sidebar from '@/components/layout/sidebar';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sideBarOpen, setSidebarOpen] = useState(false);
@@ -41,7 +41,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Input
                   type="text"
                   placeholder="Search projects, tasks..."
-                  className="border-border h-12 w-full rounded-lg py-2 pr-4 pl-10 text-xl focus:ring focus:outline-hidden"
+                  className="border-border h-12 w-full rounded-lg py-2 pr-4 pl-10 text-sm focus:ring focus:outline-hidden"
                 />
               </div>
             </div>

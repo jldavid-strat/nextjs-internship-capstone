@@ -1,11 +1,11 @@
 import { CircleAlert } from 'lucide-react';
 import { Button } from '../ui/button';
-import ProjectSubHeader from './project-subheader';
+import SubHeader from '../ui/subheader';
 
 export default function EditDangerZone() {
   return (
     <>
-      <ProjectSubHeader
+      <SubHeader
         title={'Danger Zone'}
         description={'Substantial or irreversible actions for project'}
         icon={<CircleAlert size={20} />}

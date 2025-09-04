@@ -1,20 +1,25 @@
 'use server';
 import { MemberValue } from '@/components/ui/add-member-multiselect';
 import { ACTIONS, RESOURCES } from '@/constants/permissions';
-import { db } from '@/lib/db/connect_db';
-import { projectMembers } from '@/lib/db/schema/schema';
+import { db, DBTransaction } from '@/lib/db/connect_db';
+import { projectMembers, projects, users } from '@/lib/db/schema/schema';
 import { checkMemberPermission } from '@/lib/queries/permssions.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
+import { getErrorMessage } from '@/lib/utils/error.utils';
 import { AddProjectMemberSchema } from '@/lib/validations/project.validations';
 import { Project, User } from '@/types/db.types';
+import { ActionResult } from '@/types/types';
+import { and, eq, ilike, or } from 'drizzle-orm';
 
 // assumes that inputs are already validated
 export async function addProjectMembers(
   projectId: Project['id'],
   members: MemberValue[],
   isNewProject: boolean,
-) {
+  dbTransaction?: DBTransaction,
+): Promise<ActionResult> {
   try {
+    const dbContext = dbTransaction ?? db;
     const currentUserId = await getCurrentUserId();
 
     const { isAuthorize } = await checkMemberPermission(
@@ -38,18 +43,17 @@ export async function addProjectMembers(
       role: m.role,
     }));
 
-    await db.insert(projectMembers).values(toInsert);
+    console.info(toInsert);
+
+    await dbContext.insert(projectMembers).values(toInsert);
     return {
       success: true,
-      message: 'Successfully added project members',
-      data: null,
     };
   } catch (error) {
     console.error(error);
     return {
       success: false,
-      message: 'Something went wrong in adding project member. Please try again',
-      error: JSON.stringify(error),
+      error: getErrorMessage(error),
     };
   }
 }
@@ -61,6 +65,44 @@ export async function addOwnerInProjectMembers(userId: User['id'], projectId: Pr
       projectId: projectId,
       role: 'owner',
     });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// moved to server actions to work properly with user multiselect
+export async function getProjectMembers(
+  projectId: Project['id'],
+  withSearchTerm?: string,
+  maxCount?: number,
+) {
+  try {
+    const searchFields = [users.firstName, users.lastName, users.primaryEmailAddress];
+
+    const conditions = [
+      eq(projects.id, projectId),
+      ...(withSearchTerm
+        ? [or(...searchFields.map((field) => ilike(field, `%${withSearchTerm.trim()}%`)))]
+        : []),
+    ];
+
+    const projectMemberQuery = (maxCount?: number) => {
+      const baseQuery = db
+        .select({
+          userData: { ...users },
+          role: projectMembers.role,
+          joinedAt: projectMembers.joinedAt,
+        })
+        .from(projects)
+        .innerJoin(projectMembers, eq(projects.id, projectMembers.projectId))
+        .innerJoin(users, eq(users.id, projectMembers.userId))
+        .where(and(...conditions))
+        .orderBy(projectMembers.role);
+
+      return maxCount ? baseQuery.limit(maxCount) : baseQuery;
+    };
+
+    return await projectMemberQuery(maxCount);
   } catch (error) {
     console.error(error);
   }

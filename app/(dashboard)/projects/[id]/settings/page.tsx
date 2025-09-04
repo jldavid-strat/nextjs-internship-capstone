@@ -2,14 +2,16 @@ import EditProjectForm from '@/components/forms/edit-project-form';
 import { getProjectDataById } from '@/lib/queries/project.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
 import { Project } from '@/types/db.types';
-import EditProjectHeading from '../../../../../components/project/edit-project-heading';
+import MemberDataBox from '@/components/project/member-data-box';
 import EditDangerZone from '@/components/project/edit-danger-zone';
-import { User, Users } from 'lucide-react';
-import ProjectMemberTable from '@/components/project/project-member-table';
-import ProjectTeamNotFound from '@/components/project/project-team-not-found';
-import ProjectSubHeader from '@/components/project/project-subheader';
+import { SearchX, User, Users } from 'lucide-react';
+import { ProjectDataNotFound } from '@/components/project/project-not-found';
+import SubHeader from '@/components/ui/subheader';
+import { MemberDataTable } from '@/components/data-table/member-data-table';
+import { hasRole } from '@/lib/utils/has_role';
+import ProjectLabelSection from '@/components/project/project-label-section';
 
-export default async function SettingsProjectPage({
+export default async function ProjectSettingsPage({
   params,
 }: {
   params: Promise<{ id: Project['id'] }>;
@@ -23,39 +25,49 @@ export default async function SettingsProjectPage({
     return <div className="space-y-6">This project does not exist</div>;
 
   const projectInfo = projectData.projectData;
-  const projectMembers = projectData.projectMembers!;
+  const projectMembers = projectData.projectMembers ?? [];
   const projectTeams = projectData.projectTeams;
+  const projectLabels = projectData.projectLabels ?? [];
 
+  console.log('projectMembers', projectMembers);
   const currentProjectMember = projectMembers.find((m) => m.userId === currentUserId)!;
+
+  const canMutateMember = hasRole(currentProjectMember.role, ['admin', 'owner']);
+  const canMutateLabel = hasRole(currentProjectMember.role, ['admin', 'owner', 'owner']);
 
   return (
     <div className="space-y-6">
       <div className="max-w-[800px] space-y-4">
-        <EditProjectHeading
-          memberData={{ ...currentProjectMember }}
-          createdAt={projectInfo.createdAt!}
-        />
+        <MemberDataBox memberData={{ ...currentProjectMember }} />
         <EditProjectForm projectData={projectInfo} />
         <EditDangerZone />
-        <ProjectSubHeader
+        <SubHeader
           title={'Project Members'}
           description={'View, add, remove and change roles of project member'}
           icon={<User size={20} />}
           color="text-primary"
         />
         {/* TODO: add way to change roles or add new members */}
-        <ProjectMemberTable projectMembers={projectMembers} />
-
-        <ProjectSubHeader
+        <MemberDataTable data={projectMembers} canMutate={canMutateMember} />
+        <ProjectLabelSection
+          projectId={projectId}
+          canMutate={canMutateLabel}
+          projectLabels={projectLabels}
+        />
+        <SubHeader
           title={'Project Teams'}
           description={'View, add, remove and change roles of project member'}
           icon={<Users size={20} />}
           color="text-primary"
         />
-
         {/* TODO: add way to add and modify teams */}
         <div className="bg-input/30 rounded-sm">
-          {projectTeams?.length == 0 && <ProjectTeamNotFound />}
+          {projectTeams?.length === 0 && (
+            <ProjectDataNotFound
+              message="No project teams found"
+              icon={<SearchX size={40} className="text-muted-foreground" />}
+            />
+          )}
         </div>
       </div>
     </div>

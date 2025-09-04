@@ -1,18 +1,39 @@
 import React from 'react';
-import { Dialog, DialogOverlay, DialogContent } from './dialog';
+import { Dialog, DialogContent, DialogDescription } from './dialog';
+import { DialogTitle, DialogTrigger } from '@radix-ui/react-dialog';
+import { cn } from '../../lib/utils/shadcn-utils';
 
 export type ModalProps = {
   isOpen: boolean;
   setIsOpen: (input: boolean) => void;
   children: React.ReactNode;
+  triggerComponent?: React.ReactNode;
+  className?: string;
 };
 
-export default function Modal({ isOpen, setIsOpen, children }: ModalProps) {
+export default function Modal({
+  isOpen,
+  setIsOpen,
+  children,
+  className,
+  triggerComponent,
+}: ModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogOverlay>
-        <DialogContent className="border-border overflow-y-hidden">{children}</DialogContent>
-      </DialogOverlay>
+      {triggerComponent && <DialogTrigger asChild>{triggerComponent}</DialogTrigger>}
+      <DialogContent
+        className={cn('border-border max-h-screen overflow-y-scroll lg:max-w-screen-lg', className)}
+      >
+        <DialogTitle className="sr-only"></DialogTitle>
+        <DialogDescription className="sr-only"></DialogDescription>
+
+        {/* 
+        
+        Add <DialogClose aSchild> in children to add a trigger to manually close the modal
+        
+        */}
+        {children}
+      </DialogContent>
     </Dialog>
   );
 }

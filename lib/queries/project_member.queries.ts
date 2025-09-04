@@ -2,7 +2,7 @@ import 'server-only';
 import { projectMembers, users } from '@/lib/db/schema/schema';
 import { db } from '../db/connect_db';
 import { projects } from '../db/schema/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq, max } from 'drizzle-orm';
 import { Project, User } from '@/types/db.types';
 
 export async function getMemberRole(userId: User['id'], projectId: Project['id']) {
@@ -29,25 +29,14 @@ export async function getMemberRole(userId: User['id'], projectId: Project['id']
   }
 }
 
-export async function getProjectMembers(projectId: string) {
+export async function getMemberCount(projectId: Project['id']) {
   try {
-    const projectMemberList = await db
-      .select({
-        userId: projectMembers.userId,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        userImgLink: users.imgLink,
-        primaryEmailAddress: users.primaryEmailAddress,
-        role: projectMembers.role,
-        joinedAt: projectMembers.joinedAt,
-      })
-      .from(projects)
-      .innerJoin(projectMembers, eq(projects.id, projectMembers.projectId))
-      .innerJoin(users, eq(users.id, projectMembers.userId))
-      .where(eq(projects.id, projectId))
-      .orderBy(projectMembers.role);
+    const [result] = await db
+      .select({ memberCount: count(projectMembers.userId) })
+      .from(projectMembers)
+      .where(eq(projectMembers.projectId, projectId));
 
-    return projectMemberList;
+    return result.memberCount;
   } catch (error) {
     console.error(error);
   }

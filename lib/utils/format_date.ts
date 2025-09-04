@@ -9,3 +9,21 @@ export function formatDate(date: Date | string) {
     year: 'numeric',
   });
 }
+
+// format due date
+export function formatDueDate(dueDate?: string | null) {
+  if (!dueDate) return 'No due date';
+
+  const due = new Date(dueDate);
+  const now = new Date();
+  const diffTime = due.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return `Overdue by ${Math.abs(diffDays)} days`;
+  } else if (diffDays === 0) {
+    return 'Due today';
+  } else {
+    return `Due in ${diffDays} days`;
+  }
+}

@@ -24,7 +24,7 @@ export const errorMessages = {
   // string validations
   empty: (field: string = 'Field') => `${field} cannot be empty`,
 
-  minChar: (field: string, min: number) => `${field} must be at least ${min} character/s`,
+  minChar: (field: string) => `${field} is required`,
   maxChar: (field: string, max: number) => `${field} must be no more than ${max} characters`,
 
   // number validations

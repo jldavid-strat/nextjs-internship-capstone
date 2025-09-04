@@ -1,6 +1,6 @@
 'use client';
 
-import { createProject } from '@/actions/project.actions';
+import { updateProject } from '@/actions/project.actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { startTransition, useActionState, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -13,21 +13,27 @@ import { Project } from '@/types/db.types';
 import { BookOpenText, Edit } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { capitalize } from 'lodash';
-import ProjectSubHeader from '../project/project-subheader';
+import { ErrorBox } from '../ui/error-box';
+import SubHeader from '../ui/subheader';
+import { toast } from 'sonner';
 
 const projectStatusBadgeStyle = {
   active: 'bg-primary/10 border-primary',
-  completed: 'bg-green-400/50 border-green-400',
+  completed: 'bg-green-400/10 border-green-400',
   archived: 'border-yellow-200 bg-yellow-500/20',
 };
 
 export default function EditProjectForm({ projectData }: { projectData: Project }) {
-  const [state, createProjectAction, isPending] = useActionState(createProject, undefined);
+  const [state, updateProjectAction, isPending] = useActionState(
+    updateProject.bind(null, projectData.id),
+    undefined,
+  );
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<EditProjectFormType>({
     mode: 'onBlur',
@@ -42,6 +48,8 @@ export default function EditProjectForm({ projectData }: { projectData: Project 
     },
   });
 
+  const [errorCount, setErrorCount] = useState(0);
+
   const formRef = useRef(null);
   const router = useRouter();
 
@@ -49,27 +57,30 @@ export default function EditProjectForm({ projectData }: { projectData: Project 
     evt.preventDefault();
     handleSubmit(() => {
       // console.log(new FormData(formRef.current!));
-      startTransition(() => createProjectAction(new FormData(formRef.current!)));
+      startTransition(() => updateProjectAction(new FormData(formRef.current!)));
     })(evt);
   };
 
   const handleCancel = () => {
-    // reset the form field and
-    // router.back();
+    // reset the form field to previous values
+    reset();
     setIsEditing(false);
   };
 
   // NOTE only handle success state
   useEffect(() => {
-    if (state?.success) {
-      // refresh cache to get update data
-      router.refresh();
+    if (state?.success === false && state?.error) {
+      //   always increment on unsuccesful attempt
+      setErrorCount((prev) => prev + 1);
+    }
+    if (state?.success === true) {
+      toast.success('Succesfully updated project information');
     }
   }, [state, router]);
   return (
     <form ref={formRef} onSubmit={onSubmitHandler}>
       <section className="mb-4 flex flex-row justify-between">
-        <ProjectSubHeader
+        <SubHeader
           title={'Project Details'}
           description={'General information about the project'}
           icon={<BookOpenText size={20} />}
@@ -88,9 +99,7 @@ export default function EditProjectForm({ projectData }: { projectData: Project 
         </div>
       </section>
       <div>
-        <label className="text-outer_space-500 dark:text-platinum-500 mb-2 block text-sm font-medium">
-          Project Title *
-        </label>
+        <label className="mb-2 block text-sm font-medium">Project Title *</label>
 
         <Input
           {...register('title')}
@@ -103,9 +112,7 @@ export default function EditProjectForm({ projectData }: { projectData: Project 
       </div>
 
       <div>
-        <label className="text-outer_space-500 dark:text-platinum-500 mb-2 block text-sm font-medium">
-          Description
-        </label>
+        <label className="mb-2 block text-sm font-medium">Description</label>
         <textarea
           {...register('description')}
           name="description"
@@ -145,7 +152,7 @@ export default function EditProjectForm({ projectData }: { projectData: Project 
               <select
                 {...register('status')}
                 name="status"
-                className="bg-card rounded-lg border px-2 focus:outline-hidden focus-visible:ring"
+                className="bg-card border-border h-8 w-[180px] rounded-lg border px-2 focus:outline-hidden focus-visible:ring"
               >
                 {PROJECT_STATUS_VALUES.map((status, index) => (
                   <option key={index} value={status}>
@@ -159,17 +166,10 @@ export default function EditProjectForm({ projectData }: { projectData: Project 
       </div>
       <p className="mt-2 text-sm text-red-400">{errors.dueDate?.message}</p>
       <p className="mt-2 text-sm text-red-400">{errors.status?.message}</p>
-      {/* <div className="mt-2 text-sm text-red-400">{JSON.stringify(errors, null, 2)}</div> */}
 
-      {/* Server validation error messages */}
-      {/* TODO display all error messages not just one or ZodErrorsw */}
-      <div>
-        {state?.success === false && (
-          <>
-            <p className="mt-2 text-sm text-red-400">{`SERVER validation: ${JSON.stringify(state.error, null, 2)}`}</p>
-            <p className="mt-2 text-sm text-red-400">{`SERVER: ${state.error}`}</p>
-          </>
-        )}
+      {/* Server side error */}
+      <div className="my-4">
+        {state?.success === false && <ErrorBox key={`error-${errorCount}`} message={state.error} />}
       </div>
 
       {isEditing && (

@@ -1,68 +1,73 @@
-import { TrendingUp, Users, CheckCircle, Clock, Plus } from 'lucide-react';
+import { ProjectDataNotFound } from '@/components/project/project-not-found';
+import { getDashboardStats } from '@/lib/queries/dashboard.queries';
+import { getRecentProjects } from '@/lib/queries/project.queries';
+import { formatDate } from '@/lib/utils/format_date';
+import { TrendingUp, Users, CheckCircle, Clock, Plus, SearchX } from 'lucide-react';
+import Link from 'next/link';
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const dashboarStats = await getDashboardStats();
+  const recentProjects = await getRecentProjects();
+
+  const activeProjectCount = dashboarStats?.activeProjectCount;
+  const memberCount = dashboarStats?.memberCount;
+  const completedTaskCount = dashboarStats?.completedTaskCount;
+  const pendingTaskCount = dashboarStats?.pendingTaskCount;
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-outer_space-500 dark:text-platinum-500 text-3xl font-bold">
-          Dashboard
-        </h1>
-        <p className="text-payne's_gray-500 dark:text-french_gray-500 mt-2">
+        <h1 className="text-primary text-3xl font-bold">Dashboard</h1>
+        <p className="text-muted-foreground mt-2">
           Welcome back! Here&apos;s an overview of your projects and tasks.
         </p>
-      </div>
-
-      {/* Implementation Status Banner */}
-      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-        <div className="flex items-start">
-          <div className="shrink-0">
-            <div className="bg-blue_munsell-500 flex h-8 w-8 items-center justify-center rounded-full">
-              <TrendingUp className="text-white" size={16} />
-            </div>
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100">
-              Dashboard Implementation Tasks
-            </h3>
-            <div className="mt-2 text-sm text-blue-800 dark:text-blue-200">
-              <ul className="list-inside list-disc space-y-1">
-                <li>Task 4.2: Create project listing and dashboard interface</li>
-                <li>Task 5.3: Set up client-side state management with Zustand</li>
-                <li>Task 6.6: Optimize performance and implement loading states</li>
-              </ul>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Stats Grid - Placeholder */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { name: 'Active Projects', value: '12', icon: TrendingUp, change: '+2.5%' },
-          { name: 'Team Members', value: '24', icon: Users, change: '+4.1%' },
+          {
+            name: 'Active Projects',
+            value: activeProjectCount,
+            icon: TrendingUp,
+            change: '+2.5%',
+            color: 'primary',
+          },
+          {
+            name: 'Project Members',
+            value: memberCount,
+            icon: Users,
+            change: '+4.1%',
+            color: 'gray-400',
+          },
           {
             name: 'Completed Tasks',
-            value: '156',
+            value: completedTaskCount,
             icon: CheckCircle,
             change: '+12.3%',
+            color: 'purple-400',
           },
-          { name: 'Pending Tasks', value: '43', icon: Clock, change: '-2.1%' },
+          {
+            name: 'Pending Tasks',
+            value: pendingTaskCount,
+            icon: Clock,
+            change: '-2.1%',
+            color: 'orange-300',
+          },
         ].map((stat) => (
           <div
             key={stat.name}
-            className="bg-card border-border border-french_gray-300 dark:border-payne's_gray-400 overflow-hidden rounded-lg border p-6"
+            className="bg-card border-border overflow-hidden rounded-lg border p-6"
           >
             <div className="flex items-center">
               <div className="shrink-0">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg">
-                  <stat.icon className="text-blue_munsell-500" size={20} />
+                <div className={`flex h-8 w-8 items-center justify-center rounded-lg`}>
+                  <stat.icon className={`text-${stat.color}`} size={20} />
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-payne's_gray-500 dark:text-french_gray-400 truncate text-sm font-medium">
-                    {stat.name}
-                  </dt>
+                  <dt className="truncate text-sm font-medium">{stat.name}</dt>
                   <dd className="flex items-baseline">
                     <div className="text-outer_space-500 dark:text-platinum-500 text-2xl font-semibold">
                       {stat.value}
@@ -82,31 +87,24 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Projects */}
         <div className="bg-card border-border rounded-lg border-1 p-6">
-          <h3 className="text-outer_space-500 dark:text-platinum-500 mb-4 text-lg font-semibold">
-            Recent Projects
-          </h3>
+          <h3 className="mb-4 text-lg font-semibold">Recent Projects</h3>
           <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="bg-card border-border flex items-center justify-between rounded-lg border-1 p-3"
-              >
-                <div>
-                  <div className="text-outer_space-500 dark:text-platinum-500 font-medium">
-                    Project {i}
+            {recentProjects && recentProjects.length > 0 ? (
+              recentProjects.map((project) => (
+                <Link
+                  key={project.id}
+                  href={`/projects/${project.id}`}
+                  className="bg-card hover:bg-accent/60 border-border flex items-center justify-between gap-2 rounded-lg border-1 p-3"
+                >
+                  <div className="font-medium">{project.title}</div>
+                  <div className="text-muted-foreground text-sm">
+                    {`${project.updatedAt ? `Last updated on ${formatDate(project.updatedAt)}` : `Created on ${formatDate(project.createdAt!)}`} `}
                   </div>
-                  <div className="text-muted-foreground text-sm">Last updated 2 hours ago</div>
-                </div>
-                <div className="bg-accent h-2 w-12 rounded-full">
-                  <div className="h-2 w-8 rounded-full bg-blue-200"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 rounded border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              📋 <strong>Task 4.1:</strong> Implement project CRUD operations
-            </p>
+                </Link>
+              ))
+            ) : (
+              <ProjectDataNotFound message="No projects found" icon={<SearchX size={12} />} />
+            )}
           </div>
         </div>
 
@@ -115,25 +113,14 @@ export default function DashboardPage() {
           <h3 className="text-outer_space-500 dark:text-platinum-500 mb-4 text-lg font-semibold">
             Quick Actions
           </h3>
-          <div className="space-y-3">
-            <button className="hover:bg-accent flex w-full items-center justify-center rounded-lg border px-4 py-3 transition-colors hover:cursor-pointer">
-              <Plus size={20} className="mr-2" />
-              Create New Project
-            </button>
-            <button className="hover:bg-accent flex w-full items-center justify-center rounded-lg border px-4 py-3 transition-colors hover:cursor-pointer">
-              <Plus size={20} className="mr-2" />
-              Add Team Member
-            </button>
-            <button className="hover:bg-accent flex w-full items-center justify-center rounded-lg border px-4 py-3 transition-colors hover:cursor-pointer">
-              <Plus size={20} className="mr-2" />
-              Create Task
-            </button>
-          </div>
-          <div className="mt-4 rounded border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              📋 <strong>Task 4.4:</strong> Build task creation and editing functionality
-            </p>
-          </div>
+          <Link href={`/projects`}>
+            <div className="space-y-3">
+              <button className="hover:bg-accent flex w-full items-center justify-center rounded-lg border px-4 py-3 transition-colors hover:cursor-pointer">
+                <Plus size={20} className="mr-2" />
+                Create New Project
+              </button>
+            </div>
+          </Link>
         </div>
       </div>
     </div>

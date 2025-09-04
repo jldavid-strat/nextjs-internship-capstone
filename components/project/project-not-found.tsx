@@ -1,13 +1,14 @@
 'use client';
 
+import { cn } from '@/lib/utils/shadcn-utils';
 import { SearchX } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
-export default function ProjectNotFound() {
+export function ProjectNotFound() {
   const router = useRouter();
   return (
-    <div className="flex w-full flex-col items-center justify-center gap-4 p-2">
+    <div className="flex w-full flex-col items-center justify-center gap-4">
       <SearchX size={40} className="text-muted-foreground" />
       <div className="flex flex-col justify-center text-center">
         <h2 className="text-muted-foreground">Failed to retrieve this project</h2>
@@ -20,6 +21,28 @@ export default function ProjectNotFound() {
           Try again
         </p>
       </div>
+    </div>
+  );
+}
+
+export function ProjectDataNotFound({
+  message,
+  icon,
+  className,
+}: {
+  message: string;
+  className?: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        'bg-input/30 flex h-30 flex-col items-center justify-center rounded-sm p-2',
+        className,
+      )}
+    >
+      {icon}
+      <h2 className="text-muted-foreground my-2">{message}</h2>
     </div>
   );
 }

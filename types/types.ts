@@ -1,48 +1,57 @@
-import { KanbanColumn, Project, ProjectKanbanColumn, Task } from './db.types';
+import { ProjectLabelTableData } from '@/components/data-table/project-label-table';
+import {
+  KanbanColumn,
+  Label,
+  Project,
+  ProjectKanbanColumn,
+  ProjectLabel,
+  Task,
+  User,
+} from './db.types';
 
-export type QueryResult<TData = undefined, Error = string> =
+// [CONSIDER]
+// change success to status code to differentiate different types of response especially in handling errors
+export type QueryResult<TData = undefined, Error = string | string[]> =
   | {
       success: true;
-      message: string;
       data: TData;
     }
   | {
       success: false;
-      message: string;
       error: Error;
     };
 
-export type ActionResult<TData = undefined, Error = string> =
+export type ActionResult<TData = undefined, Error = string | string[]> =
   | {
       success: true;
-      message: string;
       data?: TData;
     }
   | {
       success: false;
-      message: string;
       error: Error;
     };
 
 export type MoveTaskDataType = {
   taskId: Task['id'];
-  sourceColumnId: KanbanColumn['id'];
-  targetColumnId: KanbanColumn['id'];
+  sourceColumnId: ProjectKanbanColumn['id'];
+  targetColumnId: ProjectKanbanColumn['id'];
   newPosition: Task['position'];
   projectId: Project['id'];
 };
 
 export type ReorderColumnDataType = {
-  columnId: KanbanColumn['id'];
+  projectColumnId: ProjectKanbanColumn['id'];
   newPosition: ProjectKanbanColumn['position'];
   projectId: Project['id'];
 };
 
 export type ColumnQueryResult = {
+  projectColumnId: ProjectKanbanColumn['id'];
   kanbanColumnId: KanbanColumn['id'];
   name: KanbanColumn['name'];
   description: ProjectKanbanColumn['description'];
   position: ProjectKanbanColumn['position'];
+  isCustom: ProjectKanbanColumn['isCustom'];
   color: ProjectKanbanColumn['color'];
 };
 
@@ -56,6 +65,10 @@ export type KanbanColumnDragData = {
   column: ColumnQueryResult;
 };
 
+export interface EditKanbaColumnFormData extends Omit<ColumnQueryResult, 'color'> {
+  projectId: Project['id'];
+}
+
 export type TaskQueryResult = {
   id: Task['id'];
   title: Task['title'];
@@ -67,3 +80,49 @@ export type TaskQueryResult = {
 };
 
 export type TaskListType = TaskQueryResult[];
+
+export type TaskLabel = {
+  projectLabelId: ProjectLabel['id'];
+  name: Label['name'];
+  color: ProjectLabel['color'];
+};
+
+export type TaskAssignee = {
+  userId: User['id'];
+  firstName: User['firstName'];
+  lastName: User['lastName'];
+  primaryEmailAddress: User['primaryEmailAddress'];
+  userImgLink: User['imgLink'];
+};
+export interface TaskCardData extends Task {
+  assignees: User[];
+  labels: ProjectLabelTableData[];
+}
+
+export type CalendarEvent = {
+  id: Project['id'] | Task['id'];
+  project_id: Project['id'];
+  title: string;
+  start: Date;
+  end: Date;
+};
+export interface EditTaskCardData {
+  id: Task['id'];
+  title: Task['title'];
+  description: Task['description'];
+  detail: Task['detail'];
+  status: Task['status'];
+  priority: Task['priority'];
+  startDate: Task['startDate'];
+  dueDate: Task['dueDate'];
+  labels: ProjectLabelTableData[];
+  assignees: User[];
+}
+
+export type TaskLabelMap = {
+  [taskId: Task['id']]: ProjectLabelTableData[];
+};
+
+export type TaskAssgineeMap = {
+  [taskId: Task['id']]: User[];
+};
