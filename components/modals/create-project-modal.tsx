@@ -11,6 +11,8 @@ import { ProjectSchema } from '@/lib/validations';
 import z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
 /*
 TODO: Implementation Notes for Interns:
 
@@ -84,7 +86,7 @@ export function CreateProjectModal({ setIsOpen }: { setIsOpen: (setValue: boolea
 
   return (
     <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div className="dark:bg-outer_space-500 mx-4 w-full max-w-md rounded-lg bg-white p-6">
+      <div className="bg-card mx-4 w-full max-w-md rounded-lg p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-outer_space-500 dark:text-platinum-500 text-lg font-semibold">
             Create New Project
@@ -104,11 +106,10 @@ export function CreateProjectModal({ setIsOpen }: { setIsOpen: (setValue: boolea
             </label>
 
             {/* TODO: add way to auto-focus title input */}
-            <input
+            <Input
               {...register('title')}
               type="text"
               name="title"
-              className="border-french_gray-300 dark:border-payne's_gray-400 dark:bg-outer_space-400 text-outer_space-500 dark:text-platinum-500 focus:ring-blue_munsell-500 w-full rounded-lg border bg-white px-3 py-2 focus:ring-2 focus:outline-hidden"
               placeholder="Enter project name"
             />
             <p className="mt-2 text-sm text-red-400">{errors.title?.message}</p>
@@ -122,7 +123,7 @@ export function CreateProjectModal({ setIsOpen }: { setIsOpen: (setValue: boolea
               {...register('description')}
               name="description"
               rows={3}
-              className="border-french_gray-300 dark:border-payne's_gray-400 dark:bg-outer_space-400 text-outer_space-500 dark:text-platinum-500 focus:ring-blue_munsell-500 w-full rounded-lg border bg-white px-3 py-2 focus:ring-2 focus:outline-hidden"
+              className="focus:ring-visible border-input bg-input/30 w-full rounded-lg border px-3 py-2 text-sm focus:outline-hidden"
               placeholder="Describe what your project entails"
             />
             <p className="mt-2 text-sm text-red-400">{errors.description?.message}</p>
@@ -132,11 +133,11 @@ export function CreateProjectModal({ setIsOpen }: { setIsOpen: (setValue: boolea
             <label className="text-outer_space-500 dark:text-platinum-500 mb-2 block text-sm font-medium">
               Due Date
             </label>
-            <input
+            <Input
               {...register('dueDate', { setValueAs: (val) => (val === '' ? null : val) })}
               type="date"
               name="dueDate"
-              className="border-french_gray-300 dark:border-payne's_gray-400 dark:bg-outer_space-400 text-outer_space-500 dark:text-platinum-500 focus:ring-blue_munsell-500 w-full rounded-lg border bg-white px-3 py-2 focus:ring-2 focus:outline-hidden"
+              className="w-fit"
             />
             <p className="mt-2 text-sm text-red-400">{errors.dueDate?.message}</p>
           </div>
@@ -158,12 +159,12 @@ export function CreateProjectModal({ setIsOpen }: { setIsOpen: (setValue: boolea
             >
               Cancel
             </button>
-            <button
+            <Button
               type="submit"
               className={`bg-blue_munsell-500 hover:bg-blue_munsell-600 rounded-lg px-4 py-2 text-white transition-colors ${isPending ? 'cursor-progress' : 'cursor-pointer'}`}
             >
               {isPending ? 'Creating' : `Create Project`}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

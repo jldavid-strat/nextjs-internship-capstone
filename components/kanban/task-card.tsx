@@ -54,24 +54,24 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
       )}
     >
       <CardContent className="px-3 pt-3 pb-6 text-left whitespace-pre-wrap">
-        <Badge
-          variant="outline"
-          className={cn(
-            'text-xs font-medium',
-            task.priority === 'high' && 'border-red-500 bg-red-50 text-red-700',
-            task.priority === 'medium' && 'border-yellow-500 bg-yellow-50 text-yellow-700',
-            task.priority === 'low' && 'border-green-500 bg-green-50 text-green-700',
-          )}
-        >
-          {task.priority}
-        </Badge>
-        <p>{task.title}</p>
+        <p className="text-md">{task.title}</p>
+        <p className="text-muted-foreground text-xs">{task.description}</p>
+        <div className="flex flex-row justify-between">
+          <Badge
+            variant="outline"
+            className={cn(
+              'text-xs font-medium',
+              task.priority === 'high' && 'border-red-500 bg-red-50 text-red-700',
+              task.priority === 'medium' && 'border-yellow-500 bg-yellow-50 text-yellow-700',
+              task.priority === 'low' && 'border-green-500 bg-green-50 text-green-700',
+            )}
+          >
+            {task.priority}
+          </Badge>
+          <p className="text-muted-foreground text-xs">{task.position}</p>
+        </div>
 
-        <div className="flex items-center space-x-2">
-          <div className="bg-blue_munsell-500 flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold text-white">
-            U
-          </div>
-          {/* {!isOverlay && (
+        {/* {!isOverlay && (
             <ViewTaskDetailButton
               id={Number(task.id)}
               projectId={task.projectId}
@@ -83,7 +83,6 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
               dueDate={task.dueDate}
             />
           )} */}
-        </div>
       </CardContent>
     </Card>
   );

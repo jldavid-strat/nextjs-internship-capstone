@@ -31,31 +31,24 @@ export async function getMemberRole(userId: User['id'], projectId: Project['id']
 
 export async function getProjectMembers(projectId: string) {
   try {
-    const result = await db
+    const projectMemberList = await db
       .select({
         userId: projectMembers.userId,
         firstName: users.firstName,
         lastName: users.lastName,
-        email: users.primaryEmailAddress,
+        userImgLink: users.imgLink,
+        primaryEmailAddress: users.primaryEmailAddress,
         role: projectMembers.role,
         joinedAt: projectMembers.joinedAt,
       })
       .from(projects)
       .innerJoin(projectMembers, eq(projects.id, projectMembers.projectId))
       .innerJoin(users, eq(users.id, projectMembers.userId))
-      .where(eq(projects.id, projectId));
+      .where(eq(projects.id, projectId))
+      .orderBy(projectMembers.role);
 
-    return {
-      success: true,
-      message: 'Successfully retrieve project members',
-      data: result,
-    };
+    return projectMemberList;
   } catch (error) {
     console.error(error);
-    return {
-      success: false,
-      message: 'Failed to retrieve project members',
-      error: 'Something went wrong in retrieving project members',
-    };
   }
 }

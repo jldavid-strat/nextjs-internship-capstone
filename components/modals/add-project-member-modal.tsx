@@ -6,7 +6,7 @@ import { ExampleTable } from '../data-table/member-table';
 export function AddProjectMemberModal({ setIsOpen }: { setIsOpen: (setValue: boolean) => void }) {
   return (
     <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div className="dark:bg-outer_space-500 mx-4 w-full max-w-md rounded-lg bg-white p-6">
+      <div className="bg-card mx-4 w-full max-w-md rounded-lg p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-outer_space-500 dark:text-platinum-500 text-lg font-semibold">
             Add New Project Member

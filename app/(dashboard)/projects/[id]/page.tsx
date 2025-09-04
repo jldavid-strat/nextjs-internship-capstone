@@ -1,9 +1,9 @@
-import { ArrowLeft, Settings, Users, Calendar, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { getProjectById } from '@/lib/queries/project.queries';
-import { EditProjectButton } from '../../../../components/edit-project-button';
-import { KanbanBoard } from '@/components/kanban-board';
 import { DBKanbanBoard } from '@/components/kanban/kanban-board';
+import ProjectNotFound from '@/components/project/project-not-found';
+import ProjectSettingsButton from '@/components/buttons/project-settings-button';
 
 export default async function ProjectPage({ params }: { params: { id: string } }) {
   const projectId = (await params).id;
@@ -11,58 +11,28 @@ export default async function ProjectPage({ params }: { params: { id: string } }
   console.log(projectId);
   const { success, data } = await getProjectById(projectId);
 
-  // TODO project not found page
-  // Had to check data to remove undefined in type
-  // TODO define better return type
-  if (!success || !data) return <div>Project Not Found. SADGE</div>;
+  if (!success || !data) return <ProjectNotFound />;
 
   const project = data;
 
   return (
-    <div className="space-y-6">
+    <div className="text-foreground space-y-6">
       {/* Project Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link
-            href="/projects"
-            className="hover:bg-platinum-500 dark:hover:bg-payne's_gray-400 rounded-lg p-2 transition-colors"
-          >
+          <Link href="/projects" className="hover:bg-accent rounded-lg p-2 transition-colors">
             <ArrowLeft size={20} />
           </Link>
           <div>
-            <h1 className="text-outer_space-500 dark:text-platinum-500 text-3xl font-bold">
-              {project.title}
-            </h1>
-            <p className="text-payne's_gray-500 dark:text-french_gray-500 mt-1">
-              {project.description}
-            </p>
-            <p className="text-payne's_gray-500 dark:text-french_gray-500 mt-1">{project.status}</p>
-            <p className="text-payne's_gray-500 dark:text-french_gray-500 mt-1">
-              {project.dueDate}
-            </p>
+            <h1 className="text-3xl font-bold">{project.title}</h1>
+            <p className="mt-1">{project.description}</p>
+            <p className="mt-1">{project.status}</p>
+            <p className="mt-1">{project.dueDate}</p>
           </div>
         </div>
 
         <div className="flex items-center space-x-2">
-          <EditProjectButton
-            id={project.id}
-            title={project.title}
-            description={project.description}
-            status={project.status}
-            dueDate={project.dueDate}
-          />
-          <button className="hover:bg-platinum-500 dark:hover:bg-payne's_gray-400 rounded-lg p-2 transition-colors">
-            <Users size={20} />
-          </button>
-          <button className="hover:bg-platinum-500 dark:hover:bg-payne's_gray-400 rounded-lg p-2 transition-colors">
-            <Calendar size={20} />
-          </button>
-          <button className="hover:bg-platinum-500 dark:hover:bg-payne's_gray-400 rounded-lg p-2 transition-colors">
-            <Settings size={20} />
-          </button>
-          <button className="hover:bg-platinum-500 dark:hover:bg-payne's_gray-400 rounded-lg p-2 transition-colors">
-            <MoreHorizontal size={20} />
-          </button>
+          <ProjectSettingsButton projectId={projectId} />
         </div>
       </div>
 
@@ -79,10 +49,7 @@ export default async function ProjectPage({ params }: { params: { id: string } }
         </ul>
       </div>
 
-      {/* Kanban Board Placeholder */}
-      <KanbanBoard projectId={project.id} />
       <DBKanbanBoard projectId={project.id} />
-      {/* <DnDKanbanBoard /> */}
 
       {/* Component Implementation Guide */}
       <div className="mt-8 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6 dark:border-gray-600 dark:bg-gray-800/50">

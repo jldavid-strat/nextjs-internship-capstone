@@ -1,42 +1,43 @@
 'use server';
+import { MemberValue } from '@/components/ui/add-member-multiselect';
 import { ACTIONS, RESOURCES } from '@/constants/permissions';
 import { db } from '@/lib/db/connect_db';
-import { MemberRole } from '@/lib/db/schema/enums';
 import { projectMembers } from '@/lib/db/schema/schema';
 import { checkMemberPermission } from '@/lib/queries/permssions.queries';
 import { getCurrentUserId } from '@/lib/queries/user.queries';
+import { AddProjectMemberSchema } from '@/lib/validations/project.validations';
 import { Project, User } from '@/types/db.types';
 
 // assumes that inputs are already validated
-export async function addProjectMember(
-  additionalInfo: { projectId: Project['id'] },
-  previousState: unknown,
-  formData: FormData,
+export async function addProjectMembers(
+  projectId: Project['id'],
+  members: MemberValue[],
+  isNewProject: boolean,
 ) {
   try {
     const currentUserId = await getCurrentUserId();
 
     const { isAuthorize } = await checkMemberPermission(
       currentUserId,
-      additionalInfo.projectId,
-      RESOURCES.PROJECTS,
-      ACTIONS.ASSIGN_MEMBERS,
+      projectId,
+      RESOURCES.PROJECT_MEMBERS,
+      ACTIONS.INVITE,
+      isNewProject,
     );
 
     if (!isAuthorize) throw new Error('User is unauthorized to update project');
 
-    // decode member array from form data
-    const usersToBeAdded = JSON.parse(formData.get('members') as string) as string[];
-    const role = formData.get('role') as MemberRole;
-    const toInsert = [];
+    const validatedData = AddProjectMemberSchema.parse({
+      members: members,
+    });
 
-    for (let i = 0; i < usersToBeAdded.length; i++) {
-      toInsert.push({
-        userId: usersToBeAdded[i],
-        projectId: additionalInfo.projectId,
-        role: role,
-      });
-    }
+    // transform member data for multiple db insertion
+    const toInsert = validatedData.members.map((m) => ({
+      userId: m.userId,
+      projectId: projectId,
+      role: m.role,
+    }));
+
     await db.insert(projectMembers).values(toInsert);
     return {
       success: true,

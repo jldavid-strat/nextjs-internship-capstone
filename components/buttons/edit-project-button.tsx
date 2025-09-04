@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { Pen } from 'lucide-react';
-import { EditProjectModal } from './modals/edit-project-modal';
+import { EditProjectModal } from '../modals/edit-project-modal';
 import { Project } from '@/types/db.types';
+import { Button } from '../ui/button';
 
 type EditProjectProps = Pick<Project, 'title' | 'description' | 'status' | 'dueDate' | 'id'>;
 
@@ -12,13 +13,14 @@ export function EditProjectButton(projectData: EditProjectProps) {
 
   return (
     <>
-      <button
+      <Button
         onClick={() => setIsOpen(true)}
-        className="bg-blue_munsell-500 hover:bg-blue_munsell-600 inline-flex items-center rounded-lg px-4 py-2 text-white transition-colors"
+        variant={'default'}
+        className="text-md inline-flex items-center rounded-lg px-4 py-2 text-white transition-colors hover:cursor-pointer"
       >
         <Pen size={20} className="mr-2" />
         Edit Project
-      </button>
+      </Button>
 
       {isOpen && <EditProjectModal projectData={projectData} setIsOpen={setIsOpen} />}
     </>
