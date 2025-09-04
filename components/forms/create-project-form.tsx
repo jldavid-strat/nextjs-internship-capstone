@@ -69,6 +69,7 @@ export default function CreateProjectForm({ currentUserId }: { currentUserId: Us
       setErrorCount((prev) => prev + 1);
     }
     if (state?.success === true) {
+      router.push(`/projects/${state.data}`);
       toast.success('Succesfully created a new project');
       //   toast
     }

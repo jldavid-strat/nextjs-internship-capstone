@@ -99,3 +99,4 @@ export type EditProjectFormType = z.infer<typeof EditProjectFormSchema>;
 export type EditProjectType = z.infer<typeof EditProjectSchema>;
 
 export type ChangeRoleMemberSchemaType = z.infer<typeof ChangeRoleMemberSchema>;
+export type AddProjectMemberType = z.infer<typeof AddProjectMemberSchema>;

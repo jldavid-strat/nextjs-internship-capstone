@@ -22,7 +22,7 @@ import { revalidatePath } from 'next/cache';
 export async function addProjectMembers(
   projectId: Project['id'],
   members: MemberValue[],
-  isNewProject: boolean,
+  isNewProject: boolean = false,
   dbTransaction?: DBTransaction,
 ): Promise<ActionResult> {
   try {
@@ -50,9 +50,11 @@ export async function addProjectMembers(
       role: m.role,
     }));
 
-    console.info(toInsert);
+    console.info('users to be added', toInsert);
 
     await dbContext.insert(projectMembers).values(toInsert);
+
+    revalidatePath(`projects/${projectId}/settings`);
     return {
       success: true,
     };

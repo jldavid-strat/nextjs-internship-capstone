@@ -11,6 +11,7 @@ import { MemberDataTable } from '@/components/data-table/member-data-table';
 import { hasRole } from '@/lib/utils/has_role';
 import ProjectLabelSection from '@/components/project/project-label-section';
 import Link from 'next/link';
+import AddProjectMemberForm from '@/components/forms/add-project-member-modal-form';
 
 export default async function ProjectSettingsPage({
   params,
@@ -50,12 +51,15 @@ export default async function ProjectSettingsPage({
         </section>
         <EditProjectForm projectData={projectInfo} />
         <EditDangerZone />
-        <SubHeader
-          title={'Project Members'}
-          description={'View, add, remove and change roles of project member'}
-          icon={<User size={20} />}
-          color="text-primary"
-        />
+        <div className="flex w-full flex-row items-center justify-between">
+          <SubHeader
+            title={'Project Members'}
+            description={'View, add, remove and change roles of project member'}
+            icon={<User size={20} />}
+            color="text-primary"
+          />
+          <AddProjectMemberForm projectId={projectId} />
+        </div>
         {/* TODO: add way to change roles or add new members */}
         <MemberDataTable data={projectMembers} canMutate={canMutateMember} />
         <ProjectLabelSection

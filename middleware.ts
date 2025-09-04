@@ -1,23 +1,17 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
 const isProtectedRoute = createRouteMatcher([
-  '/projects(.*)',
-  '/calendar(.*)',
   '/analytics(.*)',
-  '/team(.*)',
+  '/calendar(.*)',
+  '/dashboard(.*)',
+  '/projects(.*)',
   '/settings(.*)',
+  '/team(.*)',
 ]);
 
-export default clerkMiddleware(
-  async (auth, req) => {
-    // redirects the user to sign-in page
-    if (isProtectedRoute(req)) await auth.protect();
-  },
-  // {
-  //   // only enable debugging in development environment
-  //   debug: process.env.NODE_ENV === 'development',
-  // },
-);
+export default clerkMiddleware(async (auth, req) => {
+  if (isProtectedRoute(req)) await auth.protect();
+});
 
 export const config = {
   matcher: [
@@ -26,24 +20,4 @@ export const config = {
     // Always run for API routes
     '/(api|trpc)(.*)',
   ],
-  publicRoutes: ['/api/events'],
 };
-
-/*
-TODO: Task 2.2 Implementation Notes for Interns:
-- Install and configure Clerk
-- Set up authMiddleware to protect routes
-- Configure public routes: ["/", "/sign-in", "/sign-up"]
-- Protect all dashboard routes: ["/dashboard", "/projects"]
-- Add proper redirects for unauthenticated users
-
-Example implementation when ready:
-export default authMiddleware({
-  publicRoutes: ["/", "/sign-in", "/sign-up"],
-  ignoredRoutes: [],
-})
-
-export const config = {
-  matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
-}
-*/

@@ -81,8 +81,9 @@ export function AddTaskForm({ kanbanData }: { kanbanData: CreateTaskProps }) {
       _queryClient.invalidateQueries({
         queryKey: ['tasks', kanbanData.projectId],
       });
-      reset();
       setIsModalOpen(false);
+      document.body.style.overflow = '';
+      reset();
       toast.success('Succesfully added a new task');
     }
   }, [state, _queryClient, kanbanData.projectId, reset]);

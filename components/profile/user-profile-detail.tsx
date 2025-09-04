@@ -16,7 +16,7 @@ export default function UserProfileDetail() {
 
   const disabledCursorStyle = isEditing ? 'hover: cursor-not-allowed' : ' ';
 
-  if (!isLoaded) return <Loader2 className="bg-card animate-spin"></Loader2>;
+  if (!isLoaded) return <Loader2 className="bg-card animate-spin">Loading user data</Loader2>;
   if (!isSignedIn) return <div>User is not signed in.</div>;
 
   const updateUser = async (formData: FormData) => {
@@ -76,21 +76,6 @@ export default function UserProfileDetail() {
               </p>
             )}
           </div>
-          <div>
-            <label className="text-muted-foreground block text-sm font-medium">Role</label>
-            <select
-              disabled
-              className={`bg-input border-border w-full rounded-lg border px-3 py-2 focus:ring-1 focus:outline-hidden ${disabledCursorStyle}`}
-            >
-              <option>Project Manager</option>
-              <option>Developer</option>
-              <option>Designer</option>
-              <option>QA Engineer</option>
-            </select>
-            {isEditing && (
-              <p className="mt-2 text-sm text-red-400">Updating user role is now allowed for now</p>
-            )}
-          </div>
 
           {/* buttons */}
           {isLoading ? (
@@ -105,7 +90,7 @@ export default function UserProfileDetail() {
                   <Button onClick={() => setIsEditing(false)} disabled={isLoading} variant="cancel">
                     Cancel
                   </Button>
-                  <Button type="submit" variant="submit" disabled={isLoading}>
+                  <Button type="submit" variant="default" disabled={isLoading}>
                     Save Changes
                   </Button>
                 </Fragment>

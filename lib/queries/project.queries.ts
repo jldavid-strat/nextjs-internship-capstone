@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, countDistinct, eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { db } from '../db/connect_db';
 import { projects, tasks } from '../db/schema/schema';
 import { QueryResult } from '@/types/types';
@@ -15,7 +15,6 @@ import { getCurrentUserId } from './user.queries';
 
 // [CONSIDER] check read authorization in fetching projects
 
-// NOTE: change to Partial<SelectProject[]> if you don't need all the columns
 export async function getAllProjects(): Promise<QueryResult<Project[]>> {
   try {
     const projectList = await db.select().from(projects).orderBy(projects.createdAt);
@@ -60,12 +59,9 @@ export async function getAllUserProject(userId: string) {
       .where(and(eq(projectMembers.userId, userId), eq(projects.isArchived, false)))
       .groupBy(projects.id);
 
-    if (projectList.length === 0) {
-      throw new Error('No projects found');
-    }
     return {
       success: true,
-      data: projectList,
+      data: projectList ?? [],
     };
   } catch (error) {
     console.error(error);
